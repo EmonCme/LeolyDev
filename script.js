@@ -1,9 +1,8 @@
-// --- CONFIG DATA LOG IN ---
+// ==========================================================================
+// 1. KREDENSIAL LOGIN & KONSTANTA DEFAULT (BLACK & WHITE THEME)
+// ==========================================================================
 const DEV_USER = "leoly";
 const DEV_PASS = "dev123";
-
-// --- STATE MANAGEMENT & LOCALSTORAGE PERSISTENCE ---
-let currentUserRole = localStorage.getItem('userRole') || "guest"; 
 
 const DEFAULT_PROJECT_IMG = "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?q=80&w=600";
 const DEFAULT_SHOP_IMG = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600";
@@ -11,7 +10,11 @@ const DEFAULT_SHOP_IMG = "https://images.unsplash.com/photo-1618005182384-a83a8b
 const DEFAULT_AVATAR_IMG = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150";
 const DEFAULT_BANNER_IMG = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200";
 
-// --- LOAD / INITIALIZE CONTENT DATA ---
+// ==========================================================================
+// 2. MANAGEMENT STATE & PERSISTENCE LOCALSTORAGE
+// ==========================================================================
+let currentUserRole = localStorage.getItem('userRole') || "guest"; 
+
 let profileData = JSON.parse(localStorage.getItem('leoly_profile')) || {
     name: "Leoly.dev",
     tag: "Mobile-Based Developer",
@@ -48,9 +51,17 @@ let shopData = JSON.parse(localStorage.getItem('leoly_shop')) || [
     }
 ];
 
-let messagesData = JSON.parse(localStorage.getItem('leoly_messages')) || [];
+let messagesData = JSON.parse(localStorage.getItem('leoly_messages')) || [
+    {
+        contact: "HDFv_Member#001",
+        subject: "Akses Server Terkunci",
+        message: "Halo admin Leoly, saya tidak bisa mengakses dashboard info server utama HDFv sejak tadi pagi. Mohon bantuannya."
+    }
+];
 
-// --- TOAST NOTIFICATION SYSTEM ---
+// ==========================================================================
+// 3. TOAST NOTIFICATION SYSTEM
+// ==========================================================================
 function showToast(message, type = "success") {
     const oldToast = document.querySelector('.toast-notif');
     if (oldToast) oldToast.remove();
@@ -67,7 +78,9 @@ function showToast(message, type = "success") {
     }, 3000);
 }
 
-// --- DOM ELEMENTS SELECTION ---
+// ==========================================================================
+// 4. SELEKSI ELEMEN DOM
+// ==========================================================================
 const openMenuBtn = document.getElementById('openMenu');
 const closeMenuBtn = document.getElementById('closeMenu');
 const sidebar = document.getElementById('sidebar');
@@ -111,7 +124,9 @@ const displayBio = document.getElementById('display-bio');
 const displayAvatar = document.getElementById('display-avatar');
 const displayBanner = document.getElementById('display-banner');
 
-// --- SIDEBAR CONTROL SYSTEM ---
+// ==========================================================================
+// 5. SISTEM KENDALI SIDEBAR & NAVIGASI
+// ==========================================================================
 function toggleSidebar(open) {
     if (open) {
         sidebar.classList.add('active');
@@ -126,74 +141,7 @@ openMenuBtn.addEventListener('click', () => toggleSidebar(true));
 closeMenuBtn.addEventListener('click', () => toggleSidebar(false));
 overlay.addEventListener('click', () => toggleSidebar(false));
 
-// --- SINKRONISASI STATUS AUTH DEVELOPER ---
-function updateAuthUI() {
-    if (currentUserRole === "developer") {
-        roleIndicator.textContent = "Dev Mode";
-        roleIndicator.className = "role-badge developer";
-        btnAuthAction.textContent = "Sign Out / Log Out";
-        authBoxDesc.textContent = "Kamu masuk sebagai Owner.";
-        menuAdmin.classList.remove('locked');
-        
-        const lockIcon = menuAdmin.querySelector('.lock-icon');
-        if (lockIcon) lockIcon.textContent = "↗";
-    } else {
-        roleIndicator.textContent = "Guest Mode";
-        roleIndicator.className = "role-badge guest";
-        btnAuthAction.textContent = "Sign In Developer";
-        authBoxDesc.textContent = "Ingin mengelola konten web?";
-        menuAdmin.classList.add('locked');
-        
-        const lockIcon = menuAdmin.querySelector('.lock-icon');
-        if (lockIcon) lockIcon.textContent = "🔒";
-    }
-}
-
-// --- AKSI SWITCH / SIGN-IN LOG OUT ---
-btnAuthAction.addEventListener('click', () => {
-    if (currentUserRole === "guest") {
-        toggleSidebar(false);
-        loginModal.classList.add('show');
-    } else {
-        currentUserRole = "guest";
-        localStorage.setItem('userRole', 'guest');
-        updateAuthUI();
-        renderHubContent();
-        showToast("Keluar dari Mode Developer", "info");
-        document.querySelector('[data-target="beranda-view"]').click();
-        toggleSidebar(false);
-    }
-});
-
-closeLogin.addEventListener('click', () => {
-    loginModal.classList.remove('show');
-    loginError.style.display = 'none';
-    loginForm.reset();
-});
-
-// --- VERIFIKASI LOGIN SYSTEM ---
-loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const username = loginUsernameInput.value.trim();
-    const password = loginPasswordInput.value;
-
-    if (username === DEV_USER && password === DEV_PASS) {
-        currentUserRole = "developer";
-        localStorage.setItem('userRole', 'developer');
-        updateAuthUI();
-        renderHubContent();
-        loginModal.classList.remove('show');
-        loginError.style.display = 'none';
-        loginForm.reset();
-        showToast("Selamat Datang Kembali, Leoly!");
-        document.querySelector('[data-target="admin-view"]').click();
-    } else {
-        loginError.style.display = 'block';
-        showToast("Kredensial login salah!", "error");
-    }
-});
-
-// --- ROUTING SINGLE PAGE APPLICATION (SPA) ---
+// ROUTING SPA (Single Page Application)
 navItems.forEach(item => {
     item.addEventListener('click', () => {
         const targetView = item.getAttribute('data-target');
@@ -218,16 +166,78 @@ navItems.forEach(item => {
     });
 });
 
-// --- TOGGLE KOLOM HARGA FORM DI ADMIN PANEL ---
-formTarget.addEventListener('change', () => {
-    if (formTarget.value === 'shop') {
-        priceGroup.style.display = 'block';
+// ==========================================================================
+// 6. SISTEM AUTHENTIKASI DEVELOPER (SIGN IN / OUT)
+// ==========================================================================
+function updateAuthUI() {
+    if (currentUserRole === "developer") {
+        roleIndicator.textContent = "Dev Mode";
+        roleIndicator.className = "role-badge developer";
+        btnAuthAction.textContent = "Sign Out / Log Out";
+        authBoxDesc.textContent = "Kamu masuk sebagai Owner.";
+        menuAdmin.classList.remove('locked');
+        
+        const lockIcon = menuAdmin.querySelector('.lock-icon');
+        if (lockIcon) lockIcon.textContent = "↗";
     } else {
-        priceGroup.style.display = 'none';
+        roleIndicator.textContent = "Guest Mode";
+        roleIndicator.className = "role-badge guest";
+        btnAuthAction.textContent = "Sign In Developer";
+        authBoxDesc.textContent = "Ingin mengelola konten web?";
+        menuAdmin.classList.add('locked');
+        
+        const lockIcon = menuAdmin.querySelector('.lock-icon');
+        if (lockIcon) lockIcon.textContent = "🔒";
+    }
+}
+
+btnAuthAction.addEventListener('click', () => {
+    if (currentUserRole === "guest") {
+        toggleSidebar(false);
+        loginModal.classList.add('show');
+    } else {
+        currentUserRole = "guest";
+        localStorage.setItem('userRole', 'guest');
+        updateAuthUI();
+        renderHubContent();
+        showToast("Keluar dari Mode Developer", "info");
+        document.querySelector('[data-target="beranda-view"]').click();
+        toggleSidebar(false);
     }
 });
 
-// --- FUNGSI HAPUS (CRUD - DELETE) ---
+closeLogin.addEventListener('click', () => {
+    loginModal.classList.remove('show');
+    loginError.style.display = 'none';
+    loginForm.reset();
+});
+
+loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = loginUsernameInput.value.trim();
+    const password = loginPasswordInput.value;
+
+    if (username === DEV_USER && password === DEV_PASS) {
+        currentUserRole = "developer";
+        localStorage.setItem('userRole', 'developer');
+        updateAuthUI();
+        renderHubContent();
+        loginModal.classList.remove('show');
+        loginError.style.display = 'none';
+        loginForm.reset();
+        showToast("Selamat Datang Kembali, Leoly!");
+        document.querySelector('[data-target="admin-view"]').click();
+    } else {
+        loginError.style.display = 'block';
+        showToast("Kredensial login salah!", "error");
+    }
+});
+
+// ==========================================================================
+// 7. OPERASI CRUD (CREATE, READ, DELETE) & CLEAR FITUR
+// ==========================================================================
+
+// Menghapus data Project
 function deleteProject(index) {
     if(confirm("Hapus project ini dari showcase?")) {
         projectsData.splice(index, 1);
@@ -237,6 +247,7 @@ function deleteProject(index) {
     }
 }
 
+// Menghapus data Produk Shop
 function deleteShopItem(index) {
     if(confirm("Hapus produk ini dari toko?")) {
         shopData.splice(index, 1);
@@ -246,6 +257,7 @@ function deleteShopItem(index) {
     }
 }
 
+// Menghapus satu tiket satuan (Selesai)
 function deleteMessage(index) {
     if(confirm("Tandai tiket ini sebagai SELESAI?")) {
         messagesData.splice(index, 1);
@@ -255,6 +267,7 @@ function deleteMessage(index) {
     }
 }
 
+// Bersihkan Semua Tiket Sekaligus (Fitur Baru)
 function clearAllMessages() {
     if (messagesData.length === 0) {
         showToast("Kotak masuk sudah bersih!", "info");
@@ -269,7 +282,7 @@ function clearAllMessages() {
     }
 }
 
-// --- SUBMIT KREASI TIKET HELP CENTER ---
+// Form kirim tiket bantuan (Public)
 helpForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const contactInput = document.getElementById('help-email');
@@ -290,66 +303,130 @@ helpForm.addEventListener('submit', (e) => {
     document.querySelector('[data-target="beranda-view"]').click();
 });
 
-// --- SUBMIT UPDATE DATA PROFIL (FIXED) ---
+// Form tambah konten baru (Project / Shop)
+formTarget.addEventListener('change', () => {
+    if (formTarget.value === 'shop') {
+        priceGroup.style.display = 'block';
+    } else {
+        priceGroup.style.display = 'none';
+    }
+});
+
+contentForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const titleInput = document.getElementById('content-title');
+    const descInput = document.getElementById('content-desc');
+    const imgInput = document.getElementById('content-image');
+    const priceInput = document.getElementById('content-price');
+
+    if (formTarget.value === 'project') {
+        projectsData.push({
+            title: titleInput.value.trim(),
+            desc: descInput.value.trim(),
+            image: imgInput.value.trim()
+        });
+        localStorage.setItem('leoly_projects', JSON.stringify(projectsData));
+        showToast("Showcase project berhasil ditambahkan!");
+        document.querySelector('[data-target="project-view"]').click();
+    } else {
+        shopData.push({
+            title: titleInput.value.trim(),
+            desc: descInput.value.trim(),
+            price: priceInput.value.trim() || "Free",
+            image: imgInput.value.trim()
+        });
+        localStorage.setItem('leoly_shop', JSON.stringify(shopData));
+        showToast("Item produk baru berhasil dipajang!");
+        document.querySelector('[data-target="shop-view"]').click();
+    }
+
+    renderHubContent();
+    contentForm.reset();
+    priceGroup.style.display = 'none';
+});
+
+// ==========================================================================
+// 8. UPDATE DATA PROFIL & REAL-TIME MANIPULASI DOM (FIXED URL)
+// ==========================================================================
 profileForm.addEventListener('submit', (e) => {
     e.preventDefault();
     
-    // Membaca input nilai terbaru dari form admin panel
-    profileData.name = profileNameInput.value.trim();
-    profileData.tag = profileTagInput.value.trim();
-    profileData.bio = profileBioInput.value.trim();
-    profileData.avatar = profileAvatarInput.value.trim(); 
-    profileData.banner = profileBannerInput.value.trim(); 
+    // Tarik nilai langsung saat event submit dipicu
+    const inputNama = profileNameInput.value.trim();
+    const inputTag = profileTagInput.value.trim();
+    const inputBio = profileBioInput.value.trim();
+    const inputAvatar = profileAvatarInput.value.trim(); 
+    const inputBanner = profileBannerInput.value.trim(); 
     
-    // Simpan data terbaru ke dalam LocalStorage
+    // Tulis ke dalam database object state
+    profileData.name = inputNama;
+    profileData.tag = inputTag;
+    profileData.bio = inputBio;
+    profileData.avatar = inputAvatar; 
+    profileData.banner = inputBanner; 
+    
+    // Kunci langsung ke dalam LocalStorage
     localStorage.setItem('leoly_profile', JSON.stringify(profileData));
     
-    // Perbarui UI secara real-time
-    renderHubContent();
+    // Force Direct Inject DOM untuk menghindari delay/cache browser mobile
+    displayName.textContent = inputNama;
+    displayTag.textContent = inputTag;
+    displayBio.textContent = inputBio;
     
-    showToast("Profil dan foto baru berhasil diperbarui!");
+    if (inputAvatar !== "") {
+        displayAvatar.src = inputAvatar;
+    } else {
+        displayAvatar.src = DEFAULT_AVATAR_IMG;
+    }
+    
+    if (inputBanner !== "") {
+        displayBanner.style.backgroundImage = `url('${inputBanner}')`;
+    } else {
+        displayBanner.style.backgroundImage = `url('${DEFAULT_BANNER_IMG}')`;
+    }
+    
+    renderHubContent();
+    showToast("Profil dan aset visual berhasil diperbarui!");
     document.querySelector('[data-target="beranda-view"]').click();
 });
 
-// --- RENDERING KONTEN DINAMIS (FIXED) ---
+// ==========================================================================
+// 9. FUNGSIONAL RENDER SEKALIGUS REFRESH ANTARMUKA
+// ==========================================================================
 function renderHubContent() {
-    // 1. Render Elemen Profil Beranda
+    // Render Profil Utama
     displayName.textContent = profileData.name;
     displayTag.textContent = profileData.tag;
     displayBio.textContent = profileData.bio;
     
-    // Cek ketersediaan URL Avatar
     if (profileData.avatar && profileData.avatar.trim() !== "") {
         displayAvatar.src = profileData.avatar;
     } else {
         displayAvatar.src = DEFAULT_AVATAR_IMG;
     }
-    // Proteksi jika tautan gambar rusak/broken link
     displayAvatar.onerror = function() { this.src = DEFAULT_AVATAR_IMG; };
     
-    // Cek ketersediaan URL Banner background
     if (profileData.banner && profileData.banner.trim() !== "") {
         displayBanner.style.backgroundImage = `url('${profileData.banner}')`;
     } else {
         displayBanner.style.backgroundImage = `url('${DEFAULT_BANNER_IMG}')`;
     }
 
-    // 2. Set Nilai Input Form Admin agar tetap sinkron dengan isi storage
+    // Kembalikan isi data objek ke input control di panel admin agar tidak kosong
     profileNameInput.value = profileData.name;
     profileTagInput.value = profileData.tag;
     profileBioInput.value = profileData.bio;
     profileAvatarInput.value = profileData.avatar;
     profileBannerInput.value = profileData.banner;
 
-    // Sinkronisasi Counter Dashboard
+    // Sinkronisasi Data Statistik Angka Dashboard
     if (document.getElementById('count-projects')) {
         document.getElementById('count-projects').textContent = projectsData.length;
         document.getElementById('count-shop').textContent = shopData.length;
         document.getElementById('count-messages').textContent = messagesData.length;
     }
 
-    const isDev = (currentUserRole === "developer");
-
+    // Sinkronisasi Visual Keaktifan Tombol Clear Tiket
     if (btnClearMessages) {
         if (messagesData.length === 0) {
             btnClearMessages.style.opacity = "0.5";
@@ -360,7 +437,9 @@ function renderHubContent() {
         }
     }
 
-    // 3. Render Grid Tab Project
+    const isDev = (currentUserRole === "developer");
+
+    // Render Grid Tab Project
     projectContainer.innerHTML = '';
     projectsData.forEach((proj, idx) => {
         const item = document.createElement('div');
@@ -380,7 +459,7 @@ function renderHubContent() {
         projectContainer.appendChild(item);
     });
 
-    // 4. Render Grid Tab Shop
+    // Render Grid Tab Shop
     shopContainer.innerHTML = '';
     shopData.forEach((prod, idx) => {
         const item = document.createElement('div');
@@ -402,7 +481,7 @@ function renderHubContent() {
         shopContainer.appendChild(item);
     });
 
-    // 5. Render Daftar Inbox Help Center di Admin Panel
+    // Render Data Baris Tabel Inbox Help Center
     adminMessagesList.innerHTML = '';
     if (messagesData.length === 0) {
         adminMessagesList.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 2rem;">Kotak masuk kosong. Tidak ada tiket bantuan aktif.</td></tr>`;
@@ -410,57 +489,4 @@ function renderHubContent() {
         messagesData.forEach((msg, idx) => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td class="msg-contact">${msg.contact}</td>
-                <td class="msg-subject">${msg.subject}</td>
-                <td style="max-width: 300px; white-space: pre-wrap;">${msg.message}</td>
-                <td>
-                    <button class="btn-table-action" onclick="deleteMessage(${idx})">Selesai</button>
-                </td>
-            `;
-            adminMessagesList.appendChild(row);
-        });
-    }
-}
-
-// --- SUBMIT KONTEN BARU (PROJECT/SHOP) ---
-contentForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const titleInput = document.getElementById('content-title');
-    const descInput = document.getElementById('content-desc');
-    const imgInput = document.getElementById('content-image');
-    const priceInput = document.getElementById('content-price');
-
-    if (formTarget.value === 'project') {
-        projectsData.push({
-            title: titleInput.value,
-            desc: descInput.value,
-            image: imgInput.value
-        });
-        localStorage.setItem('leoly_projects', JSON.stringify(projectsData));
-        showToast("Showcase project berhasil ditambahkan!");
-        document.querySelector('[data-target="project-view"]').click();
-    } else {
-        shopData.push({
-            title: titleInput.value,
-            desc: descInput.value,
-            price: priceInput.value || "Free",
-            image: imgInput.value
-        });
-        localStorage.setItem('leoly_shop', JSON.stringify(shopData));
-        showToast("Item produk baru berhasil dipajang!");
-        document.querySelector('[data-target="shop-view"]').click();
-    }
-
-    renderHubContent();
-    contentForm.reset();
-    priceGroup.style.display = 'none';
-});
-
-// Inisialisasi Booting Global Akses Window
-window.deleteProject = deleteProject;
-window.deleteShopItem = deleteShopItem;
-window.deleteMessage = deleteMessage;
-window.clearAllMessages = clearAllMessages;
-
-updateAuthUI();
-renderHubContent();
+                <td class="msg-contact">${msg.cont
