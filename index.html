@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leoly Dev - Personal Hub</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <div class="sidebar-overlay" id="overlay"></div>
+
+    <header>
+        <div class="logo-area">
+            <h1>Leoly<span class="logo-dot">.</span><span class="logo-sub">dev</span></h1>
+        </div>
+        <div class="header-actions">
+            <span id="role-indicator" class="role-badge guest">Guest Mode</span>
+            <button class="menu-toggle" id="openMenu" aria-label="Buka Menu">☰</button>
+        </div>
+    </header>
+
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-title">NAVIGASI CONTROL</span>
+            <button class="close-sidebar" id="closeMenu">✕</button>
+        </div>
+        
+        <ul class="nav-links">
+            <li>
+                <div class="nav-item active" data-target="beranda-view">
+                    <span class="nav-icon">⌂</span> Beranda
+                </div>
+            </li>
+            <li>
+                <div class="nav-item" data-target="dashboard-view">
+                    <span class="nav-icon">⚄</span> Dashboard
+                </div>
+            </li>
+            <li>
+                <div class="nav-item" data-target="project-view">
+                    <span class="nav-icon">⟨/⟩</span> Project
+                </div>
+            </li>
+            <li>
+                <div class="nav-item" data-target="donasi-view">
+                    <span class="nav-icon">♡</span> Donasi
+                </div>
+            </li>
+            <li>
+                <div class="nav-item" data-target="shop-view">
+                    <span class="nav-icon">🛒</span> Shop
+                </div>
+            </li>
+            
+            <li class="menu-divider">Developer Access</li>
+            
+            <li>
+                <div class="nav-item locked" data-target="admin-view" id="menu-admin">
+                    <span class="nav-icon">⚙</span> Admin Panel <span class="lock-icon">🔒</span>
+                </div>
+            </li>
+        </ul>
+
+        <div class="role-switcher-box">
+            <p id="auth-box-desc">Ingin mengelola konten web?</p>
+            <button id="btn-auth-action" class="btn-role">Sign In Developer</button>
+        </div>
+    </nav>
+
+    <main>
+        
+        <section id="beranda-view" class="view-section active">
+            <div class="welcome-back">
+                <h2>Workspace Hub</h2>
+                <p>Selamat datang kembali di pusat kendali informasi dan pengembangan proyek.</p>
+            </div>
+            
+            <div class="beranda-grid">
+                <div class="profile-card-v2">
+                    <div class="p-banner" id="display-banner"></div>
+                    <div class="p-avatar-area">
+                        <img id="display-avatar" src="" alt="Avatar">
+                    </div>
+                    <div class="p-details">
+                        <h3 id="display-name">Leoly<span class="logo-dot">.</span>dev</h3>
+                        <span class="p-badge" id="display-tag">Mobile-Based Developer</span>
+                        <p class="p-bio" id="display-bio">Fokus membangun antarmuka web interaktif yang bersih, minimalis, dan nyaman dipandang dengan optimasi kode modern.</p>
+                    </div>
+                </div>
+
+                <div class="server-status-card">
+                    <div class="quick-action-area" style="border-top: none; padding-top: 0;">
+                        <div class="card-title-mini">QUICK NAVIGATION</div>
+                        <div class="action-buttons-flex">
+                            <button class="action-btn-item" onclick="document.querySelector('[data-target=\'project-view\']').click();">
+                                <span class="action-icon">⟩</span> Lihat Proyek
+                            </button>
+                            <button class="action-btn-item" onclick="document.querySelector('[data-target=\'shop-view\']').click();">
+                                <span class="action-icon">🛒</span> Kunjungi Toko
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboard-view" class="view-section">
+            <div class="welcome-back">
+                <h2>Statistik & Aktivitas</h2>
+                <p>Rangkuman performa project dan interaksi publik.</p>
+            </div>
+            <div class="stats-grid">
+                <div class="card stat-card">
+                    <div class="card-header"><span>Total Project</span></div>
+                    <div class="card-value" id="count-projects">0</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="card-header"><span>Item di Toko</span></div>
+                    <div class="card-value" id="count-shop">0</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="card-header"><span>Pengunjung Bulan Ini</span></div>
+                    <div class="card-value">1,240</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="project-view" class="view-section">
+            <div class="welcome-back">
+                <h2>Project Showcase</h2>
+                <p>Kumpulan project yang pernah saya buat dan kembangkan.</p>
+            </div>
+            <div id="project-container" class="stats-grid"></div>
+        </section>
+
+        <section id="donasi-view" class="view-section">
+            <div class="welcome-back">
+                <h2>Dukung Kreativitas Saya</h2>
+                <p>Jika kamu menyukai karya saya, kamu bisa memberikan dukungan di sini.</p>
+            </div>
+            <div class="card donation-card">
+                <div class="donation-icon-wrapper">
+                    <span class="donation-icon">☕</span>
+                </div>
+                <h3>Beri Dukungan Kopi</h3>
+                <p style="color: var(--text-muted); margin-bottom: 2rem; max-width: 500px;">Dukungan kamu sangat berarti untuk membantu saya tetap bersemangat ngoding dan mengeksplorasi teknologi baru.</p>
+                <div class="donation-options">
+                    <a href="#" class="donation-btn">Saweria ↗</a>
+                    <a href="#" class="donation-btn">Trakteer ↗</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="shop-view" class="view-section">
+            <div class="welcome-back">
+                <h2>Leoly Digital Shop</h2>
+                <p>Dapatkan source code premium, template UI, atau jasa kustomisasi di sini.</p>
+            </div>
+            <div id="shop-container" class="stats-grid"></div>
+        </section>
+
+        <section id="admin-view" class="view-section">
+            <div class="welcome-back">
+                <h2>Developer Control Panel</h2>
+                <p>Tempat khusus kamu untuk mengatur profil beranda, menambah project, atau produk shop secara dinamis.</p>
+            </div>
+            
+            <div class="admin-grid-layout">
+                <div class="admin-controls">
+                    <h3>Ubah Data Profil Beranda</h3>
+                    <form id="profile-form">
+                        <div class="form-group">
+                            <label for="profile-name">Nama Developer</label>
+                            <input type="text" id="profile-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-tag">Badge / Status</label>
+                            <input type="text" id="profile-tag" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-bio">Bio Singkat</label>
+                            <input type="text" id="profile-bio" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-avatar-url">URL Foto Profil</label>
+                            <input type="url" id="profile-avatar-url" placeholder="https://...">
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-banner-url">URL Background Banner</label>
+                            <input type="url" id="profile-banner-url" placeholder="https://... (Kosongkan untuk warna default)">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Simpan Perubahan Profil</button>
+                    </form>
+                </div>
+
+                <div class="admin-controls">
+                    <h3>Tambah Konten Baru</h3>
+                    <form id="content-form">
+                        <div class="form-group">
+                            <label for="form-target">Pilih Kategori Konten</label>
+                            <select id="form-target">
+                                <option value="project">Project Showcase</option>
+                                <option value="shop">Item Shop (Toko)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="content-title">Judul / Nama Item</label>
+                            <input type="text" id="content-title" placeholder="Contoh: Responsive Sidebar V2" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="content-desc">Deskripsi Singkat</label>
+                            <input type="text" id="content-desc" placeholder="Contoh: Desain minimalis transparan..." required>
+                        </div>
+                        <div class="form-group">
+                            <label for="content-image">URL Gambar / Foto Konten</label>
+                            <input type="url" id="content-image" placeholder="Contoh: https://images.unsplash.com">
+                        </div>
+                        <div class="form-group" id="price-group" style="display: none;">
+                            <label for="content-price">Harga (Khusus Item Shop)</label>
+                            <input type="text" id="content-price" placeholder="Contoh: Rp 25.000 / Free">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Suntik Konten Baru</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="login-modal" id="loginModal">
+        <div class="login-box">
+            <div class="login-header">
+                <h3>Developer Login</h3>
+                <button id="closeLogin">✕</button>
+            </div>
+            <p class="login-subtitle">Masukkan kredensial khusus developer Leoly Dev.</p>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" placeholder="Username kamu" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required>
+                </div>
+                <div id="login-error" class="error-msg">Username atau Password salah!</div>
+                <button type="submit" class="btn btn-primary">Verifikasi Akses</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

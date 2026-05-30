@@ -1,0 +1,665 @@
+/* ==========================================================================
+   1. CORE VARIABLES & RESET SYSTEM
+   ========================================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+:root {
+    --bg-main: #050507;
+    --bg-card: rgba(18, 18, 22, 0.45);
+    --bg-sidebar: rgba(10, 10, 12, 0.7);
+    --accent: #ffffff;
+    --accent-sub: #a1a1aa;
+    --text-main: #f4f4f5;
+    --text-muted: #71717a;
+    --border: rgba(255, 255, 255, 0.05);
+    --border-hover: rgba(255, 255, 255, 0.12);
+    --smooth-blur: blur(24px);
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Ambient Background Orbs */
+.glow-orb {
+    position: fixed;
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.015);
+    filter: blur(100px);
+    z-index: -1;
+    pointer-events: none;
+}
+.orb-1 { top: -10%; left: -10%; }
+.orb-2 { bottom: 10%; right: -5%; background: rgba(255, 255, 255, 0.01); }
+
+
+/* ==========================================================================
+   2. HEADER & MAIN NAVBAR
+   ========================================================================== */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(5, 5, 7, 0.6);
+    backdrop-filter: var(--smooth-blur);
+    z-index: 90;
+}
+
+.logo-area h1 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    color: var(--text-main);
+}
+.logo-dot { color: #f4f4f5; }
+.logo-sub {
+    color: var(--text-muted);
+    font-weight: 400;
+    font-size: 1.1rem;
+    margin-left: 1px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+/* Tombol Menu Utama Minimalis dengan Ikon */
+.menu-toggle {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-hover);
+    transform: scale(1.05);
+}
+
+/* Badges Status */
+.role-badge {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 100px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+.role-badge.guest {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+.role-badge.developer {
+    background: rgba(255, 255, 255, 0.95);
+    color: #000000;
+}
+
+
+/* ==========================================================================
+   3. FLOATING GLASS SIDEBAR SYSTEM
+   ========================================================================== */
+nav {
+    position: fixed;
+    top: 0;
+    right: -300px;
+    width: 300px;
+    height: 100vh;
+    background: var(--bg-sidebar);
+    backdrop-filter: var(--smooth-blur);
+    -webkit-backdrop-filter: var(--smooth-blur);
+    border-left: 1px solid var(--border);
+    padding: 2.5rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    z-index: 100;
+    transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+nav.active { right: 0; }
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.sidebar-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.12em;
+}
+
+/* Tombol Tutup Menu */
+.close-sidebar {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+.close-sidebar:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-hover);
+}
+
+.nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    list-style: none;
+}
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1rem;
+    color: var(--text-muted);
+    border-radius: 12px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+.nav-item:hover, .nav-item.active {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-main);
+}
+
+/* Penyelarasan Ikon Native Sidebar */
+.nav-icon {
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: inline-block;
+    width: 24px;
+    text-align: center;
+    color: var(--text-muted);
+    transition: color 0.25s ease;
+}
+.nav-item:hover .nav-icon, 
+.nav-item.active .nav-icon {
+    color: var(--text-main);
+}
+
+.menu-divider {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.2);
+    letter-spacing: 0.1em;
+    margin: 1.5rem 0 0.5rem 1rem;
+    list-style: none;
+}
+.nav-item.locked { opacity: 0.4; cursor: not-allowed; }
+.lock-icon { margin-left: auto; font-size: 0.85rem; color: var(--text-muted); }
+
+/* Kotak Otentikasi Sidebar */
+.role-switcher-box {
+    margin-top: auto;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    padding: 1.25rem;
+    border-radius: 16px;
+}
+.role-switcher-box p {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+.btn-role {
+    width: 100%;
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 0.65rem;
+    font-size: 0.85rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.btn-role:hover {
+    background: var(--text-main);
+    color: #000000;
+}
+
+
+/* ==========================================================================
+   4. LAYOUT SYSTEM & VIEWS SPA
+   ========================================================================== */
+main {
+    flex: 1;
+    padding: 2.5rem 2rem;
+    max-width: 1140px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.view-section { display: none; }
+.view-section.active {
+    display: block;
+    animation: smoothFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes smoothFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome-back { margin-bottom: 2.5rem; }
+.welcome-back h2 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.35rem; }
+.welcome-back p { color: var(--text-muted); font-size: 0.95rem; }
+
+
+/* ==========================================================================
+   5. GRID LAYOUT & CARDS (PROJECT & SHOP)
+   ========================================================================== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    backdrop-filter: var(--smooth-blur);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    min-height: 380px;
+}
+.card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.card-img-wrapper {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.card-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    font-weight: 500;
+}
+.card-header span { color: var(--text-main); font-size: 1.05rem; font-weight: 600; }
+.card-value { font-size: 2.25rem; font-weight: 700; letter-spacing: -0.04em; }
+
+
+/* ==========================================================================
+   6. LIVE CRUD CONTROLS (DELETE BUTTON)
+   ========================================================================== */
+.btn-delete-item {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 69, 58, 0.85);
+    border: none;
+    color: #fff;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.2s ease;
+}
+.card:hover .btn-delete-item {
+    opacity: 1;
+    transform: translateY(0);
+}
+.btn-delete-item:hover {
+    background: #ff453a;
+    box-shadow: 0 4px 12px rgba(255, 69, 58, 0.3);
+}
+
+
+/* ==========================================================================
+   7. DONATION VIEW SPECIFIC
+   ========================================================================== */
+.donation-card { align-items: center; text-align: center; padding: 4rem 2rem; }
+.donation-icon-wrapper {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+.donation-icon { font-size: 2rem; }
+.donation-options { display: flex; gap: 1rem; width: 100%; max-width: 420px; }
+.donation-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.85rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    text-decoration: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.donation-btn:hover { background: var(--text-main); color: #000000; }
+
+
+/* ==========================================================================
+   8. ADMIN FORMS & INPUT CONTROLS
+   ========================================================================== */
+.admin-controls {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 2rem;
+}
+.admin-controls h3 { font-size: 1.2rem; margin-bottom: 1.5rem; font-weight: 600; }
+
+.form-group { margin-bottom: 1.5rem; }
+.form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem; font-weight: 500; }
+.form-group input, .form-group select {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border);
+    padding: 0.9rem 1.1rem;
+    border-radius: 12px;
+    color: var(--text-main);
+    font-size: 0.92rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+.form-group input:focus, .form-group select:focus {
+    border-color: var(--text-muted);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.btn {
+    padding: 0.9rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    border: none;
+}
+.btn-primary { background: var(--text-main); color: #000000; }
+.btn-primary:hover { opacity: 0.9; }
+
+
+/* ==========================================================================
+   9. MODAL SECURITY OVERLAY
+   ========================================================================== */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 95;
+    display: none;
+}
+.sidebar-overlay.active { display: block; }
+
+.login-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(16px);
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.login-modal.show { opacity: 1; pointer-events: auto; }
+
+.login-box {
+    background: rgba(20, 20, 25, 0.8);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 400px;
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    transform: scale(0.95);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.login-modal.show .login-box { transform: scale(1); }
+
+.login-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.login-header h3 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
+#closeLogin { background: none; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer; }
+
+.login-subtitle { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 2rem; }
+.error-msg {
+    color: #ff453a;
+    font-size: 0.85rem;
+    margin-bottom: 1.25rem;
+    display: none;
+    background: rgba(255, 69, 58, 0.08);
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 69, 58, 0.15);
+}
+
+
+/* ==========================================================================
+   10. SYSTEM NOTIFICATION TOAST
+   ========================================================================== */
+.toast-notif {
+    position: fixed;
+    bottom: -60px;
+    right: 2rem;
+    background: rgba(20, 20, 25, 0.85);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    color: var(--text-main);
+    padding: 1rem 1.5rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 999;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+}
+.toast-notif.show { bottom: 2rem; }
+.toast-notif.error { border-color: rgba(255, 69, 58, 0.3); background: rgba(30, 10, 10, 0.85); color: #ff453a; }
+.toast-notif.info { border-color: rgba(255, 255, 255, 0.15); }
+
+
+/* ==========================================================================
+   11. BERANDA HERO GRID SYSTEM
+   ========================================================================== */
+.beranda-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1.75rem;
+    align-items: stretch; /* Mengisi tinggi secara merata agar simetris */
+}
+
+/* Bagian Profil Kiri */
+.profile-card-v2 {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    overflow: hidden;
+    backdrop-filter: var(--smooth-blur);
+    padding-bottom: 2rem;
+}
+.p-banner {
+    height: 120px;
+    background: linear-gradient(135deg, #121214 0%, #1a1a1e 100%);
+    border-bottom: 1px solid var(--border);
+}
+.p-avatar-area {
+    margin-top: -45px;
+    padding: 0 2rem;
+}
+.p-avatar-area img {
+    width: 90px;
+    height: 90px;
+    border-radius: 20px;
+    border: 5px solid #050507;
+    object-fit: cover;
+    background: #18181b;
+}
+.p-details {
+    padding: 1.25rem 2rem 0 2rem;
+}
+.p-details h3 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.25rem;
+}
+.p-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent-sub);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    padding: 0.3rem 0.75rem;
+    border-radius: 30px;
+    margin-bottom: 1.25rem;
+}
+.p-bio {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+/* Bagian Kanan (Quick Actions Area Only) */
+.server-status-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 2rem;
+    backdrop-filter: var(--smooth-blur);
+    display: flex;
+    align-items: center; /* Sejajarkan menu kontrol di tengah tinggi kartu */
+    justify-content: center;
+}
+.card-title-mini {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.12em;
+    margin-bottom: 1.25rem;
+    text-align: center;
+}
+.quick-action-area {
+    width: 100%;
+}
+.action-buttons-flex {
+    display: flex;
+    flex-direction: column; /* Ubah ke susunan vertikal agar lebih kokoh dan minimalis */
+    gap: 0.85rem;
+}
+.action-btn-item {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border-radius: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    transition: all 0.2s ease;
+}
+.action-btn-item:hover {
+    background: var(--text-main);
+    color: #000;
+    border-color: var(--text-main);
+}
+.action-icon {
+    font-weight: bold;
+}
+
+/* Responsive Mobile Breakpoint */
+@media (max-width: 768px) {
+    .beranda-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
