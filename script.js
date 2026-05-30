@@ -115,8 +115,8 @@ const profileForm = document.getElementById('profile-form');
 const profileNameInput = document.getElementById('profile-name');
 const profileTagInput = document.getElementById('profile-tag');
 const profileBioInput = document.getElementById('profile-bio');
-const profileAvatarInput = document.getElementById('profile-avatar-url');
-const profileBannerInput = document.getElementById('profile-banner-url');
+const profileAvatarInput = document.getElementById('profile-avatar-url'); // Input file lokal avatar
+const profileBannerInput = document.getElementById('profile-banner-url'); // Input file lokal banner
 
 const displayName = document.getElementById('display-name');
 const displayTag = document.getElementById('display-tag');
@@ -125,7 +125,7 @@ const displayAvatar = document.getElementById('display-avatar');
 const displayBanner = document.getElementById('display-banner');
 
 // ==========================================================================
-// 5. SISTEM KENDALI SIDEBAR & NAVIGASI
+// 5. SISTEM KENDALI SIDEBAR & NAVIGASI (FLOATING RIGHT EFFECT)
 // ==========================================================================
 function toggleSidebar(open) {
     if (open) {
@@ -237,7 +237,6 @@ loginForm.addEventListener('submit', (e) => {
 // 7. OPERASI CRUD (CREATE, READ, DELETE) & CLEAR FITUR
 // ==========================================================================
 
-// Menghapus data Project
 function deleteProject(index) {
     if(confirm("Hapus project ini dari showcase?")) {
         projectsData.splice(index, 1);
@@ -247,7 +246,6 @@ function deleteProject(index) {
     }
 }
 
-// Menghapus data Produk Shop
 function deleteShopItem(index) {
     if(confirm("Hapus produk ini dari toko?")) {
         shopData.splice(index, 1);
@@ -257,7 +255,6 @@ function deleteShopItem(index) {
     }
 }
 
-// Menghapus satu tiket satuan (Selesai)
 function deleteMessage(index) {
     if(confirm("Tandai tiket ini sebagai SELESAI?")) {
         messagesData.splice(index, 1);
@@ -267,7 +264,6 @@ function deleteMessage(index) {
     }
 }
 
-// Bersihkan Semua Tiket Sekaligus (Fitur Baru)
 function clearAllMessages() {
     if (messagesData.length === 0) {
         showToast("Kotak masuk sudah bersih!", "info");
@@ -282,7 +278,6 @@ function clearAllMessages() {
     }
 }
 
-// Form kirim tiket bantuan (Public)
 helpForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const contactInput = document.getElementById('help-email');
@@ -303,7 +298,6 @@ helpForm.addEventListener('submit', (e) => {
     document.querySelector('[data-target="beranda-view"]').click();
 });
 
-// Form tambah konten baru (Project / Shop)
 formTarget.addEventListener('change', () => {
     if (formTarget.value === 'shop') {
         priceGroup.style.display = 'block';
@@ -346,59 +340,63 @@ contentForm.addEventListener('submit', (e) => {
 });
 
 // ==========================================================================
-// 8. UPDATE DATA PROFIL & REAL-TIME MANIPULASI DOM (FIXED URL)
+// 8. UPDATE DATA PROFIL DENGAN FOTO LOKAL (FILE READER TO BASE64)
 // ==========================================================================
-profileForm.addEventListener('submit', (e) => {
+profileForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Tarik nilai langsung saat event submit dipicu
     const inputNama = profileNameInput.value.trim();
     const inputTag = profileTagInput.value.trim();
     const inputBio = profileBioInput.value.trim();
-    const inputAvatar = profileAvatarInput.value.trim(); 
-    const inputBanner = profileBannerInput.value.trim(); 
     
-    // Tulis ke dalam database object state
     profileData.name = inputNama;
     profileData.tag = inputTag;
     profileData.bio = inputBio;
-    profileData.avatar = inputAvatar; 
-    profileData.banner = inputBanner; 
-    
-    // Kunci langsung ke dalam LocalStorage
-    localStorage.setItem('leoly_profile', JSON.stringify(profileData));
-    
-    // Force Direct Inject DOM untuk menghindari delay/cache browser mobile
-    displayName.textContent = inputNama;
-    displayTag.textContent = inputTag;
-    displayBio.textContent = inputBio;
-    
-    if (inputAvatar !== "") {
-        displayAvatar.src = inputAvatar;
-    } else {
-        displayAvatar.src = DEFAULT_AVATAR_IMG;
-    }
-    
-    if (inputBanner !== "") {
-        displayBanner.style.backgroundImage = `url('${inputBanner}')`;
-    } else {
-        displayBanner.style.backgroundImage = `url('${DEFAULT_BANNER_IMG}')`;
-    }
-    
-    renderHubContent();
-    showToast("Profil dan aset visual berhasil diperbarui!");
-    document.querySelector('[data-target="beranda-view"]').click();
+
+    // Fungsi membaca data biner file gambar lokal menjadi teks string base64
+    const readAndSaveFile = (fileInput, storageKey) => {
+        return new Promise((resolve) => {
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    profileData[storageKey] = event.target.result; 
+                    resolve();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                resolve(); // Lewati jika tidak ada file lokal baru dipilih
+            }
+        });
+    };
+
+    // Jalankan konversi file bertingkat secara pararel (Avatar & Banner)
+    Promise.all([
+        readAndSaveFile(profileAvatarInput, 'avatar'),
+        readAndSaveFile(profileBannerInput, 'banner')
+    ]).then(() => {
+        // Simpan state final gabungan ke LocalStorage
+        localStorage.setItem('leoly_profile', JSON.stringify(profileData));
+        
+        // Render ulang DOM halaman agar perubahan langsung kelihatan
+        renderHubContent();
+        
+        showToast("Profil dan file gambar lokal berhasil diperbarui!");
+        document.querySelector('[data-target="beranda-view"]').click();
+        profileForm.reset(); // Reset form upload file agar bersih kembali
+    });
 });
 
 // ==========================================================================
 // 9. FUNGSIONAL RENDER SEKALIGUS REFRESH ANTARMUKA
 // ==========================================================================
 function renderHubContent() {
-    // Render Profil Utama
+    // Render teks data profil utama
     displayName.textContent = profileData.name;
     displayTag.textContent = profileData.tag;
     displayBio.textContent = profileData.bio;
     
+    // Render file gambar avatar lokal/default
     if (profileData.avatar && profileData.avatar.trim() !== "") {
         displayAvatar.src = profileData.avatar;
     } else {
@@ -406,27 +404,26 @@ function renderHubContent() {
     }
     displayAvatar.onerror = function() { this.src = DEFAULT_AVATAR_IMG; };
     
+    // Render file gambar background banner lokal/default
     if (profileData.banner && profileData.banner.trim() !== "") {
         displayBanner.style.backgroundImage = `url('${profileData.banner}')`;
     } else {
         displayBanner.style.backgroundImage = `url('${DEFAULT_BANNER_IMG}')`;
     }
 
-    // Kembalikan isi data objek ke input control di panel admin agar tidak kosong
+    // Set nilai text input form control panel admin agar sinkron
     profileNameInput.value = profileData.name;
     profileTagInput.value = profileData.tag;
     profileBioInput.value = profileData.bio;
-    profileAvatarInput.value = profileData.avatar;
-    profileBannerInput.value = profileData.banner;
 
-    // Sinkronisasi Data Statistik Angka Dashboard
+    // Sinkronisasi Angka Statistik Counter Panel Utama
     if (document.getElementById('count-projects')) {
         document.getElementById('count-projects').textContent = projectsData.length;
         document.getElementById('count-shop').textContent = shopData.length;
         document.getElementById('count-messages').textContent = messagesData.length;
     }
 
-    // Sinkronisasi Visual Keaktifan Tombol Clear Tiket
+    // Mengatur transparansi opacity tombol pembersih tiket otomatis
     if (btnClearMessages) {
         if (messagesData.length === 0) {
             btnClearMessages.style.opacity = "0.5";
@@ -439,7 +436,7 @@ function renderHubContent() {
 
     const isDev = (currentUserRole === "developer");
 
-    // Render Grid Tab Project
+    // Render Grid Tab Project Showcase List
     projectContainer.innerHTML = '';
     projectsData.forEach((proj, idx) => {
         const item = document.createElement('div');
@@ -459,7 +456,7 @@ function renderHubContent() {
         projectContainer.appendChild(item);
     });
 
-    // Render Grid Tab Shop
+    // Render Grid Tab Shop Digital Item List
     shopContainer.innerHTML = '';
     shopData.forEach((prod, idx) => {
         const item = document.createElement('div');
@@ -481,7 +478,7 @@ function renderHubContent() {
         shopContainer.appendChild(item);
     });
 
-    // Render Data Baris Tabel Inbox Help Center
+    // Render Data Row Baris Tabel List Inbox Tiket Bantuan
     adminMessagesList.innerHTML = '';
     if (messagesData.length === 0) {
         adminMessagesList.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 2rem;">Kotak masuk kosong. Tidak ada tiket bantuan aktif.</td></tr>`;
@@ -509,6 +506,6 @@ window.deleteShopItem = deleteShopItem;
 window.deleteMessage = deleteMessage;
 window.clearAllMessages = clearAllMessages;
 
-// RUN ON BOOTING LOADING FIRST
+// RUN ON BOOTING INITIAL LOADING FIRST TIME
 updateAuthUI();
 renderHubContent();

@@ -1,332 +1,518 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leoly Dev - Personal Hub</title>
-    
-    <!-- Google Fonts: Plus Jakarta Sans -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="style.css">
+    <title>Leoly Hub - Server Info Dashboard</title>
+    <style>
+        /* Desain Dasar Tema Black & White / Minimalist Glassmorphism */
+        :root {
+            --bg-main: #0a0a0a;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #a0a0a0;
+            --accent: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* --- LAYOUT HEADER & HERO BANNER --- */
+        .hero-banner {
+            width: 100%;
+            height: 220px;
+            background-size: cover;
+            background-position: center;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .profile-section {
+            max-width: 800px;
+            margin: -60px auto 2rem auto;
+            padding: 0 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            z-index: 5;
+        }
+
+        .avatar-wrapper {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid var(--bg-main);
+            background: #222;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+
+        .avatar-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-info h1 {
+            font-size: 1.8rem;
+            margin-top: 0.75rem;
+            font-weight: 700;
+        }
+
+        .role-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            padding: 3px 12px;
+            border-radius: 20px;
+            margin-top: 0.25rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .role-badge.guest { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+        .role-badge.developer { background: #fff; color: #000; }
+
+        .profile-bio {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 600px;
+            margin-top: 0.75rem;
+            line-height: 1.5;
+        }
+
+        /* --- NAVIGATION BUTTON MENU BAR --- */
+        .nav-bar-container {
+            max-width: 800px;
+            margin: 0 auto 2rem auto;
+            padding: 0 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            background: transparent;
+            color: #fff;
+            border: 1px solid var(--border);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        .btn:hover { background: #fff; color: #000; }
+        .btn-primary { background: #fff; color: #000; font-weight: 600; }
+        .btn-primary:hover { background: rgba(255,255,255,0.9); }
+
+        /* --- FLOATING RIGHT SIDEBAR --- */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 280px;
+            height: 100%;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-left: 1px solid var(--border);
+            z-index: 100;
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar.active { right: 0; }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            z-index: 99;
+            display: none;
+        }
+        .overlay.active { display: block; }
+
+        .nav-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.locked .lock-icon { margin-left: auto; font-size: 0.8rem; }
+        .nav-item.locked { display: flex; align-items: center; }
+
+        /* --- MAIN VIEW CONTAINER SPA --- */
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto 5rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* GRID CARDS */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .card-img-wrapper {
+            width: 100%;
+            height: 160px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            background: #151515;
+        }
+
+        .card-preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        /* --- ADMIN FORM CONTROL --- */
+        .admin-controls {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .form-group input[type="file"] { padding: 0.5rem; }
+
+        /* TABLE MESSAGES INBOX */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+        th { color: var(--text-muted); font-weight: 600; }
+
+        /* TOAST & MODAL */
+        .toast-notif {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #fff;
+            color: #000;
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast-notif.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast-notif.error { background: #ff4444; color: #fff; }
+        .toast-notif.info { background: #333; color: #fff; border: 1px solid #444; }
+
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .modal.show { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background: #0d0d0d;
+            border: 1px solid var(--border);
+            width: 90%; max-width: 400px;
+            padding: 2rem; border-radius: 16px;
+            position: relative;
+        }
+
+        .btn-delete-item {
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(255,68,68,0.9); color: #fff;
+            border: none; padding: 4px 8px; border-radius: 4px;
+            font-size: 0.75rem; cursor: pointer;
+        }
+        .btn-table-action {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+            color: #fff; padding: 4px 10px; border-radius: 6px; cursor: pointer;
+        }
+        .btn-table-action:hover { background: #fff; color: #000; }
+    </style>
 </head>
 <body>
 
-    <!-- BLUR AMBIENT BACKGROUND GLOWS -->
-    <div class="glow-orb orb-1"></div>
-    <div class="glow-orb orb-2"></div>
+    <div class="hero-banner" id="display-banner"></div>
 
-    <!-- SIDEBAR OVERLAY -->
-    <div class="sidebar-overlay" id="overlay"></div>
-
-    <!-- MAIN NAVBAR -->
-    <header>
-        <div class="logo-area">
-            <h1>Leoly<span class="logo-dot">.</span><span class="logo-sub">dev</span></h1>
+    <div class="profile-section">
+        <div class="avatar-wrapper">
+            <img id="display-avatar" src="" alt="Avatar">
         </div>
-        <div class="header-actions">
+        <div class="profile-info">
+            <h1 id="display-name">Leoly.dev</h1>
             <span id="role-indicator" class="role-badge guest">Guest Mode</span>
-            <button class="menu-toggle" id="openMenu" aria-label="Buka Menu">☰</button>
+            <p id="display-tag" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Mobile Developer</p>
         </div>
-    </header>
+        <p class="profile-bio" id="display-bio">Loading...</p>
+    </div>
 
-    <!-- FLOATING GLASS SIDEBAR -->
-    <nav id="sidebar">
-        <div class="sidebar-header">
-            <span class="sidebar-title">NAVIGASI CONTROL</span>
-            <button class="close-sidebar" id="closeMenu">✕</button>
-        </div>
-        
-        <ul class="nav-links">
-            <li>
-                <div class="nav-item active" data-target="beranda-view">
-                    <span class="nav-icon">⌂</span> Beranda
-                </div>
-            </li>
-            <li>
-                <div class="nav-item" data-target="dashboard-view">
-                    <span class="nav-icon">⚄</span> Dashboard
-                </div>
-            </li>
-            <li>
-                <div class="nav-item" data-target="project-view">
-                    <span class="nav-icon">⟨/⟩</span> Project
-                </div>
-            </li>
-            <li>
-                <div class="nav-item" data-target="donasi-view">
-                    <span class="nav-icon">♡</span> Donasi
-                </div>
-            </li>
-            <li>
-                <div class="nav-item" data-target="shop-view">
-                    <span class="nav-icon">🛒</span> Shop
-                </div>
-            </li>
-            <li>
-                <div class="nav-item" data-target="help-view">
-                    <span class="nav-icon">❓</span> Help Center
-                </div>
-            </li>
-            
-            <li class="menu-divider">Developer Access</li>
-            
-            <li>
-                <div class="nav-item locked" data-target="admin-view" id="menu-admin">
-                    <span class="nav-icon">⚙</span> Admin Panel <span class="lock-icon">🔒</span>
-                </div>
-            </li>
-        </ul>
+    <div class="nav-bar-container">
+        <button class="btn" id="openMenu">☰ Open Menu</button>
+        <span style="font-weight: 700; font-size: 1.1rem; letter-spacing: 1px;">LEOLY HUB</span>
+        <button class="btn btn-primary" onclick="document.querySelector('[data-target=\'help-view\']').click()">Hubungi Dev</button>
+    </div>
 
-        <div class="role-switcher-box">
-            <p id="auth-box-desc">Ingin mengelola konten web?</p>
-            <button id="btn-auth-action" class="btn-role">Sign In Developer</button>
-        </div>
-    </nav>
+    <main class="main-content">
 
-    <!-- MAIN SYSTEM VIEW CONTAINER -->
-    <main>
-        
-        <!-- 1. VIEW BERANDA (CLEAN HERO SPLIT LAYOUT) -->
-        <section id="beranda-view" class="view-section active">
-            <div class="welcome-back">
-                <h2>Workspace Hub</h2>
-                <p>Selamat datang kembali di pusat kendali informasi dan pengembangan proyek.</p>
-            </div>
-            
-            <div class="beranda-grid">
-                <!-- SISI KIRI: PROFILE CARD PREMIUM -->
-                <div class="profile-card-v2">
-                    <div class="p-banner" id="display-banner"></div>
-                    <div class="p-avatar-area">
-                        <img id="display-avatar" src="" alt="Avatar">
-                    </div>
-                    <div class="p-details">
-                        <h3 id="display-name">Leoly<span class="logo-dot">.</span>dev</h3>
-                        <span class="p-badge" id="display-tag">Mobile-Based Developer</span>
-                        <p class="p-bio" id="display-bio">Fokus membangun antarmuka web interaktif yang bersih, minimalis, dan nyaman dipandang dengan optimasi kode modern.</p>
-                    </div>
+        <section class="view-section active" id="beranda-view">
+            <h2>Ringkasan Server Dashboard</h2>
+            <div class="grid-container" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 2rem;">
+                <div class="card" style="text-align: center; padding: 1.5rem;">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">Total Project</span>
+                    <h2 style="font-size: 2.5rem;" id="count-projects">0</h2>
                 </div>
-
-                <!-- SISI KANAN: QUICK ACTIONS CARD ONLY -->
-                <div class="server-status-card">
-                    <div class="quick-action-area" style="border-top: none; padding-top: 0;">
-                        <div class="card-title-mini">QUICK NAVIGATION</div>
-                        <div class="action-buttons-flex">
-                            <button class="action-btn-item" onclick="document.querySelector('[data-target=\'project-view\']').click();">
-                                <span class="action-icon">⟩</span> Lihat Proyek
-                            </button>
-                            <button class="action-btn-item" onclick="document.querySelector('[data-target=\'help-view\']').click();">
-                                <span class="action-icon">❓</span> Butuh Bantuan?
-                            </button>
-                        </div>
-                    </div>
+                <div class="card" style="text-align: center; padding: 1.5rem;">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">Item Toko Digital</span>
+                    <h2 style="font-size: 2.5rem;" id="count-shop">0</h2>
+                </div>
+                <div class="card" style="text-align: center; padding: 1.5rem;">
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">Tiket Masuk Active</span>
+                    <h2 style="font-size: 2.5rem;" id="count-messages">0</h2>
                 </div>
             </div>
+            <p style="color:var(--text-muted); line-height: 1.6;">Gunakan menu navigasi di pojok kiri atas untuk melihat showcase portofolio, mendownload slicing kit modular pada menu shop, atau masuk ke panel admin pengelola.</p>
         </section>
 
-        <!-- 2. VIEW DASHBOARD -->
-        <section id="dashboard-view" class="view-section">
-            <div class="welcome-back">
-                <h2>Statistik & Aktivitas</h2>
-                <p>Rangkuman performa project dan interaksi publik.</p>
-            </div>
-            <div class="stats-grid">
-                <div class="card stat-card">
-                    <div class="card-header"><span>Total Project</span></div>
-                    <div class="card-value" id="count-projects">0</div>
-                </div>
-                <div class="card stat-card">
-                    <div class="card-header"><span>Item di Toko</span></div>
-                    <div class="card-value" id="count-shop">0</div>
-                </div>
-                <div class="card stat-card">
-                    <div class="card-header"><span>Pesan / Tiket Masuk</span></div>
-                    <div class="card-value" id="count-messages">0</div>
-                </div>
-            </div>
+        <section class="view-section" id="project-view">
+            <h2>Showcase Konten Project</h2>
+            <div class="grid-container" id="project-container"></div>
         </section>
 
-        <!-- 3. VIEW PROJECT -->
-        <section id="project-view" class="view-section">
-            <div class="welcome-back">
-                <h2>Project Showcase</h2>
-                <p>Kumpulan project yang pernah saya buat dan kembangkan.</p>
-            </div>
-            <div id="project-container" class="stats-grid"></div>
+        <section class="view-section" id="shop-view">
+            <h2>Toko File UI Kit</h2>
+            <div class="grid-container" id="shop-container"></div>
         </section>
 
-        <!-- 4. VIEW DONASI -->
-        <section id="donasi-view" class="view-section">
-            <div class="welcome-back">
-                <h2>Dukung Kreativitas Saya</h2>
-                <p>Jika kamu menyukai karya saya, kamu bisa memberikan dukungan di sini.</p>
-            </div>
-            <div class="card donation-card">
-                <div class="donation-icon-wrapper">
-                    <span class="donation-icon">☕</span>
-                </div>
-                <h3>Beri Dukungan Kopi</h3>
-                <p style="color: var(--text-muted); margin-bottom: 2rem; max-width: 500px;">Dukungan kamu sangat berarti untuk membantu saya tetap bersemangat ngoding dan mengeksplorasi teknologi baru.</p>
-                <div class="donation-options">
-                    <a href="#" class="donation-btn">Saweria ↗</a>
-                    <a href="#" class="donation-btn">Trakteer ↗</a>
-                </div>
-            </div>
-        </section>
-
-        <!-- 5. VIEW SHOP -->
-        <section id="shop-view" class="view-section">
-            <div class="welcome-back">
-                <h2>Leoly Digital Shop</h2>
-                <p>Dapatkan source code premium, template UI, atau jasa kustomisasi di sini.</p>
-            </div>
-            <div id="shop-container" class="stats-grid"></div>
-        </section>
-
-        <!-- 6. VIEW HELP CENTER (FOR PUBLIC/GUEST) -->
-        <section id="help-view" class="view-section">
-            <div class="welcome-back">
-                <h2>Help Center & Support</h2>
-                <p>Mengalami kendala pada server atau butuh bantuan teknis? Kirim pesan langsung ke pengembang.</p>
-            </div>
-            
-            <div class="admin-controls" style="max-width: 600px; margin: 0 auto;">
-                <h3>Kirim Tiket Bantuan</h3>
+        <section class="view-section" id="help-view">
+            <h2>Kirim Tiket / Aduan Layanan</h2>
+            <div class="admin-controls" style="margin-top: 1rem;">
                 <form id="help-form">
                     <div class="form-group">
-                        <label for="help-email">Alamat Email / Kontak Discord</label>
-                        <input type="text" id="help-email" placeholder="Contoh: user#1234 atau email@kamu.com" required>
+                        <label for="help-email">Kontak / Nickname Discord / Email</label>
+                        <input type="text" id="help-email" placeholder="Contoh: Leoly#1234" required>
                     </div>
                     <div class="form-group">
-                        <label for="help-subject">Subjek Masalah</label>
-                        <input type="text" id="help-subject" placeholder="Contoh: Bug Sidebar Error / Pertanyaan Jasa" required>
+                        <label for="help-subject">Subjek Kendala</label>
+                        <input type="text" id="help-subject" placeholder="Akses premium macet / Request script" required>
                     </div>
                     <div class="form-group">
-                        <label for="help-message">Detail Pesan Masalah</label>
-                        <textarea id="help-message" rows="5" placeholder="Tuliskan secara detail agar developer mudah memahami..." required></textarea>
+                        <label for="help-message">Detail Informasi</label>
+                        <textarea id="help-message" rows="4" placeholder="Tulis rincian keluhan kamu di sini..." required></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary">Kirimkan Tiket Pengaduan</button>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Kirim Tiket Sekarang</button>
                 </form>
             </div>
         </section>
 
-        <!-- 7. VIEW ADMIN PANEL (PROTECTED) -->
-        <section id="admin-view" class="view-section">
-            <div class="welcome-back">
-                <h2>Developer Control Panel</h2>
-                <p>Tempat khusus kamu untuk mengatur profil beranda, menambah project, atau produk shop secara dinamis.</p>
-            </div>
-            
-            <div class="admin-grid-layout">
-                <!-- FORMULIR UPDATE PROFIL BERANDA -->
-                <div class="admin-controls">
-                    <h3>Ubah Data Profil Beranda</h3>
-                    <form id="profile-form">
-                        <div class="form-group">
-                            <label for="profile-name">Nama Developer</label>
-                            <input type="text" id="profile-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="profile-tag">Badge / Status</label>
-                            <input type="text" id="profile-tag" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="profile-bio">Bio Singkat</label>
-                            <input type="text" id="profile-bio" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="profile-avatar-url">URL Foto Profil</label>
-                            <input type="url" id="profile-avatar-url" placeholder="https://... (Kosongkan untuk foto default)">
-                        </div>
-                        <div class="form-group">
-                            <label for="profile-banner-url">URL Background Banner</label>
-                            <input type="url" id="profile-banner-url" placeholder="https://... (Kosongkan untuk background default)">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Simpan Perubahan Profil</button>
-                    </form>
-                </div>
+        <section class="view-section" id="admin-view">
+            <h2>Developer Admin Control</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">Kelola seluruh konten visual database web pribadi.</p>
 
-                <!-- FORMULIR TAMBAH KONTEN KARTU -->
-                <div class="admin-controls">
-                    <h3>Tambah Konten Baru</h3>
-                    <form id="content-form">
-                        <div class="form-group">
-                            <label for="form-target">Pilih Kategori Konten</label>
-                            <select id="form-target">
-                                <option value="project">Project Showcase</option>
-                                <option value="shop">Item Shop (Toko)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="content-title">Judul / Nama Item</label>
-                            <input type="text" id="content-title" placeholder="Contoh: Responsive Sidebar V2" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="content-desc">Deskripsi Singkat</label>
-                            <input type="text" id="content-desc" placeholder="Contoh: Desain minimalis transparan..." required>
-                        </div>
-                        <div class="form-group">
-                            <label for="content-image">URL Gambar / Foto Konten</label>
-                            <input type="url" id="content-image" placeholder="Contoh: https://images.unsplash.com">
-                        </div>
-                        <div class="form-group" id="price-group" style="display: none;">
-                            <label for="content-price">Harga (Khusus Item Shop)</label>
-                            <input type="text" id="content-price" placeholder="Contoh: Rp 25.000 / Free">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Suntik Konten Baru</button>
-                    </form>
-                </div>
+            <div class="admin-controls">
+                <h3>Ubah Data Profil Beranda</h3>
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="profile-name">Nama Developer</label>
+                        <input type="text" id="profile-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-tag">Badge / Status</label>
+                        <input type="text" id="profile-tag" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-bio">Bio Singkat</label>
+                        <input type="text" id="profile-bio" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-avatar-url">Unggah Foto Profil Lokal</label>
+                        <input type="file" id="profile-avatar-url" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-banner-url">Unggah Background Banner Lokal</label>
+                        <input type="file" id="profile-banner-url" accept="image/*">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan Profil</button>
+                </form>
             </div>
 
-            <!-- TABEL INBOX HELP CENTER -->
-            <div class="admin-controls" style="margin-top: 2rem;">
-                <div class="inbox-header-flex">
-                    <h3>Daftar Tiket Help Center Masuk</h3>
-                    <!-- TOMBOL BERSIHKAN TIKET (BARU) -->
-                    <button id="btn-clear-messages" class="btn-clear-all" onclick="clearAllMessages()">🧹 Bersihkan Semua Tiket</button>
+            <div class="admin-controls">
+                <h3>Tambah Item Showcase Baru</h3>
+                <form id="content-form">
+                    <div class="form-group">
+                        <label for="form-target">Kategori Upload</label>
+                        <select id="form-target">
+                            <option value="project">Project Portofolio</option>
+                            <option value="shop">Produk Toko Digital</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="content-title">Judul Item</label>
+                        <input type="text" id="content-title" required>
+                    </div>
+                    <div class="form-group" id="price-group" style="display: none;">
+                        <label for="content-price">Harga (Khusus Toko)</label>
+                        <input type="text" id="content-price" placeholder="Rp 25.000 / Free">
+                    </div>
+                    <div class="form-group">
+                        <label for="content-desc">Deskripsi Informasi</label>
+                        <input type="text" id="content-desc" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="content-image">URL Gambar Thumbnail Konten</label>
+                        <input type="url" id="content-image" placeholder="https://unsplash.com/xxx.jpg">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Publish Item Baru</button>
+                </form>
+            </div>
+
+            <div class="admin-controls">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>Kotak Masuk Tiket Bantuan</h3>
+                    <button class="btn" id="btn-clear-messages" onclick="clearAllMessages()" style="border-color: rgba(255,68,68,0.4); color: #ff4444; padding: 4px 12px; font-size: 0.8rem;">🧹 Bersihkan Semua</button>
                 </div>
-                <div class="table-container" style="overflow-x: auto; margin-top: 1rem;">
-                    <table class="admin-inbox-table">
+                <div class="table-wrapper">
+                    <table>
                         <thead>
                             <tr>
-                                <th>Kontak Pengirim</th>
-                                <th>Subjek Masalah</th>
-                                <th>Detail Isi Pesan</th>
-                                <th>Aksi Kendali</th>
+                                <th>Kontak</th>
+                                <th>Subjek</th>
+                                <th>Isi Pesan</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-messages-list">
-                            <!-- Injeksi pesan dinamis dari JS -->
-                        </tbody>
+                        <tbody id="admin-messages-list"></tbody>
                     </table>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- FLOATING PREMIUM GLASS LOGIN MODAL -->
-    <div class="login-modal" id="loginModal">
-        <div class="login-box">
-            <div class="login-header">
-                <h3>Developer Login</h3>
-                <button id="closeLogin">✕</button>
-            </div>
-            <p class="login-subtitle">Masukkan kredensial khusus developer Leoly Dev.</p>
-            
+    <div class="overlay" id="overlay"></div>
+    <nav class="sidebar" id="sidebar">
+        <button class="btn" id="closeMenu" style="align-self: flex-start; margin-bottom: 1rem;">✕ Close</button>
+        <div class="nav-item active" data-target="beranda-view">🏠 Beranda Hub</div>
+        <div class="nav-item" data-target="project-view">📂 Project List</div>
+        <div class="nav-item" data-target="shop-view">🛒 Toko Slicing</div>
+        <div class="nav-item" data-target="help-view">🛡️ Help Center</div>
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.5rem 0;">
+        <div class="nav-item locked" id="menu-admin" data-target="admin-view">
+            <span>⚙️ Admin Panel</span>
+            <span class="lock-icon">🔒</span>
+        </div>
+        
+        <div style="margin-top: auto; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
+            <p style="font-size: 0.75rem; color: var(--text-muted);" id="auth-box-desc">Ingin mengelola konten web?</p>
+            <button class="btn btn-primary" id="btn-auth-action" style="width: 100%; font-size: 0.8rem; padding: 0.5rem; margin-top: 0.5rem;">Sign In Developer</button>
+        </div>
+    </nav>
+
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 0.5rem;">Developer Verification</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem;">Masukkan akun owner sistem Leoly Hub.</p>
             <form id="login-form">
                 <div class="form-group">
-                    <label for="login-username">Username</label>
-                    <input type="text" id="login-username" placeholder="Username kamu" required>
+                    <input type="text" id="login-username" placeholder="Username" required>
                 </div>
                 <div class="form-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" placeholder="••••••••" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
                 </div>
-                <div id="login-error" class="error-msg">Username atau Password salah!</div>
-                <button type="submit" class="btn btn-primary">Verifikasi Akses</button>
+                <p id="login-error" style="color: #ff4444; font-size: 0.8rem; margin-bottom: 1rem; display: none;">⚠️ Akun tidak terdaftar!</p>
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button type="button" class="btn" id="closeLogin">Batal</button>
+                    <button type="submit" class="btn btn-primary">Verify Access</button>
+                </div>
             </form>
         </div>
     </div>
