@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leoly Dev - Personal Hub</title>
     
+    <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -13,11 +14,14 @@
 </head>
 <body>
 
+    <!-- BLUR AMBIENT BACKGROUND GLOWS -->
     <div class="glow-orb orb-1"></div>
     <div class="glow-orb orb-2"></div>
 
+    <!-- SIDEBAR OVERLAY -->
     <div class="sidebar-overlay" id="overlay"></div>
 
+    <!-- MAIN NAVBAR -->
     <header>
         <div class="logo-area">
             <h1>Leoly<span class="logo-dot">.</span><span class="logo-sub">dev</span></h1>
@@ -28,6 +32,7 @@
         </div>
     </header>
 
+    <!-- FLOATING GLASS SIDEBAR -->
     <nav id="sidebar">
         <div class="sidebar-header">
             <span class="sidebar-title">NAVIGASI CONTROL</span>
@@ -60,6 +65,11 @@
                     <span class="nav-icon">🛒</span> Shop
                 </div>
             </li>
+            <li>
+                <div class="nav-item" data-target="help-view">
+                    <span class="nav-icon">❓</span> Help Center
+                </div>
+            </li>
             
             <li class="menu-divider">Developer Access</li>
             
@@ -76,8 +86,10 @@
         </div>
     </nav>
 
+    <!-- MAIN SYSTEM VIEW CONTAINER -->
     <main>
         
+        <!-- 1. VIEW BERANDA (CLEAN HERO SPLIT LAYOUT) -->
         <section id="beranda-view" class="view-section active">
             <div class="welcome-back">
                 <h2>Workspace Hub</h2>
@@ -85,6 +97,7 @@
             </div>
             
             <div class="beranda-grid">
+                <!-- SISI KIRI: PROFILE CARD PREMIUM -->
                 <div class="profile-card-v2">
                     <div class="p-banner" id="display-banner"></div>
                     <div class="p-avatar-area">
@@ -97,6 +110,7 @@
                     </div>
                 </div>
 
+                <!-- SISI KANAN: QUICK ACTIONS CARD ONLY -->
                 <div class="server-status-card">
                     <div class="quick-action-area" style="border-top: none; padding-top: 0;">
                         <div class="card-title-mini">QUICK NAVIGATION</div>
@@ -104,8 +118,8 @@
                             <button class="action-btn-item" onclick="document.querySelector('[data-target=\'project-view\']').click();">
                                 <span class="action-icon">⟩</span> Lihat Proyek
                             </button>
-                            <button class="action-btn-item" onclick="document.querySelector('[data-target=\'shop-view\']').click();">
-                                <span class="action-icon">🛒</span> Kunjungi Toko
+                            <button class="action-btn-item" onclick="document.querySelector('[data-target=\'help-view\']').click();">
+                                <span class="action-icon">❓</span> Butuh Bantuan?
                             </button>
                         </div>
                     </div>
@@ -113,6 +127,7 @@
             </div>
         </section>
 
+        <!-- 2. VIEW DASHBOARD -->
         <section id="dashboard-view" class="view-section">
             <div class="welcome-back">
                 <h2>Statistik & Aktivitas</h2>
@@ -128,12 +143,13 @@
                     <div class="card-value" id="count-shop">0</div>
                 </div>
                 <div class="card stat-card">
-                    <div class="card-header"><span>Pengunjung Bulan Ini</span></div>
-                    <div class="card-value">1,240</div>
+                    <div class="card-header"><span>Pesan / Tiket Masuk</span></div>
+                    <div class="card-value" id="count-messages">0</div>
                 </div>
             </div>
         </section>
 
+        <!-- 3. VIEW PROJECT -->
         <section id="project-view" class="view-section">
             <div class="welcome-back">
                 <h2>Project Showcase</h2>
@@ -142,6 +158,7 @@
             <div id="project-container" class="stats-grid"></div>
         </section>
 
+        <!-- 4. VIEW DONASI -->
         <section id="donasi-view" class="view-section">
             <div class="welcome-back">
                 <h2>Dukung Kreativitas Saya</h2>
@@ -160,6 +177,7 @@
             </div>
         </section>
 
+        <!-- 5. VIEW SHOP -->
         <section id="shop-view" class="view-section">
             <div class="welcome-back">
                 <h2>Leoly Digital Shop</h2>
@@ -168,6 +186,34 @@
             <div id="shop-container" class="stats-grid"></div>
         </section>
 
+        <!-- 6. VIEW HELP CENTER (FOR PUBLIC/GUEST) -->
+        <section id="help-view" class="view-section">
+            <div class="welcome-back">
+                <h2>Help Center & Support</h2>
+                <p>Mengalami kendala pada server atau butuh bantuan teknis? Kirim pesan langsung ke pengembang.</p>
+            </div>
+            
+            <div class="admin-controls" style="max-width: 600px; margin: 0 auto;">
+                <h3>Kirim Tiket Bantuan</h3>
+                <form id="help-form">
+                    <div class="form-group">
+                        <label for="help-email">Alamat Email / Kontak Discord</label>
+                        <input type="text" id="help-email" placeholder="Contoh: user#1234 atau email@kamu.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="help-subject">Subjek Masalah</label>
+                        <input type="text" id="help-subject" placeholder="Contoh: Bug Sidebar Error / Pertanyaan Jasa" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="help-message">Detail Pesan Masalah</label>
+                        <textarea id="help-message" rows="5" placeholder="Tuliskan secara detail agar developer mudah memahami..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Kirimkan Tiket Pengaduan</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- 7. VIEW ADMIN PANEL (PROTECTED) -->
         <section id="admin-view" class="view-section">
             <div class="welcome-back">
                 <h2>Developer Control Panel</h2>
@@ -175,6 +221,7 @@
             </div>
             
             <div class="admin-grid-layout">
+                <!-- FORMULIR UPDATE PROFIL BERANDA -->
                 <div class="admin-controls">
                     <h3>Ubah Data Profil Beranda</h3>
                     <form id="profile-form">
@@ -192,16 +239,17 @@
                         </div>
                         <div class="form-group">
                             <label for="profile-avatar-url">URL Foto Profil</label>
-                            <input type="url" id="profile-avatar-url" placeholder="https://...">
+                            <input type="url" id="profile-avatar-url" placeholder="https://... (Kosongkan untuk foto default)">
                         </div>
                         <div class="form-group">
                             <label for="profile-banner-url">URL Background Banner</label>
-                            <input type="url" id="profile-banner-url" placeholder="https://... (Kosongkan untuk warna default)">
+                            <input type="url" id="profile-banner-url" placeholder="https://... (Kosongkan untuk background default)">
                         </div>
                         <button type="submit" class="btn btn-primary">Simpan Perubahan Profil</button>
                     </form>
                 </div>
 
+                <!-- FORMULIR TAMBAH KONTEN KARTU -->
                 <div class="admin-controls">
                     <h3>Tambah Konten Baru</h3>
                     <form id="content-form">
@@ -232,9 +280,34 @@
                     </form>
                 </div>
             </div>
+
+            <!-- TABEL INBOX HELP CENTER -->
+            <div class="admin-controls" style="margin-top: 2rem;">
+                <div class="inbox-header-flex">
+                    <h3>Daftar Tiket Help Center Masuk</h3>
+                    <!-- TOMBOL BERSIHKAN TIKET (BARU) -->
+                    <button id="btn-clear-messages" class="btn-clear-all" onclick="clearAllMessages()">🧹 Bersihkan Semua Tiket</button>
+                </div>
+                <div class="table-container" style="overflow-x: auto; margin-top: 1rem;">
+                    <table class="admin-inbox-table">
+                        <thead>
+                            <tr>
+                                <th>Kontak Pengirim</th>
+                                <th>Subjek Masalah</th>
+                                <th>Detail Isi Pesan</th>
+                                <th>Aksi Kendali</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-messages-list">
+                            <!-- Injeksi pesan dinamis dari JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </section>
     </main>
 
+    <!-- FLOATING PREMIUM GLASS LOGIN MODAL -->
     <div class="login-modal" id="loginModal">
         <div class="login-box">
             <div class="login-header">

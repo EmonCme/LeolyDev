@@ -8,6 +8,18 @@ let currentUserRole = localStorage.getItem('userRole') || "guest";
 const DEFAULT_PROJECT_IMG = "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?q=80&w=600";
 const DEFAULT_SHOP_IMG = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600";
 
+const DEFAULT_AVATAR_IMG = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150";
+const DEFAULT_BANNER_IMG = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200";
+
+// --- LOAD / INITIALIZE CONTENT DATA ---
+let profileData = JSON.parse(localStorage.getItem('leoly_profile')) || {
+    name: "Leoly.dev",
+    tag: "Mobile-Based Developer",
+    bio: "Fokus membangun antarmuka web interaktif yang bersih, minimalis, dan nyaman dipandang dengan optimasi kode modern.",
+    avatar: "", 
+    banner: ""  
+};
+
 let projectsData = JSON.parse(localStorage.getItem('leoly_projects')) || [
     { 
         title: "Personal Website V1", 
@@ -33,6 +45,14 @@ let shopData = JSON.parse(localStorage.getItem('leoly_shop')) || [
         desc: "Source code efek right-floating sidebar blur transparan.", 
         price: "Free",
         image: "https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?q=80&w=600"
+    }
+];
+
+let messagesData = JSON.parse(localStorage.getItem('leoly_messages')) || [
+    {
+        contact: "HDFv_Member#001",
+        subject: "Akses Server Terkunci",
+        message: "Halo admin Leoly, saya tidak bisa mengakses dashboard info server utama HDFv sejak tadi pagi. Mohon bantuannya."
     }
 ];
 
@@ -78,6 +98,24 @@ const shopContainer = document.getElementById('shop-container');
 const contentForm = document.getElementById('content-form');
 const formTarget = document.getElementById('form-target');
 const priceGroup = document.getElementById('price-group');
+
+const helpForm = document.getElementById('help-form');
+const adminMessagesList = document.getElementById('admin-messages-list');
+const btnClearMessages = document.getElementById('btn-clear-messages');
+
+// Profile DOM Elements
+const profileForm = document.getElementById('profile-form');
+const profileNameInput = document.getElementById('profile-name');
+const profileTagInput = document.getElementById('profile-tag');
+const profileBioInput = document.getElementById('profile-bio');
+const profileAvatarInput = document.getElementById('profile-avatar-url');
+const profileBannerInput = document.getElementById('profile-banner-url');
+
+const displayName = document.getElementById('display-name');
+const displayTag = document.getElementById('display-tag');
+const displayBio = document.getElementById('display-bio');
+const displayAvatar = document.getElementById('display-avatar');
+const displayBanner = document.getElementById('display-banner');
 
 // --- SIDEBAR CONTROL SYSTEM ---
 function toggleSidebar(open) {
@@ -195,7 +233,7 @@ formTarget.addEventListener('change', () => {
     }
 });
 
-// --- FUNGSI HAPUS ITEM (CRUD - DELETE) ---
+// --- FUNGSI HAPUS (CRUD - DELETE) ---
 function deleteProject(index) {
     if(confirm("Hapus project ini dari showcase?")) {
         projectsData.splice(index, 1);
@@ -214,16 +252,116 @@ function deleteShopItem(index) {
     }
 }
 
+// Menghapus satu tiket satuan
+function deleteMessage(index) {
+    if(confirm("Tandai tiket ini sebagai SELESAI?")) {
+        messagesData.splice(index, 1);
+        localStorage.setItem('leoly_messages', JSON.stringify(messagesData));
+        renderHubContent();
+        showToast("Tiket aduan berhasil dihapus.", "success");
+    }
+}
+
+// FUNGSI BERIHKAN TIKET (MEMBERSIHKAN SEMUA TIKET SEKALIGUS) - BARU
+function clearAllMessages() {
+    if (messagesData.length === 0) {
+        showToast("Kotak masuk sudah bersih!", "info");
+        return;
+    }
+    
+    if (confirm("⚠️ PERINGATAN: Apakah kamu yakin ingin membersihkan dan menghapus SEMUA tiket masuk secara permanen?")) {
+        messagesData = []; // Mengosongkan data array pesan
+        localStorage.setItem('leoly_messages', JSON.stringify(messagesData)); // Update storage browser
+        renderHubContent(); // Refresh UI
+        showToast("🧹 Seluruh tiket bantuan berhasil dibersihkan!", "success");
+    }
+}
+
+// --- SUBMIT KREASI TIKET HELP CENTER ---
+helpForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const contactInput = document.getElementById('help-email');
+    const subjectInput = document.getElementById('help-subject');
+    const messageInput = document.getElementById('help-message');
+
+    messagesData.push({
+        contact: contactInput.value.trim(),
+        subject: subjectInput.value.trim(),
+        message: messageInput.value.trim()
+    });
+
+    localStorage.setItem('leoly_messages', JSON.stringify(messagesData));
+    showToast("Tiket bantuan terkirim! Developer akan segera memproses.");
+    
+    helpForm.reset();
+    renderHubContent();
+    document.querySelector('[data-target="beranda-view"]').click();
+});
+
+// --- SUBMIT UPDATE DATA PROFIL ---
+profileForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    profileData.name = profileNameInput.value.trim();
+    profileData.tag = profileTagInput.value.trim();
+    profileData.bio = profileBioInput.value.trim();
+    profileData.avatar = profileAvatarInput.value.trim(); 
+    profileData.banner = profileBannerInput.value.trim(); 
+    
+    localStorage.setItem('leoly_profile', JSON.stringify(profileData));
+    renderHubContent();
+    showToast("Profil dan background beranda berhasil diperbarui!");
+    document.querySelector('[data-target="beranda-view"]').click();
+});
+
 // --- RENDERING KONTEN DINAMIS ---
 function renderHubContent() {
+    // 1. Render Elemen Profil Beranda
+    displayName.textContent = profileData.name;
+    displayTag.textContent = profileData.tag;
+    displayBio.textContent = profileData.bio;
+    
+    if (profileData.avatar && profileData.avatar.trim() !== "") {
+        displayAvatar.src = profileData.avatar;
+    } else {
+        displayAvatar.src = DEFAULT_AVATAR_IMG;
+    }
+    displayAvatar.onerror = function() { this.src = DEFAULT_AVATAR_IMG; };
+    
+    if (profileData.banner && profileData.banner.trim() !== "") {
+        displayBanner.style.backgroundImage = `url('${profileData.banner}')`;
+    } else {
+        displayBanner.style.backgroundImage = `url('${DEFAULT_BANNER_IMG}')`;
+    }
+
+    // 2. Set Nilai Default Formulir Admin
+    profileNameInput.value = profileData.name;
+    profileTagInput.value = profileData.tag;
+    profileBioInput.value = profileData.bio;
+    profileAvatarInput.value = profileData.avatar;
+    profileBannerInput.value = profileData.banner;
+
+    // Sinkronisasi Counter Dashboard
     if (document.getElementById('count-projects')) {
         document.getElementById('count-projects').textContent = projectsData.length;
         document.getElementById('count-shop').textContent = shopData.length;
+        document.getElementById('count-messages').textContent = messagesData.length;
     }
 
     const isDev = (currentUserRole === "developer");
 
-    // Render Grid Tab Project
+    // Sembunyikan atau tampilkan tombol Bersihkan Tiket tergantung ada isi pesan atau tidak
+    if (btnClearMessages) {
+        if (messagesData.length === 0) {
+            btnClearMessages.style.opacity = "0.5";
+            btnClearMessages.style.cursor = "not-allowed";
+        } else {
+            btnClearMessages.style.opacity = "1";
+            btnClearMessages.style.cursor = "pointer";
+        }
+    }
+
+    // 3. Render Grid Tab Project
     projectContainer.innerHTML = '';
     projectsData.forEach((proj, idx) => {
         const item = document.createElement('div');
@@ -243,7 +381,7 @@ function renderHubContent() {
         projectContainer.appendChild(item);
     });
 
-    // Render Grid Tab Shop
+    // 4. Render Grid Tab Shop
     shopContainer.innerHTML = '';
     shopData.forEach((prod, idx) => {
         const item = document.createElement('div');
@@ -264,9 +402,28 @@ function renderHubContent() {
         `;
         shopContainer.appendChild(item);
     });
+
+    // 5. Render Daftar Inbox Help Center di Admin Panel
+    adminMessagesList.innerHTML = '';
+    if (messagesData.length === 0) {
+        adminMessagesList.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 2rem;">Kotak masuk kosong. Tidak ada tiket bantuan aktif.</td></tr>`;
+    } else {
+        messagesData.forEach((msg, idx) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="msg-contact">${msg.contact}</td>
+                <td class="msg-subject">${msg.subject}</td>
+                <td style="max-width: 300px; white-space: pre-wrap;">${msg.message}</td>
+                <td>
+                    <button class="btn-table-action" onclick="deleteMessage(${idx})">Selesai</button>
+                </td>
+            `;
+            adminMessagesList.appendChild(row);
+        });
+    }
 }
 
-// --- SUBMIT KONTEN BARU & SIMPAN DI BROWSER ---
+// --- SUBMIT KONTEN BARU (PROJECT/SHOP) ---
 contentForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const titleInput = document.getElementById('content-title');
@@ -300,8 +457,11 @@ contentForm.addEventListener('submit', (e) => {
     priceGroup.style.display = 'none';
 });
 
-// Inisialisasi Booting Awal System Hub
+// Inisialisasi Booting Global Akses Window
 window.deleteProject = deleteProject;
 window.deleteShopItem = deleteShopItem;
+window.deleteMessage = deleteMessage;
+window.clearAllMessages = clearAllMessages;
+
 updateAuthUI();
 renderHubContent();

@@ -83,7 +83,6 @@ header {
     gap: 1.25rem;
 }
 
-/* Tombol Menu Utama Minimalis dengan Ikon */
 .menu-toggle {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border);
@@ -106,7 +105,6 @@ header {
     transform: scale(1.05);
 }
 
-/* Badges Status */
 .role-badge {
     font-size: 0.75rem;
     padding: 0.4rem 0.85rem;
@@ -159,7 +157,6 @@ nav.active { right: 0; }
     letter-spacing: 0.12em;
 }
 
-/* Tombol Tutup Menu */
 .close-sidebar {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border);
@@ -204,7 +201,6 @@ nav.active { right: 0; }
     color: var(--text-main);
 }
 
-/* Penyelarasan Ikon Native Sidebar */
 .nav-icon {
     font-size: 1.2rem;
     font-weight: bold;
@@ -230,7 +226,6 @@ nav.active { right: 0; }
 .nav-item.locked { opacity: 0.4; cursor: not-allowed; }
 .lock-icon { margin-left: auto; font-size: 0.85rem; color: var(--text-muted); }
 
-/* Kotak Otentikasi Sidebar */
 .role-switcher-box {
     margin-top: auto;
     background: rgba(255, 255, 255, 0.02);
@@ -409,17 +404,23 @@ main {
 /* ==========================================================================
    8. ADMIN FORMS & INPUT CONTROLS
    ========================================================================== */
+.admin-grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 1.5rem;
+}
 .admin-controls {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 24px;
     padding: 2rem;
+    backdrop-filter: var(--smooth-blur);
 }
 .admin-controls h3 { font-size: 1.2rem; margin-bottom: 1.5rem; font-weight: 600; }
 
 .form-group { margin-bottom: 1.5rem; }
 .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem; font-weight: 500; }
-.form-group input, .form-group select {
+.form-group input, .form-group select, .form-group textarea {
     width: 100%;
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid var(--border);
@@ -430,7 +431,8 @@ main {
     outline: none;
     transition: all 0.2s ease;
 }
-.form-group input:focus, .form-group select:focus {
+.form-group textarea { resize: vertical; font-family: inherit; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
     border-color: var(--text-muted);
     background: rgba(0, 0, 0, 0.4);
 }
@@ -547,10 +549,9 @@ main {
     display: grid;
     grid-template-columns: 1.2fr 1fr;
     gap: 1.75rem;
-    align-items: stretch; /* Mengisi tinggi secara merata agar simetris */
+    align-items: stretch;
 }
 
-/* Bagian Profil Kiri */
 .profile-card-v2 {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -561,7 +562,8 @@ main {
 }
 .p-banner {
     height: 120px;
-    background: linear-gradient(135deg, #121214 0%, #1a1a1e 100%);
+    background-size: cover;
+    background-position: center;
     border-bottom: 1px solid var(--border);
 }
 .p-avatar-area {
@@ -604,7 +606,6 @@ main {
     line-height: 1.6;
 }
 
-/* Bagian Kanan (Quick Actions Area Only) */
 .server-status-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -612,7 +613,7 @@ main {
     padding: 2rem;
     backdrop-filter: var(--smooth-blur);
     display: flex;
-    align-items: center; /* Sejajarkan menu kontrol di tengah tinggi kartu */
+    align-items: center;
     justify-content: center;
 }
 .card-title-mini {
@@ -628,7 +629,7 @@ main {
 }
 .action-buttons-flex {
     display: flex;
-    flex-direction: column; /* Ubah ke susunan vertikal agar lebih kokoh dan minimalis */
+    flex-direction: column;
     gap: 0.85rem;
 }
 .action-btn-item {
@@ -656,7 +657,79 @@ main {
     font-weight: bold;
 }
 
-/* Responsive Mobile Breakpoint */
+/* ==========================================================================
+   12. ADMIN TABLE INBOX STYLING & CLEAN CONTROLS
+   ========================================================================== */
+.inbox-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.btn-clear-all {
+    background: rgba(255, 69, 58, 0.1);
+    border: 1px solid rgba(255, 69, 58, 0.3);
+    color: #ff453a;
+    padding: 0.6rem 1.1rem;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-clear-all:hover {
+    background: #ff453a;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(255, 69, 58, 0.25);
+    transform: translateY(-1px);
+}
+
+.admin-inbox-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9rem;
+}
+.admin-inbox-table th, .admin-inbox-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+.admin-inbox-table th {
+    background: rgba(255, 255, 255, 0.02);
+    color: var(--text-main);
+    font-weight: 600;
+}
+.admin-inbox-table td {
+    color: var(--text-muted);
+}
+.msg-contact {
+    color: var(--text-main);
+    font-weight: 500;
+}
+.msg-subject {
+    color: #ffffff;
+    font-weight: 600;
+}
+.btn-table-action {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-table-action:hover {
+    background: var(--text-main);
+    color: #000;
+}
+
 @media (max-width: 768px) {
     .beranda-grid {
         grid-template-columns: 1fr;
