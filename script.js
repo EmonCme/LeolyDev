@@ -48,13 +48,7 @@ let shopData = JSON.parse(localStorage.getItem('leoly_shop')) || [
     }
 ];
 
-let messagesData = JSON.parse(localStorage.getItem('leoly_messages')) || [
-    {
-        contact: "HDFv_Member#001",
-        subject: "Akses Server Terkunci",
-        message: "Halo admin Leoly, saya tidak bisa mengakses dashboard info server utama HDFv sejak tadi pagi. Mohon bantuannya."
-    }
-];
+let messagesData = JSON.parse(localStorage.getItem('leoly_messages')) || [];
 
 // --- TOAST NOTIFICATION SYSTEM ---
 function showToast(message, type = "success") {
@@ -252,7 +246,6 @@ function deleteShopItem(index) {
     }
 }
 
-// Menghapus satu tiket satuan
 function deleteMessage(index) {
     if(confirm("Tandai tiket ini sebagai SELESAI?")) {
         messagesData.splice(index, 1);
@@ -262,7 +255,6 @@ function deleteMessage(index) {
     }
 }
 
-// FUNGSI BERIHKAN TIKET (MEMBERSIHKAN SEMUA TIKET SEKALIGUS) - BARU
 function clearAllMessages() {
     if (messagesData.length === 0) {
         showToast("Kotak masuk sudah bersih!", "info");
@@ -270,9 +262,9 @@ function clearAllMessages() {
     }
     
     if (confirm("⚠️ PERINGATAN: Apakah kamu yakin ingin membersihkan dan menghapus SEMUA tiket masuk secara permanen?")) {
-        messagesData = []; // Mengosongkan data array pesan
-        localStorage.setItem('leoly_messages', JSON.stringify(messagesData)); // Update storage browser
-        renderHubContent(); // Refresh UI
+        messagesData = []; 
+        localStorage.setItem('leoly_messages', JSON.stringify(messagesData)); 
+        renderHubContent(); 
         showToast("🧹 Seluruh tiket bantuan berhasil dibersihkan!", "success");
     }
 }
@@ -298,43 +290,51 @@ helpForm.addEventListener('submit', (e) => {
     document.querySelector('[data-target="beranda-view"]').click();
 });
 
-// --- SUBMIT UPDATE DATA PROFIL ---
+// --- SUBMIT UPDATE DATA PROFIL (FIXED) ---
 profileForm.addEventListener('submit', (e) => {
     e.preventDefault();
     
+    // Membaca input nilai terbaru dari form admin panel
     profileData.name = profileNameInput.value.trim();
     profileData.tag = profileTagInput.value.trim();
     profileData.bio = profileBioInput.value.trim();
     profileData.avatar = profileAvatarInput.value.trim(); 
     profileData.banner = profileBannerInput.value.trim(); 
     
+    // Simpan data terbaru ke dalam LocalStorage
     localStorage.setItem('leoly_profile', JSON.stringify(profileData));
+    
+    // Perbarui UI secara real-time
     renderHubContent();
-    showToast("Profil dan background beranda berhasil diperbarui!");
+    
+    showToast("Profil dan foto baru berhasil diperbarui!");
     document.querySelector('[data-target="beranda-view"]').click();
 });
 
-// --- RENDERING KONTEN DINAMIS ---
+// --- RENDERING KONTEN DINAMIS (FIXED) ---
 function renderHubContent() {
     // 1. Render Elemen Profil Beranda
     displayName.textContent = profileData.name;
     displayTag.textContent = profileData.tag;
     displayBio.textContent = profileData.bio;
     
+    // Cek ketersediaan URL Avatar
     if (profileData.avatar && profileData.avatar.trim() !== "") {
         displayAvatar.src = profileData.avatar;
     } else {
         displayAvatar.src = DEFAULT_AVATAR_IMG;
     }
+    // Proteksi jika tautan gambar rusak/broken link
     displayAvatar.onerror = function() { this.src = DEFAULT_AVATAR_IMG; };
     
+    // Cek ketersediaan URL Banner background
     if (profileData.banner && profileData.banner.trim() !== "") {
         displayBanner.style.backgroundImage = `url('${profileData.banner}')`;
     } else {
         displayBanner.style.backgroundImage = `url('${DEFAULT_BANNER_IMG}')`;
     }
 
-    // 2. Set Nilai Default Formulir Admin
+    // 2. Set Nilai Input Form Admin agar tetap sinkron dengan isi storage
     profileNameInput.value = profileData.name;
     profileTagInput.value = profileData.tag;
     profileBioInput.value = profileData.bio;
@@ -350,7 +350,6 @@ function renderHubContent() {
 
     const isDev = (currentUserRole === "developer");
 
-    // Sembunyikan atau tampilkan tombol Bersihkan Tiket tergantung ada isi pesan atau tidak
     if (btnClearMessages) {
         if (messagesData.length === 0) {
             btnClearMessages.style.opacity = "0.5";
