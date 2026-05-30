@@ -76,7 +76,7 @@ function fileToBase64(file) {
             return;
         }
         
-        const maxSizeBytes = 1024 * 1024; 
+        const maxSizeBytes = 1024 * 1024; // 1MB
         if (file.size > maxSizeBytes) {
             showToast("Ukuran gambar terlalu besar! Maksimal ukuran file adalah 1MB.", "error");
             resolve(""); 
@@ -120,19 +120,13 @@ window.copyToClipboard = copyToClipboard;
 
 // Fungsi Utama untuk Mengarahkan Transaksi ke WhatsApp
 function redirectToWhatsApp(itemTitle, itemPrice) {
-    // Menyusun teks template pesan otomatis yang rapi
     const baseText = `Halo Leoly, saya ingin membeli/memesan item berikut:\n\n` +
                      `📦 *Nama Item:* ${itemTitle}\n` +
                      `💰 *Harga:* ${itemPrice}\n\n` +
                      `Mohon info detail untuk langkah selanjutnya. Terima kasih!`;
     
-    // Melakukan encode karakter teks agar aman di dalam URL string
     const encodedText = encodeURIComponent(baseText);
-    
-    // Membuat tautan lengkap API WhatsApp
     const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
-    
-    // Membuka tab/aplikasi WhatsApp baru di HP pengguna
     window.open(waUrl, '_blank');
 }
 window.redirectToWhatsApp = redirectToWhatsApp;
@@ -532,7 +526,7 @@ function renderHubContent() {
         });
     }
 
-    // Render Shop (KINI TERINTEGRASI DENGAN REDIRECT WHATSAPP)
+    // Render Shop (Aman dari Bug Tanda Kutip Satu/Dua)
     if (shopContainer) {
         shopContainer.innerHTML = '';
         shopData.forEach((prod, idx) => {
@@ -549,8 +543,15 @@ function renderHubContent() {
                     <span style="font-size:0.8rem; font-weight:700; color:#ffffff; background:rgba(255,255,255,0.04); padding: 4px 10px; border-radius:100px; border: 1px solid var(--border);">${prod.price}</span>
                 </div>
                 <p style="color: var(--text-muted); font-size:0.9rem; line-height:1.6; margin-bottom:0.25rem;">${prod.desc}</p>
-                <button class="btn btn-primary" style="padding:0.75rem; font-size:0.85rem; margin-top:auto;" onclick="redirectToWhatsApp('${prod.title}', '${prod.price}')">Beli Item</button>
+                <button class="btn btn-primary btn-order-wa" style="padding:0.75rem; font-size:0.85rem; margin-top:auto;">Beli Item</button>
             `;
+            
+            // Menggunakan event listener langsung agar karakter string unik bebas error parsing
+            const orderBtn = item.querySelector('.btn-order-wa');
+            if (orderBtn) {
+                orderBtn.addEventListener('click', () => redirectToWhatsApp(prod.title, prod.price));
+            }
+            
             shopContainer.appendChild(item);
         });
     }
