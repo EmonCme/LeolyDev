@@ -489,4 +489,26 @@ function renderHubContent() {
         messagesData.forEach((msg, idx) => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td class="msg-contact">${msg.cont
+                <td class="msg-contact">${msg.contact}</td>
+                <td class="msg-subject">${msg.subject}</td>
+                <td style="max-width: 300px; white-space: pre-wrap;">${msg.message}</td>
+                <td>
+                    <button class="btn-table-action" onclick="deleteMessage(${idx})">Selesai</button>
+                </td>
+            `;
+            adminMessagesList.appendChild(row);
+        });
+    }
+}
+
+// ==========================================================================
+// 10. SCOPING GLOBAL UNTUK SISTEM ATRIBUT TRIGER ONCLICK HTML
+// ==========================================================================
+window.deleteProject = deleteProject;
+window.deleteShopItem = deleteShopItem;
+window.deleteMessage = deleteMessage;
+window.clearAllMessages = clearAllMessages;
+
+// RUN ON BOOTING LOADING FIRST
+updateAuthUI();
+renderHubContent();
