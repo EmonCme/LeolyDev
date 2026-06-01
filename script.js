@@ -1,10 +1,9 @@
-/* --- SUPABASE CONFIGURATION (FRONTEND) --- */
+/* --- SUPABASE CONFIGURATION --- */
 const SUPABASE_URL = "https://qndqvujqfuplmwpzrbgl.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuZHF2dWpxZnVwbG13cHpyYmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODg1NTMsImV4cCI6MjA5NTg2NDU1M30.xjYhc6RdShq4uq-nRDKQ5uEvE02pzwixpfhfsCcLrrk";
 
 let supabase = null;
-let useLocalStorage = true;
-let supabaseInitialized = false;
+let useSupabase = false;
 
 // Default data
 const DEFAULT_PROJECTS = [
@@ -41,6 +40,16 @@ const DEFAULT_HOME_CONTENT = {
 
 const WHATSAPP_NUMBER = "6285198224557";
 
+// Global State
+let projects = [...DEFAULT_PROJECTS];
+let products = [...DEFAULT_PRODUCTS];
+let faqs = [...DEFAULT_FAQS];
+let testimonials = [...DEFAULT_TESTIMONIALS];
+let cart = [];
+let homeContent = {...DEFAULT_HOME_CONTENT};
+let typingTimeout = null;
+let cartPanel = null;
+
 // Helper functions
 function getStorage(key, fallback) {
     const data = localStorage.getItem(key);
@@ -51,70 +60,80 @@ function setStorage(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
 }
 
-// Global State
-let projects = getStorage('leoly_projects', DEFAULT_PROJECTS);
-let products = getStorage('leoly_products', DEFAULT_PRODUCTS);
-let faqs = getStorage('leoly_faqs', DEFAULT_FAQS);
-let testimonials = getStorage('leoly_testimonials', DEFAULT_TESTIMONIALS);
-let cart = getStorage('leoly_cart', []);
-let homeContent = getStorage('leoly_home_content', DEFAULT_HOME_CONTENT);
-let typingTimeout = null;
-let cartPanel = null;
+function updateLoadingStatus(message) {
+    const statusEl = document.getElementById("loading-status");
+    if (statusEl) statusEl.textContent = message;
+}
 
 /* --- INITIALIZER --- */
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("DOM Loaded, initializing...");
-    
-    const loader = document.getElementById("loading-screen");
+    updateLoadingStatus("Menghubungkan ke database...");
     
     AOS.init({ duration: 800, once: true });
     initParticles();
     
-    // Initialize Supabase
+    // Coba konek ke Supabase
     await initSupabase();
     
-    // Load data from Supabase if connected
-    if (supabase && !useLocalStorage) {
+    // Load data dari Supabase jika berhasil
+    if (useSupabase && supabase) {
+        updateLoadingStatus("Mengambil data dari server...");
         await loadAllDataFromSupabase();
+    } else {
+        updateLoadingStatus("Menggunakan data lokal...");
+        loadFromLocalStorage();
     }
     
-    // Render all content
+    // Render semua konten
     renderHomeContent();
     renderAppProjects();
     renderAppProducts();
     renderAppFAQs();
     renderAppTestimonials();
+    
+    // Load cart dari localStorage
+    cart = getStorage('leoly_cart', []);
     updateCartCount();
     renderCartPanelItems();
     
     setupGlobalEventListeners();
     
-    // Hide loading screen
+    // Sembunyikan loading screen setelah 1 detik
     setTimeout(() => {
+        const loader = document.getElementById("loading-screen");
         if(loader) {
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
         }
-    }, 1500);
+    }, 1000);
     
-    console.log("Initialization complete");
+    console.log("Initialization complete, useSupabase:", useSupabase);
 });
 
-// Initialize Supabase
+function loadFromLocalStorage() {
+    projects = getStorage('leoly_projects', DEFAULT_PROJECTS);
+    products = getStorage('leoly_products', DEFAULT_PRODUCTS);
+    faqs = getStorage('leoly_faqs', DEFAULT_FAQS);
+    testimonials = getStorage('leoly_testimonials', DEFAULT_TESTIMONIALS);
+    homeContent = getStorage('leoly_home_content', DEFAULT_HOME_CONTENT);
+    console.log("Loaded from localStorage");
+}
+
 async function initSupabase() {
     try {
         if (typeof supabaseJs === 'undefined') {
-            console.warn("Supabase library not loaded, using localStorage only");
-            useLocalStorage = true;
+            console.warn("Supabase library not loaded");
+            updateLoadingStatus("Library Supabase tidak ditemukan, menggunakan data lokal");
             return;
         }
         
         supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log("Supabase client created");
         
-        // Test connection with timeout
+        // Test koneksi dengan timeout 3 detik
         const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Connection timeout")), 5000)
+            setTimeout(() => reject(new Error("Connection timeout")), 3000)
         );
         
         const testPromise = supabase.from('projects').select('count', { count: 'exact', head: true });
@@ -122,17 +141,17 @@ async function initSupabase() {
         await Promise.race([testPromise, timeoutPromise]);
         
         console.log("Supabase connection successful");
-        useLocalStorage = false;
-        supabaseInitialized = true;
+        useSupabase = true;
+        updateLoadingStatus("Terhubung ke server!");
         
     } catch (error) {
-        console.warn("Supabase connection failed, using localStorage:", error.message);
-        useLocalStorage = true;
+        console.warn("Supabase connection failed:", error.message);
+        useSupabase = false;
         supabase = null;
+        updateLoadingStatus("Gagal konek ke server, menggunakan data lokal");
     }
 }
 
-// Load all data from Supabase
 async function loadAllDataFromSupabase() {
     if (!supabase) return;
     
@@ -146,7 +165,7 @@ async function loadAllDataFromSupabase() {
         if (!projectsError && projectsData && projectsData.length > 0) {
             projects = projectsData;
             setStorage('leoly_projects', projects);
-            console.log("Projects loaded from Supabase:", projects.length);
+            console.log("Projects loaded:", projects.length);
         }
         
         // Load Products
@@ -158,7 +177,7 @@ async function loadAllDataFromSupabase() {
         if (!productsError && productsData && productsData.length > 0) {
             products = productsData;
             setStorage('leoly_products', products);
-            console.log("Products loaded from Supabase:", products.length);
+            console.log("Products loaded:", products.length);
         }
         
         // Load FAQs
@@ -170,7 +189,7 @@ async function loadAllDataFromSupabase() {
         if (!faqsError && faqsData && faqsData.length > 0) {
             faqs = faqsData;
             setStorage('leoly_faqs', faqs);
-            console.log("FAQs loaded from Supabase:", faqs.length);
+            console.log("FAQs loaded:", faqs.length);
         }
         
         // Load Testimonials
@@ -182,7 +201,7 @@ async function loadAllDataFromSupabase() {
         if (!testimonialsError && testimonialsData && testimonialsData.length > 0) {
             testimonials = testimonialsData;
             setStorage('leoly_testimonials', testimonials);
-            console.log("Testimonials loaded from Supabase:", testimonials.length);
+            console.log("Testimonials loaded:", testimonials.length);
         }
         
         // Load Home Content
@@ -208,10 +227,10 @@ async function loadAllDataFromSupabase() {
                 typingWords: typingWords
             };
             setStorage('leoly_home_content', homeContent);
-            console.log("Home content loaded from Supabase");
+            console.log("Home content loaded");
         }
         
-        // Refresh render after data load
+        // Refresh render
         renderHomeContent();
         renderAppProjects();
         renderAppProducts();
@@ -223,9 +242,8 @@ async function loadAllDataFromSupabase() {
     }
 }
 
-// Save to Supabase helper
 async function saveToSupabase(table, data, idField = 'id') {
-    if (!supabase || useLocalStorage) return false;
+    if (!supabase || !useSupabase) return false;
     try {
         if (data[idField]) {
             const { error } = await supabase.from(table).update(data).eq(idField, data[idField]);
@@ -241,9 +259,8 @@ async function saveToSupabase(table, data, idField = 'id') {
     }
 }
 
-// Delete from Supabase helper
 async function deleteFromSupabase(table, id, idField = 'id') {
-    if (!supabase || useLocalStorage) return false;
+    if (!supabase || !useSupabase) return false;
     try {
         const { error } = await supabase.from(table).delete().eq(idField, id);
         if (error) throw error;
@@ -464,7 +481,7 @@ async function actionLikeProject(id) {
     if(project) {
         project.likes = (project.likes || 0) + 1;
         setStorage('leoly_projects', projects);
-        if (!useLocalStorage && supabase) {
+        if (useSupabase && supabase) {
             await supabase.from('projects').update({ likes: project.likes }).eq('id', id);
         }
         renderAppProjects();
@@ -816,9 +833,8 @@ async function editHomeContent() {
         };
         homeContent = newContent;
         setStorage('leoly_home_content', homeContent);
-        if (!useLocalStorage && supabase) {
+        if (useSupabase && supabase) {
             await supabase.from('home_content').upsert([{
-                id: 1,
                 tagline: newContent.tagline,
                 title_prefix: newContent.titlePrefix,
                 description: newContent.description,
@@ -837,7 +853,7 @@ async function deleteProjectNode(id) {
     if(result.isConfirmed) {
         projects = projects.filter(p => p.id !== id);
         setStorage('leoly_projects', projects);
-        if (!useLocalStorage && supabase) await deleteFromSupabase('projects', id);
+        if (useSupabase && supabase) await deleteFromSupabase('projects', id);
         renderAppProjects();
         renderAdminTables();
         Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
@@ -849,7 +865,7 @@ async function deleteProductNode(id) {
     if(result.isConfirmed) {
         products = products.filter(p => p.id !== id);
         setStorage('leoly_products', products);
-        if (!useLocalStorage && supabase) await deleteFromSupabase('products', id);
+        if (useSupabase && supabase) await deleteFromSupabase('products', id);
         renderAppProducts();
         renderAdminTables();
         Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
@@ -861,7 +877,7 @@ async function deleteFaqNode(id) {
     if(result.isConfirmed) {
         faqs = faqs.filter(f => f.id !== id);
         setStorage('leoly_faqs', faqs);
-        if (!useLocalStorage && supabase) await deleteFromSupabase('faqs', id);
+        if (useSupabase && supabase) await deleteFromSupabase('faqs', id);
         renderAppFAQs();
         renderAdminTables();
         Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
@@ -873,7 +889,7 @@ async function deleteTestimonialNode(id) {
     if(result.isConfirmed) {
         testimonials = testimonials.filter(t => t.id !== id);
         setStorage('leoly_testimonials', testimonials);
-        if (!useLocalStorage && supabase) await deleteFromSupabase('testimonials', id);
+        if (useSupabase && supabase) await deleteFromSupabase('testimonials', id);
         renderAppTestimonials();
         renderAdminTables();
         Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
@@ -896,7 +912,6 @@ async function editProjectNode(id) {
             <div class="form-group"><label>Kategori</label><select id="ep-cat"><option ${project.category === 'Web' ? 'selected' : ''}>Web</option><option ${project.category === 'Server' ? 'selected' : ''}>Server</option><option ${project.category === 'UI/UX' ? 'selected' : ''}>UI/UX</option></select></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="ep-desc" rows="3">${escapeHtml(project.description)}</textarea></div>
             <div class="form-group"><label>Gambar</label><input type="file" id="ep-image" accept="image/*"></div>
-            ${project.image ? `<img src="${project.image}" style="max-width:100px; margin-top:10px;">` : ''}
             <button type="submit" class="btn btn-primary btn-block">Simpan</button>
         </form>
     `;
@@ -918,7 +933,7 @@ async function editProjectNode(id) {
         const index = projects.findIndex(p => p.id === id);
         projects[index] = updated;
         setStorage('leoly_projects', projects);
-        if (!useLocalStorage && supabase) await saveToSupabase('projects', updated);
+        if (useSupabase && supabase) await saveToSupabase('projects', updated);
         renderAppProjects();
         renderAdminTables();
         overlay.classList.remove("modal-active");
@@ -942,7 +957,6 @@ async function editProductNode(id) {
             <div class="form-group"><label>Harga</label><input type="number" id="ep-price" value="${product.price}"></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="ep-desc" rows="3">${escapeHtml(product.description)}</textarea></div>
             <div class="form-group"><label>Gambar</label><input type="file" id="ep-image" accept="image/*"></div>
-            ${product.image ? `<img src="${product.image}" style="max-width:100px; margin-top:10px;">` : ''}
             <button type="submit" class="btn btn-primary btn-block">Simpan</button>
         </form>
     `;
@@ -965,7 +979,7 @@ async function editProductNode(id) {
         const index = products.findIndex(p => p.id === id);
         products[index] = updated;
         setStorage('leoly_products', products);
-        if (!useLocalStorage && supabase) await saveToSupabase('products', updated);
+        if (useSupabase && supabase) await saveToSupabase('products', updated);
         renderAppProducts();
         renderAdminTables();
         overlay.classList.remove("modal-active");
@@ -973,7 +987,7 @@ async function editProductNode(id) {
     });
 }
 
-// Add functions
+// Add functions modal triggers
 function setupAdminModalTriggers() {
     const overlay = document.getElementById("global-data-modal");
     const closeBtn = document.getElementById("modal-close-trigger");
@@ -1013,7 +1027,7 @@ function setupAdminModalTriggers() {
             };
             projects.unshift(newProject);
             setStorage('leoly_projects', projects);
-            if (!useLocalStorage && supabase) await supabase.from('projects').insert([newProject]);
+            if (useSupabase && supabase) await supabase.from('projects').insert([newProject]);
             renderAppProjects();
             renderAdminTables();
             overlay.classList.remove("modal-active");
@@ -1053,7 +1067,7 @@ function setupAdminModalTriggers() {
             };
             products.unshift(newProduct);
             setStorage('leoly_products', products);
-            if (!useLocalStorage && supabase) await supabase.from('products').insert([newProduct]);
+            if (useSupabase && supabase) await supabase.from('products').insert([newProduct]);
             renderAppProducts();
             renderAdminTables();
             overlay.classList.remove("modal-active");
@@ -1083,7 +1097,7 @@ function setupAdminModalTriggers() {
             };
             faqs.push(newFaq);
             setStorage('leoly_faqs', faqs);
-            if (!useLocalStorage && supabase) await supabase.from('faqs').insert([newFaq]);
+            if (useSupabase && supabase) await supabase.from('faqs').insert([newFaq]);
             renderAppFAQs();
             renderAdminTables();
             overlay.classList.remove("modal-active");
@@ -1117,7 +1131,7 @@ function setupAdminModalTriggers() {
             };
             testimonials.unshift(newTesti);
             setStorage('leoly_testimonials', testimonials);
-            if (!useLocalStorage && supabase) await supabase.from('testimonials').insert([newTesti]);
+            if (useSupabase && supabase) await supabase.from('testimonials').insert([newTesti]);
             renderAppTestimonials();
             renderAdminTables();
             overlay.classList.remove("modal-active");
