@@ -1,11 +1,10 @@
-/* --- ECOSYSTEM CONFIGURATION & SUPABASE INITIATION --- */
-
-// Supabase Configuration
+/* --- SUPABASE CONFIGURATION (FRONTEND) --- */
 const SUPABASE_URL = "https://qndqvujqfuplmwpzrbgl.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuZHF2dWpxZnVwbG13cHpyYmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODg1NTMsImV4cCI6MjA5NTg2NDU1M30.xjYhc6RdShq4uq-nRDKQ5uEvE02pzwixpfhfsCcLrrk";
 
 let supabase = null;
 let useLocalStorage = true;
+let supabaseInitialized = false;
 
 // Default data
 const DEFAULT_PROJECTS = [
@@ -42,6 +41,7 @@ const DEFAULT_HOME_CONTENT = {
 
 const WHATSAPP_NUMBER = "6285198224557";
 
+// Helper functions
 function getStorage(key, fallback) {
     const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : fallback;
@@ -70,12 +70,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     AOS.init({ duration: 800, once: true });
     initParticles();
     
+    // Initialize Supabase
     await initSupabase();
     
-    if (!useLocalStorage && supabase) {
+    // Load data from Supabase if connected
+    if (supabase && !useLocalStorage) {
         await loadAllDataFromSupabase();
     }
     
+    // Render all content
     renderHomeContent();
     renderAppProjects();
     renderAppProducts();
@@ -83,9 +86,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderAppTestimonials();
     updateCartCount();
     renderCartPanelItems();
-
+    
     setupGlobalEventListeners();
     
+    // Hide loading screen
     setTimeout(() => {
         if(loader) {
             loader.style.opacity = '0';
@@ -96,16 +100,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("Initialization complete");
 });
 
+// Initialize Supabase
 async function initSupabase() {
     try {
         if (typeof supabaseJs === 'undefined') {
-            console.warn("Supabase library not loaded");
+            console.warn("Supabase library not loaded, using localStorage only");
+            useLocalStorage = true;
             return;
         }
         
         supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log("Supabase client created");
         
+        // Test connection with timeout
         const timeoutPromise = new Promise((_, reject) => 
             setTimeout(() => reject(new Error("Connection timeout")), 5000)
         );
@@ -116,44 +123,75 @@ async function initSupabase() {
         
         console.log("Supabase connection successful");
         useLocalStorage = false;
+        supabaseInitialized = true;
         
     } catch (error) {
-        console.warn("Supabase connection failed, using localStorage:", error);
+        console.warn("Supabase connection failed, using localStorage:", error.message);
         useLocalStorage = true;
         supabase = null;
     }
 }
 
+// Load all data from Supabase
 async function loadAllDataFromSupabase() {
     if (!supabase) return;
     
     try {
-        const { data: projectsData } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
-        if (projectsData && projectsData.length > 0) {
+        // Load Projects
+        const { data: projectsData, error: projectsError } = await supabase
+            .from('projects')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (!projectsError && projectsData && projectsData.length > 0) {
             projects = projectsData;
             setStorage('leoly_projects', projects);
+            console.log("Projects loaded from Supabase:", projects.length);
         }
         
-        const { data: productsData } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-        if (productsData && productsData.length > 0) {
+        // Load Products
+        const { data: productsData, error: productsError } = await supabase
+            .from('products')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (!productsError && productsData && productsData.length > 0) {
             products = productsData;
             setStorage('leoly_products', products);
+            console.log("Products loaded from Supabase:", products.length);
         }
         
-        const { data: faqsData } = await supabase.from('faqs').select('*').order('created_at', { ascending: true });
-        if (faqsData && faqsData.length > 0) {
+        // Load FAQs
+        const { data: faqsData, error: faqsError } = await supabase
+            .from('faqs')
+            .select('*')
+            .order('created_at', { ascending: true });
+        
+        if (!faqsError && faqsData && faqsData.length > 0) {
             faqs = faqsData;
             setStorage('leoly_faqs', faqs);
+            console.log("FAQs loaded from Supabase:", faqs.length);
         }
         
-        const { data: testimonialsData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
-        if (testimonialsData && testimonialsData.length > 0) {
+        // Load Testimonials
+        const { data: testimonialsData, error: testimonialsError } = await supabase
+            .from('testimonials')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (!testimonialsError && testimonialsData && testimonialsData.length > 0) {
             testimonials = testimonialsData;
             setStorage('leoly_testimonials', testimonials);
+            console.log("Testimonials loaded from Supabase:", testimonials.length);
         }
         
-        const { data: homeData } = await supabase.from('home_content').select('*').limit(1);
-        if (homeData && homeData.length > 0) {
+        // Load Home Content
+        const { data: homeData, error: homeError } = await supabase
+            .from('home_content')
+            .select('*')
+            .limit(1);
+        
+        if (!homeError && homeData && homeData.length > 0) {
             const data = homeData[0];
             let typingWords = DEFAULT_HOME_CONTENT.typingWords;
             if (data.typing_words) {
@@ -170,8 +208,10 @@ async function loadAllDataFromSupabase() {
                 typingWords: typingWords
             };
             setStorage('leoly_home_content', homeContent);
+            console.log("Home content loaded from Supabase");
         }
         
+        // Refresh render after data load
         renderHomeContent();
         renderAppProjects();
         renderAppProducts();
@@ -180,6 +220,37 @@ async function loadAllDataFromSupabase() {
         
     } catch (error) {
         console.error("Error loading from Supabase:", error);
+    }
+}
+
+// Save to Supabase helper
+async function saveToSupabase(table, data, idField = 'id') {
+    if (!supabase || useLocalStorage) return false;
+    try {
+        if (data[idField]) {
+            const { error } = await supabase.from(table).update(data).eq(idField, data[idField]);
+            if (error) throw error;
+        } else {
+            const { error } = await supabase.from(table).insert([data]);
+            if (error) throw error;
+        }
+        return true;
+    } catch (error) {
+        console.error(`Error saving to ${table}:`, error);
+        return false;
+    }
+}
+
+// Delete from Supabase helper
+async function deleteFromSupabase(table, id, idField = 'id') {
+    if (!supabase || useLocalStorage) return false;
+    try {
+        const { error } = await supabase.from(table).delete().eq(idField, id);
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        console.error(`Error deleting from ${table}:`, error);
+        return false;
     }
 }
 
@@ -263,8 +334,9 @@ function renderAppProjects(filter = "all", query = "") {
     container.innerHTML = "";
     
     const filtered = projects.filter(p => {
-        const matchCat = filter === "all" || p.category.toLowerCase() === filter.toLowerCase();
-        const matchSrc = p.title.toLowerCase().includes(query.toLowerCase()) || (p.description && p.description.toLowerCase().includes(query.toLowerCase()));
+        const matchCat = filter === "all" || (p.category && p.category.toLowerCase() === filter.toLowerCase());
+        const matchSrc = (p.title && p.title.toLowerCase().includes(query.toLowerCase())) || 
+                        (p.description && p.description.toLowerCase().includes(query.toLowerCase()));
         return matchCat && matchSrc;
     });
 
@@ -290,7 +362,7 @@ function renderAppProjects(filter = "all", query = "") {
             <div class="card-meta-bottom">
                 <span class="tag">${escapeHtml(p.category)}</span>
                 <div class="card-actions-row">
-                    <button class="icon-btn" onclick="actionLikeProject('${p.id}')"><i class="fa-solid fa-heart"></i> ${p.likes}</button>
+                    <button class="icon-btn" onclick="actionLikeProject('${p.id}')"><i class="fa-solid fa-heart"></i> ${p.likes || 0}</button>
                     <button class="icon-btn" onclick="actionShareProject('${p.title}')"><i class="fa-solid fa-share-nodes"></i></button>
                 </div>
             </div>
@@ -305,8 +377,9 @@ function renderAppProducts(filter = "all", query = "") {
     container.innerHTML = "";
 
     const filtered = products.filter(p => {
-        const matchCat = filter === "all" || p.category.toLowerCase() === filter.toLowerCase();
-        const matchSrc = p.name.toLowerCase().includes(query.toLowerCase()) || (p.description && p.description.toLowerCase().includes(query.toLowerCase()));
+        const matchCat = filter === "all" || (p.category && p.category.toLowerCase() === filter.toLowerCase());
+        const matchSrc = (p.name && p.name.toLowerCase().includes(query.toLowerCase())) || 
+                        (p.description && p.description.toLowerCase().includes(query.toLowerCase()));
         return matchCat && matchSrc;
     });
 
@@ -330,7 +403,7 @@ function renderAppProducts(filter = "all", query = "") {
             <h3>${escapeHtml(p.name)}</h3>
             <p class="desc">${escapeHtml(p.description)}</p>
             <div class="card-meta-bottom">
-                <span class="card-price">Rp ${p.price.toLocaleString('id-ID')}</span>
+                <span class="card-price">Rp ${(p.price || 0).toLocaleString('id-ID')}</span>
                 <button class="btn btn-primary btn-sm" onclick="actionAddProductToCart('${p.id}')"><i class="fa-solid fa-cart-plus"></i> Beli</button>
             </div>
         `;
@@ -373,7 +446,7 @@ function renderAppTestimonials() {
                 <div class="testi-info">
                     <h5>${escapeHtml(t.name)}</h5>
                     <span>${escapeHtml(t.company)}</span>
-                    <div class="stars-row">${'<i class="fa-solid fa-star"></i>'.repeat(t.stars)}</div>
+                    <div class="stars-row">${'<i class="fa-solid fa-star"></i>'.repeat(t.stars || 5)}</div>
                 </div>
             </div>
         `;
@@ -437,7 +510,7 @@ function renderCartPanelItems() {
         const row = document.createElement("div");
         row.style.cssText = "display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border-color)";
         row.innerHTML = `
-            <div style="flex:1;"><h5 style="font-size:13px;">${escapeHtml(item.name)}</h5><span style="font-size:12px; color:var(--text-muted);">Rp ${item.price.toLocaleString('id-ID')}</span></div>
+            <div style="flex:1;"><h5 style="font-size:13px;">${escapeHtml(item.name)}</h5><span style="font-size:12px; color:var(--text-muted);">Rp ${(item.price || 0).toLocaleString('id-ID')}</span></div>
             <button class="icon-btn" style="width:28px; height:28px; font-size:11px;" onclick="actionRemoveCartItem(${idx})"><i class="fa-solid fa-trash"></i></button>
         `;
         container.appendChild(row);
@@ -463,7 +536,7 @@ function checkoutToWhatsApp() {
     
     cart.forEach((item, index) => {
         total += item.price;
-        productList += `${index + 1}. ${item.name} - Rp ${item.price.toLocaleString('id-ID')}\n`;
+        productList += `${index + 1}. ${item.name} - Rp ${(item.price || 0).toLocaleString('id-ID')}\n`;
     });
     
     const message = `Halo Leoly! Saya ingin memesan produk berikut:%0A%0A${encodeURIComponent(productList)}%0A────────────────%0A*Total: Rp ${total.toLocaleString('id-ID')}*%0A%0ASaya tertarik dengan produk di atas. Mohon informasi lebih lanjut. Terima kasih!`;
@@ -664,8 +737,8 @@ function renderAdminTables() {
         tbodyProj.innerHTML = "";
         projects.forEach(p => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${escapeHtml(p.title)}</td><td>${escapeHtml(p.category)}</td><td>${p.likes}</td>
-                <td><button class="btn btn-secondary btn-sm" onclick="editProjectNode('${p.id}')"><i class="fa-solid fa-edit"></i></button>
+            tr.innerHTML = `<td>${escapeHtml(p.title)}</td><td>${escapeHtml(p.category)}</td><td>${p.likes || 0}</td>
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="editProjectNode('${p.id}')"><i class="fa-solid fa-edit"></i></button>
                 <button class="btn btn-secondary btn-sm" onclick="deleteProjectNode('${p.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
             tbodyProj.appendChild(tr);
         });
@@ -676,8 +749,8 @@ function renderAdminTables() {
         tbodyProd.innerHTML = "";
         products.forEach(p => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.category)}</td><td>Rp ${p.price.toLocaleString('id-ID')}</td>
-                <td><button class="btn btn-secondary btn-sm" onclick="editProductNode('${p.id}')"><i class="fa-solid fa-edit"></i></button>
+            tr.innerHTML = `<td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.category)}</td><td>Rp ${(p.price || 0).toLocaleString('id-ID')}</td>
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="editProductNode('${p.id}')"><i class="fa-solid fa-edit"></i></button>
                 <button class="btn btn-secondary btn-sm" onclick="deleteProductNode('${p.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
             tbodyProd.appendChild(tr);
         });
@@ -688,7 +761,8 @@ function renderAdminTables() {
         tbodyFaq.innerHTML = "";
         faqs.forEach(f => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${escapeHtml(f.question)}</td><td><button class="btn btn-secondary btn-sm" onclick="deleteFaqNode('${f.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+            tr.innerHTML = `<td>${escapeHtml(f.question)}</td>
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="deleteFaqNode('${f.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
             tbodyFaq.appendChild(tr);
         });
     }
@@ -698,8 +772,8 @@ function renderAdminTables() {
         tbodyTesti.innerHTML = "";
         testimonials.forEach(t => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${escapeHtml(t.name)}</td><td>${escapeHtml(t.company)}</td><td>${t.stars} ★</td>
-                <td><button class="btn btn-secondary btn-sm" onclick="deleteTestimonialNode('${t.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+            tr.innerHTML = `<td>${escapeHtml(t.name)}</td><td>${escapeHtml(t.company)}</td><td>${t.stars || 5} ★</td>
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="deleteTestimonialNode('${t.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
             tbodyTesti.appendChild(tr);
         });
     }
@@ -714,6 +788,7 @@ function imageToBase64(file) {
     });
 }
 
+// Edit Home Content
 async function editHomeContent() {
     const overlay = document.getElementById("global-data-modal");
     const titleNode = document.getElementById("modal-title-node");
@@ -736,7 +811,7 @@ async function editHomeContent() {
         const newContent = {
             tagline: document.getElementById("eh-tagline").value,
             titlePrefix: document.getElementById("eh-title").value,
-            typingWords: document.getElementById("eh-words").value.split(',').map(w => w.trim()),
+            typingWords: document.getElementById("eh-words").value.split(',').map(w => w.trim()).filter(w => w.length > 0),
             description: document.getElementById("eh-desc").value
         };
         homeContent = newContent;
@@ -756,42 +831,56 @@ async function editHomeContent() {
     });
 }
 
+// Delete functions
 async function deleteProjectNode(id) {
-    projects = projects.filter(p => p.id !== id);
-    setStorage('leoly_projects', projects);
-    if (!useLocalStorage && supabase) await supabase.from('projects').delete().eq('id', id);
-    renderAppProjects();
-    renderAdminTables();
-    Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
+    const result = await Swal.fire({ title: 'Yakin hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' });
+    if(result.isConfirmed) {
+        projects = projects.filter(p => p.id !== id);
+        setStorage('leoly_projects', projects);
+        if (!useLocalStorage && supabase) await deleteFromSupabase('projects', id);
+        renderAppProjects();
+        renderAdminTables();
+        Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
+    }
 }
 
 async function deleteProductNode(id) {
-    products = products.filter(p => p.id !== id);
-    setStorage('leoly_products', products);
-    if (!useLocalStorage && supabase) await supabase.from('products').delete().eq('id', id);
-    renderAppProducts();
-    renderAdminTables();
-    Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
+    const result = await Swal.fire({ title: 'Yakin hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' });
+    if(result.isConfirmed) {
+        products = products.filter(p => p.id !== id);
+        setStorage('leoly_products', products);
+        if (!useLocalStorage && supabase) await deleteFromSupabase('products', id);
+        renderAppProducts();
+        renderAdminTables();
+        Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
+    }
 }
 
 async function deleteFaqNode(id) {
-    faqs = faqs.filter(f => f.id !== id);
-    setStorage('leoly_faqs', faqs);
-    if (!useLocalStorage && supabase) await supabase.from('faqs').delete().eq('id', id);
-    renderAppFAQs();
-    renderAdminTables();
-    Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
+    const result = await Swal.fire({ title: 'Yakin hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' });
+    if(result.isConfirmed) {
+        faqs = faqs.filter(f => f.id !== id);
+        setStorage('leoly_faqs', faqs);
+        if (!useLocalStorage && supabase) await deleteFromSupabase('faqs', id);
+        renderAppFAQs();
+        renderAdminTables();
+        Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
+    }
 }
 
 async function deleteTestimonialNode(id) {
-    testimonials = testimonials.filter(t => t.id !== id);
-    setStorage('leoly_testimonials', testimonials);
-    if (!useLocalStorage && supabase) await supabase.from('testimonials').delete().eq('id', id);
-    renderAppTestimonials();
-    renderAdminTables();
-    Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
+    const result = await Swal.fire({ title: 'Yakin hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' });
+    if(result.isConfirmed) {
+        testimonials = testimonials.filter(t => t.id !== id);
+        setStorage('leoly_testimonials', testimonials);
+        if (!useLocalStorage && supabase) await deleteFromSupabase('testimonials', id);
+        renderAppTestimonials();
+        renderAdminTables();
+        Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
+    }
 }
 
+// Edit functions
 async function editProjectNode(id) {
     const project = projects.find(p => p.id === id);
     if(!project) return;
@@ -807,6 +896,7 @@ async function editProjectNode(id) {
             <div class="form-group"><label>Kategori</label><select id="ep-cat"><option ${project.category === 'Web' ? 'selected' : ''}>Web</option><option ${project.category === 'Server' ? 'selected' : ''}>Server</option><option ${project.category === 'UI/UX' ? 'selected' : ''}>UI/UX</option></select></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="ep-desc" rows="3">${escapeHtml(project.description)}</textarea></div>
             <div class="form-group"><label>Gambar</label><input type="file" id="ep-image" accept="image/*"></div>
+            ${project.image ? `<img src="${project.image}" style="max-width:100px; margin-top:10px;">` : ''}
             <button type="submit" class="btn btn-primary btn-block">Simpan</button>
         </form>
     `;
@@ -828,7 +918,7 @@ async function editProjectNode(id) {
         const index = projects.findIndex(p => p.id === id);
         projects[index] = updated;
         setStorage('leoly_projects', projects);
-        if (!useLocalStorage && supabase) await supabase.from('projects').update(updated).eq('id', id);
+        if (!useLocalStorage && supabase) await saveToSupabase('projects', updated);
         renderAppProjects();
         renderAdminTables();
         overlay.classList.remove("modal-active");
@@ -852,6 +942,7 @@ async function editProductNode(id) {
             <div class="form-group"><label>Harga</label><input type="number" id="ep-price" value="${product.price}"></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="ep-desc" rows="3">${escapeHtml(product.description)}</textarea></div>
             <div class="form-group"><label>Gambar</label><input type="file" id="ep-image" accept="image/*"></div>
+            ${product.image ? `<img src="${product.image}" style="max-width:100px; margin-top:10px;">` : ''}
             <button type="submit" class="btn btn-primary btn-block">Simpan</button>
         </form>
     `;
@@ -874,7 +965,7 @@ async function editProductNode(id) {
         const index = products.findIndex(p => p.id === id);
         products[index] = updated;
         setStorage('leoly_products', products);
-        if (!useLocalStorage && supabase) await supabase.from('products').update(updated).eq('id', id);
+        if (!useLocalStorage && supabase) await saveToSupabase('products', updated);
         renderAppProducts();
         renderAdminTables();
         overlay.classList.remove("modal-active");
@@ -882,6 +973,7 @@ async function editProductNode(id) {
     });
 }
 
+// Add functions
 function setupAdminModalTriggers() {
     const overlay = document.getElementById("global-data-modal");
     const closeBtn = document.getElementById("modal-close-trigger");
@@ -890,6 +982,7 @@ function setupAdminModalTriggers() {
 
     document.getElementById("btn-edit-home")?.addEventListener("click", () => editHomeContent());
     
+    // Add Project Modal
     document.getElementById("btn-add-project-modal")?.addEventListener("click", () => {
         document.getElementById("modal-title-node").textContent = "Tambah Project";
         document.getElementById("modal-body-node").innerHTML = `
@@ -928,6 +1021,7 @@ function setupAdminModalTriggers() {
         });
     });
     
+    // Add Product Modal
     document.getElementById("btn-add-product-modal")?.addEventListener("click", () => {
         document.getElementById("modal-title-node").textContent = "Tambah Produk";
         document.getElementById("modal-body-node").innerHTML = `
@@ -967,6 +1061,7 @@ function setupAdminModalTriggers() {
         });
     });
     
+    // Add FAQ Modal
     document.getElementById("btn-add-faq-modal")?.addEventListener("click", () => {
         document.getElementById("modal-title-node").textContent = "Tambah FAQ";
         document.getElementById("modal-body-node").innerHTML = `
@@ -996,6 +1091,7 @@ function setupAdminModalTriggers() {
         });
     });
     
+    // Add Testimonial Modal
     document.getElementById("btn-add-testimonial-modal")?.addEventListener("click", () => {
         document.getElementById("modal-title-node").textContent = "Tambah Testimoni";
         document.getElementById("modal-body-node").innerHTML = `
