@@ -1,8 +1,8 @@
 /* --- ECOSYSTEM CONFIGURATION & SUPABASE INITIATION --- */
 
 // Supabase Configuration
-const SUPABASE_URL = "https://umpykccadfpnukoxbmep.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtcHlrY2NhZGZwbnVrb3hibWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNzE1NTEsImV4cCI6MjA5NTg0NzU1MX0.oi0Hi1fXyQDYeB4QOeWSGyoxpaErnld5czV5Ym_8FV0";
+const SUPABASE_URL = "https://qndqvujqfuplmwpzrbgl.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuZHF2dWpxZnVwbG13cHpyYmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODg1NTMsImV4cCI6MjA5NTg2NDU1M30.xjYhc6RdShq4uq-nRDKQ5uEvE02pzwixpfhfsCcLrrk";
 
 let supabase = null;
 let useLocalStorage = true; // Fallback ke localStorage jika Supabase gagal
@@ -40,16 +40,7 @@ const DEFAULT_HOME_CONTENT = {
     typingWords: ["Creative Technologist", "Fullstack Developer", "UI/UX Enthusiast"]
 };
 
-// Global State
-let projects = [];
-let products = [];
-let faqs = [];
-let testimonials = [];
-let cart = [];
-let homeContent = {};
-let typingTimeout = null;
-let cartPanel = null;
-
+// Nomor WhatsApp tujuan
 const WHATSAPP_NUMBER = "6285198224557";
 
 // Helper functions untuk localStorage
@@ -62,6 +53,16 @@ function setStorage(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
 }
 
+// Global State
+let projects = getStorage('leoly_projects', DEFAULT_PROJECTS);
+let products = getStorage('leoly_products', DEFAULT_PRODUCTS);
+let faqs = getStorage('leoly_faqs', DEFAULT_FAQS);
+let testimonials = getStorage('leoly_testimonials', DEFAULT_TESTIMONIALS);
+let cart = getStorage('leoly_cart', []);
+let homeContent = getStorage('leoly_home_content', DEFAULT_HOME_CONTENT);
+let typingTimeout = null;
+let cartPanel = null;
+
 /* --- INITIALIZER --- */
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("DOM Loaded, initializing...");
@@ -72,11 +73,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     AOS.init({ duration: 800, once: true });
     initParticles();
     
-    // Load data dari localStorage terlebih dahulu (cepat)
-    loadFromLocalStorage();
-    
-    // Kemudian coba load dari Supabase (opsional)
+    // Inisialisasi Supabase (tanpa menghalangi render)
     await initSupabase();
+    
+    // Jika Supabase berhasil, load data dari server
+    if (!useLocalStorage && supabase) {
+        await loadAllDataFromSupabase();
+    }
     
     // Render semua konten
     renderHomeContent();
@@ -84,48 +87,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderAppProducts();
     renderAppFAQs();
     renderAppTestimonials();
-    
-    // Load cart dari localStorage
-    cart = getStorage('leoly_cart', []);
     updateCartCount();
     renderCartPanelItems();
 
     setupGlobalEventListeners();
     
-    // Sembunyikan loading screen setelah semua selesai (maksimal 2 detik)
+    // Sembunyikan loading screen setelah 1.5 detik
     setTimeout(() => {
         if(loader) {
             loader.style.opacity = '0';
             setTimeout(() => loader.style.display = 'none', 500);
         }
-    }, 1000);
+    }, 1500);
+    
+    console.log("Initialization complete");
 });
 
-// Load dari localStorage (fallback)
-function loadFromLocalStorage() {
-    projects = getStorage('leoly_projects', DEFAULT_PROJECTS);
-    products = getStorage('leoly_products', DEFAULT_PRODUCTS);
-    faqs = getStorage('leoly_faqs', DEFAULT_FAQS);
-    testimonials = getStorage('leoly_testimonials', DEFAULT_TESTIMONIALS);
-    homeContent = getStorage('leoly_home_content', DEFAULT_HOME_CONTENT);
-    console.log("Loaded from localStorage");
-}
-
+// Inisialisasi Supabase
 async function initSupabase() {
     try {
-        // Cek apakah Supabase library tersedia
         if (typeof supabaseJs === 'undefined') {
             console.warn("Supabase library not loaded");
             return;
         }
         
-        // Inisialisasi client
         supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         console.log("Supabase client created");
         
         // Test koneksi dengan timeout 5 detik
         const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Supabase connection timeout")), 5000)
+            setTimeout(() => reject(new Error("Connection timeout")), 5000)
         );
         
         const testPromise = supabase.from('projects').select('count', { count: 'exact', head: true });
@@ -135,16 +126,14 @@ async function initSupabase() {
         console.log("Supabase connection successful");
         useLocalStorage = false;
         
-        // Load data dari Supabase
-        await loadAllDataFromSupabase();
-        
     } catch (error) {
         console.warn("Supabase connection failed, using localStorage:", error);
         useLocalStorage = true;
-        // Sudah menggunakan localStorage dari loadFromLocalStorage()
+        supabase = null;
     }
 }
 
+// Load semua data dari Supabase
 async function loadAllDataFromSupabase() {
     if (!supabase) return;
     
@@ -201,12 +190,19 @@ async function loadAllDataFromSupabase() {
         
         if (!homeError && homeData && homeData.length > 0) {
             const data = homeData[0];
+            let typingWords = DEFAULT_HOME_CONTENT.typingWords;
+            if (data.typing_words) {
+                try {
+                    typingWords = JSON.parse(data.typing_words);
+                } catch(e) {
+                    typingWords = data.typing_words.split(',').map(w => w.trim());
+                }
+            }
             homeContent = {
                 tagline: data.tagline || DEFAULT_HOME_CONTENT.tagline,
                 titlePrefix: data.title_prefix || DEFAULT_HOME_CONTENT.titlePrefix,
                 description: data.description || DEFAULT_HOME_CONTENT.description,
-                typingWords: Array.isArray(data.typing_words) ? data.typing_words : 
-                           (typeof data.typing_words === 'string' ? JSON.parse(data.typing_words) : DEFAULT_HOME_CONTENT.typingWords)
+                typingWords: typingWords
             };
             setStorage('leoly_home_content', homeContent);
         }
@@ -225,20 +221,20 @@ async function loadAllDataFromSupabase() {
     }
 }
 
-// Fungsi untuk menyimpan ke Supabase (jika terhubung)
+// Save data ke Supabase
 async function saveToSupabase(table, data, idField = 'id') {
     if (!supabase || useLocalStorage) return false;
     
     try {
         if (data[idField]) {
-            // Update
+            // Update existing
             const { error } = await supabase
                 .from(table)
                 .update(data)
                 .eq(idField, data[idField]);
             if (error) throw error;
         } else {
-            // Insert
+            // Insert new
             const { error } = await supabase
                 .from(table)
                 .insert([data]);
@@ -251,6 +247,7 @@ async function saveToSupabase(table, data, idField = 'id') {
     }
 }
 
+// Delete data dari Supabase
 async function deleteFromSupabase(table, id, idField = 'id') {
     if (!supabase || useLocalStorage) return false;
     
@@ -287,18 +284,18 @@ function initParticles() {
 
 function renderHomeContent() {
     const taglineElement = document.querySelector("#home .tagline");
-    if(taglineElement && homeContent) taglineElement.textContent = homeContent.tagline || "Hi, I'm Leoly 👋";
+    if(taglineElement) taglineElement.textContent = homeContent.tagline;
     
     const titleElement = document.querySelector("#home h1");
-    if(titleElement && homeContent) {
+    if(titleElement) {
         const existingTypingSpan = titleElement.querySelector(".typing-text");
         if(existingTypingSpan) {
-            titleElement.innerHTML = `${escapeHtml(homeContent.titlePrefix || "Fullstack Developer &")} <br><span class="typing-text"></span>`;
+            titleElement.innerHTML = `${escapeHtml(homeContent.titlePrefix)} <br><span class="typing-text"></span>`;
         }
     }
     
     const descElement = document.querySelector("#home .hero-text > p");
-    if(descElement && homeContent) descElement.textContent = homeContent.description || "Saya seorang Fullstack Developer yang berdedikasi menciptakan pengalaman digital yang bermakna.";
+    if(descElement) descElement.textContent = homeContent.description;
     
     if(typingTimeout) clearTimeout(typingTimeout);
     initTypingEffect();
@@ -308,17 +305,8 @@ function initTypingEffect() {
     const node = document.querySelector(".typing-text");
     if(!node) return;
     
-    let words = (homeContent && homeContent.typingWords && homeContent.typingWords.length > 0) ? 
+    const words = homeContent.typingWords && homeContent.typingWords.length > 0 ? 
         homeContent.typingWords : ["Creative Technologist", "Fullstack Developer", "UI/UX Enthusiast"];
-    
-    if (typeof words === 'string') {
-        try {
-            words = JSON.parse(words);
-        } catch(e) {
-            words = ["Creative Technologist", "Fullstack Developer", "UI/UX Enthusiast"];
-        }
-    }
-    
     let wordIdx = 0, charIdx = 0, isDeleting = false;
     
     function type() {
@@ -358,8 +346,8 @@ function renderAppProjects(filter = "all", query = "") {
     container.innerHTML = "";
     
     const filtered = projects.filter(p => {
-        const matchCat = filter === "all" || (p.category && p.category.toLowerCase() === filter.toLowerCase());
-        const matchSrc = (p.title && p.title.toLowerCase().includes(query.toLowerCase())) || (p.desc && p.desc.toLowerCase().includes(query.toLowerCase()));
+        const matchCat = filter === "all" || p.category.toLowerCase() === filter.toLowerCase();
+        const matchSrc = p.title.toLowerCase().includes(query.toLowerCase()) || p.desc.toLowerCase().includes(query.toLowerCase());
         return matchCat && matchSrc;
     });
 
@@ -385,7 +373,7 @@ function renderAppProjects(filter = "all", query = "") {
             <div class="card-meta-bottom">
                 <span class="tag">${escapeHtml(p.category)}</span>
                 <div class="card-actions-row">
-                    <button class="icon-btn btn-like" onclick="actionLikeProject('${p.id}')"><i class="fa-solid fa-heart"></i> ${p.likes || 0}</button>
+                    <button class="icon-btn btn-like" onclick="actionLikeProject('${p.id}')"><i class="fa-solid fa-heart"></i> ${p.likes}</button>
                     <button class="icon-btn" onclick="actionShareProject('${p.title}')"><i class="fa-solid fa-share-nodes"></i></button>
                 </div>
             </div>
@@ -400,8 +388,8 @@ function renderAppProducts(filter = "all", query = "") {
     container.innerHTML = "";
 
     const filtered = products.filter(p => {
-        const matchCat = filter === "all" || (p.category && p.category.toLowerCase() === filter.toLowerCase());
-        const matchSrc = (p.name && p.name.toLowerCase().includes(query.toLowerCase())) || (p.desc && p.desc.toLowerCase().includes(query.toLowerCase()));
+        const matchCat = filter === "all" || p.category.toLowerCase() === filter.toLowerCase();
+        const matchSrc = p.name.toLowerCase().includes(query.toLowerCase()) || p.desc.toLowerCase().includes(query.toLowerCase());
         return matchCat && matchSrc;
     });
 
@@ -425,7 +413,7 @@ function renderAppProducts(filter = "all", query = "") {
             <h3>${escapeHtml(p.name)}</h3>
             <p class="desc">${escapeHtml(p.desc)}</p>
             <div class="card-meta-bottom">
-                <span class="card-price">Rp ${(p.price || 0).toLocaleString('id-ID')}</span>
+                <span class="card-price">Rp ${p.price.toLocaleString('id-ID')}</span>
                 <button class="btn btn-primary btn-sm" onclick="actionAddProductToCart('${p.id}')"><i class="fa-solid fa-cart-plus"></i> Beli</button>
             </div>
         `;
@@ -468,7 +456,7 @@ function renderAppTestimonials() {
                 <div class="testi-info">
                     <h5>${escapeHtml(t.name)}</h5>
                     <span>${escapeHtml(t.company)}</span>
-                    <div class="stars-row">${'<i class="fa-solid fa-star"></i>'.repeat(t.stars || 5)}</div>
+                    <div class="stars-row">${'<i class="fa-solid fa-star"></i>'.repeat(t.stars)}</div>
                 </div>
             </div>
         `;
@@ -486,10 +474,10 @@ async function actionLikeProject(id) {
     if(project) {
         project.likes = (project.likes || 0) + 1;
         
-        // Update ke localStorage
+        // Save to localStorage
         setStorage('leoly_projects', projects);
         
-        // Update ke Supabase jika memungkinkan
+        // Save to Supabase if available
         if (!useLocalStorage && supabase) {
             await supabase.from('projects').update({ likes: project.likes }).eq('id', id);
         }
@@ -533,7 +521,7 @@ function renderCartPanelItems() {
     }
 
     cart.forEach((item, idx) => {
-        total += item.price || 0;
+        total += item.price;
         const row = document.createElement("div");
         row.style.display = "flex";
         row.style.justifyContent = "space-between";
@@ -544,7 +532,7 @@ function renderCartPanelItems() {
         row.innerHTML = `
             <div style="flex:1;">
                 <h5 style="font-size:13px;">${escapeHtml(item.name)}</h5>
-                <span style="font-size:12px; color:var(--text-muted);">Rp ${(item.price || 0).toLocaleString('id-ID')}</span>
+                <span style="font-size:12px; color:var(--text-muted);">Rp ${item.price.toLocaleString('id-ID')}</span>
             </div>
             <button class="icon-btn" style="width:28px; height:28px; font-size:11px;" onclick="actionRemoveCartItem(${idx})"><i class="fa-solid fa-trash"></i></button>
         `;
@@ -570,8 +558,8 @@ function checkoutToWhatsApp() {
     let productList = "";
     
     cart.forEach((item, index) => {
-        total += item.price || 0;
-        productList += `${index + 1}. ${item.name} - Rp ${(item.price || 0).toLocaleString('id-ID')}\n`;
+        total += item.price;
+        productList += `${index + 1}. ${item.name} - Rp ${item.price.toLocaleString('id-ID')}\n`;
     });
     
     const message = `Halo Leoly! Saya ingin memesan produk berikut:%0A%0A${encodeURIComponent(productList)}%0A────────────────%0A*Total: Rp ${total.toLocaleString('id-ID')}*%0A%0ASaya tertarik dengan produk di atas. Mohon informasi lebih lanjut untuk proses pemesanan. Terima kasih!`;
@@ -582,7 +570,7 @@ function checkoutToWhatsApp() {
     Swal.fire({
         icon: 'question',
         title: 'Konfirmasi Checkout',
-        text: `Anda akan diarahkan ke WhatsApp untuk melanjutkan pemesanan dengan total Rp ${total.toLocaleString('id-ID')}. Keranjang akan dikosongkan setelah checkout. Lanjutkan?`,
+        text: `Anda akan diarahkan ke WhatsApp untuk melanjutkan pemesanan dengan total Rp ${total.toLocaleString('id-ID')}. Lanjutkan?`,
         showCancelButton: true,
         confirmButtonText: 'Ya, Lanjutkan',
         cancelButtonText: 'Batal',
@@ -595,7 +583,7 @@ function checkoutToWhatsApp() {
             setStorage('leoly_cart', cart);
             updateCartCount();
             renderCartPanelItems();
-            Swal.fire({ icon: 'success', title: 'Checkout Berhasil!', text: 'Pesanan Anda telah dikirim. Keranjang sudah dikosongkan.', confirmButtonColor: '#000', timer: 2000 });
+            Swal.fire({ icon: 'success', title: 'Checkout Berhasil!', text: 'Pesanan Anda telah dikirim.', confirmButtonColor: '#000', timer: 2000 });
         }
     });
 }
@@ -604,17 +592,6 @@ function closeCartPanel() {
     if(cartPanel) {
         cartPanel.classList.remove("panel-open");
     }
-}
-
-function saveCart() {
-    setStorage('leoly_cart', cart);
-}
-
-function clearCart() {
-    cart = [];
-    saveCart();
-    updateCartCount();
-    renderCartPanelItems();
 }
 
 /* --- EVENT LISTENERS --- */
@@ -739,7 +716,7 @@ function setupGlobalEventListeners() {
             const waMessage = `Halo Leoly!%0A%0ANama: ${encodeURIComponent(name)}%0AEmail: ${encodeURIComponent(email)}%0APesan: ${encodeURIComponent(message)}%0A%0AMohon direspons. Terima kasih!`;
             const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`;
             
-            Swal.fire({ icon: 'success', title: 'Pesan Terkirim!', text: 'Terima kasih, Anda akan diarahkan ke WhatsApp untuk melanjutkan.', confirmButtonColor: '#000' }).then(() => {
+            Swal.fire({ icon: 'success', title: 'Pesan Terkirim!', text: 'Terima kasih, Anda akan diarahkan ke WhatsApp.', confirmButtonColor: '#000' }).then(() => {
                 window.open(waUrl, '_blank');
             });
             contactForm.reset();
@@ -762,7 +739,7 @@ function setupGlobalEventListeners() {
     setupAdminSubsystem();
 }
 
-/* --- ADMIN SUBSYSTEM (Sederhana) --- */
+/* --- ADMIN SUBSYSTEM --- */
 function setupAdminSubsystem() {
     const loginForm = document.getElementById("admin-login-form");
     const loginBox = document.getElementById("admin-login-box");
@@ -815,7 +792,7 @@ function renderAdminTables() {
         projects.forEach(p => {
             const tr = document.createElement("tr");
             const hasImage = p.image ? '<i class="fa-solid fa-image" style="color:green"></i>' : '<i class="fa-solid fa-image-slash" style="color:gray"></i>';
-            tr.innerHTML = `<td>${hasImage} ${escapeHtml(p.title)}</td><td>${escapeHtml(p.category)}</td><td>${p.likes || 0}</td>
+            tr.innerHTML = `<td>${hasImage} ${escapeHtml(p.title)}</td><td>${escapeHtml(p.category)}</td><td>${p.likes}</td>
                 <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="editProjectNode('${p.id}')"><i class="fa-solid fa-edit"></i></button>
                 <button class="btn btn-secondary btn-sm" onclick="deleteProjectNode('${p.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
             tbodyProj.appendChild(tr);
@@ -828,7 +805,7 @@ function renderAdminTables() {
         products.forEach(p => {
             const tr = document.createElement("tr");
             const hasImage = p.image ? '<i class="fa-solid fa-image" style="color:green"></i>' : '<i class="fa-solid fa-image-slash" style="color:gray"></i>';
-            tr.innerHTML = `<td>${hasImage} ${escapeHtml(p.name)}</td><td>${escapeHtml(p.category)}</td><td>Rp ${(p.price || 0).toLocaleString('id-ID')}</td>
+            tr.innerHTML = `<td>${hasImage} ${escapeHtml(p.name)}</td><td>${escapeHtml(p.category)}</td><td>Rp ${p.price.toLocaleString('id-ID')}</td>
                 <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="editProductNode('${p.id}')"><i class="fa-solid fa-edit"></i></button>
                 <button class="btn btn-secondary btn-sm" onclick="deleteProductNode('${p.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
             tbodyProd.appendChild(tr);
@@ -851,7 +828,7 @@ function renderAdminTables() {
         tbodyTesti.innerHTML = "";
         testimonials.forEach(t => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${escapeHtml(t.name)}</td><td>${escapeHtml(t.company)}</td><td>${t.stars || 5} ★</td>
+            tr.innerHTML = `<td>${escapeHtml(t.name)}</td><td>${escapeHtml(t.company)}</td><td>${t.stars} ★</td>
                 <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="deleteTestimonialNode('${t.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
             tbodyTesti.appendChild(tr);
         });
@@ -867,27 +844,27 @@ function imageToBase64(file) {
     });
 }
 
-// Fungsi Edit Home Content
-function editHomeContent() {
+// Edit Home Content dengan Supabase
+async function editHomeContent() {
     const overlay = document.getElementById("global-data-modal");
     const titleNode = document.getElementById("modal-title-node");
     const bodyNode = document.getElementById("modal-body-node");
     
-    const typingWordsStr = Array.isArray(homeContent.typingWords) ? homeContent.typingWords.join(', ') : "";
+    const typingWordsStr = homeContent.typingWords.join(', ');
     
     titleNode.textContent = "Edit Home Page Content";
     bodyNode.innerHTML = `
         <form id="form-edit-home">
-            <div class="form-group"><label>Tagline</label><input type="text" id="eh-tagline" value="${escapeHtml(homeContent.tagline || '')}" required></div>
-            <div class="form-group"><label>Title Prefix</label><input type="text" id="eh-title-prefix" value="${escapeHtml(homeContent.titlePrefix || '')}" required></div>
-            <div class="form-group"><label>Kata-kata Typing Effect (pisahkan dengan koma)</label><input type="text" id="eh-typing-words" value="${escapeHtml(typingWordsStr)}" required><small style="color: var(--text-muted); font-size: 12px;">Contoh: Creative Technologist, Fullstack Developer, UI/UX Enthusiast</small></div>
-            <div class="form-group"><label>Deskripsi</label><textarea id="eh-description" rows="4" required>${escapeHtml(homeContent.description || '')}</textarea></div>
+            <div class="form-group"><label>Tagline</label><input type="text" id="eh-tagline" value="${escapeHtml(homeContent.tagline)}" required></div>
+            <div class="form-group"><label>Title Prefix</label><input type="text" id="eh-title-prefix" value="${escapeHtml(homeContent.titlePrefix)}" required></div>
+            <div class="form-group"><label>Kata-kata Typing Effect (pisahkan dengan koma)</label><input type="text" id="eh-typing-words" value="${escapeHtml(typingWordsStr)}" required><small>Contoh: Creative Technologist, Fullstack Developer, UI/UX Enthusiast</small></div>
+            <div class="form-group"><label>Deskripsi</label><textarea id="eh-description" rows="4" required>${escapeHtml(homeContent.description)}</textarea></div>
             <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
         </form>
     `;
     overlay.classList.add("modal-active");
     
-    document.getElementById("form-edit-home").addEventListener("submit", (e) => {
+    document.getElementById("form-edit-home").addEventListener("submit", async (e) => {
         e.preventDefault();
         const tagline = document.getElementById("eh-tagline").value;
         const titlePrefix = document.getElementById("eh-title-prefix").value;
@@ -896,26 +873,20 @@ function editHomeContent() {
         
         const typingWords = typingWordsStr.split(',').map(word => word.trim()).filter(word => word.length > 0);
         
-        homeContent = {
-            tagline: tagline,
-            titlePrefix: titlePrefix,
-            description: description,
-            typingWords: typingWords
-        };
+        homeContent = { tagline, titlePrefix, description, typingWords };
         
-        // Simpan ke localStorage
+        // Save ke localStorage
         setStorage('leoly_home_content', homeContent);
         
-        // Simpan ke Supabase jika memungkinkan
+        // Save ke Supabase jika tersedia
         if (!useLocalStorage && supabase) {
-            supabase.from('home_content').upsert([{
+            await supabase.from('home_content').upsert([{
                 id: 1,
                 tagline: tagline,
                 title_prefix: titlePrefix,
                 description: description,
-                typing_words: JSON.stringify(typingWords),
-                updated_at: new Date().toISOString()
-            }]).then(() => console.log("Home content saved to Supabase"));
+                typing_words: JSON.stringify(typingWords)
+            }]);
         }
         
         renderHomeContent();
@@ -924,15 +895,13 @@ function editHomeContent() {
     });
 }
 
-// Delete Functions
-function deleteProjectNode(id) {
+// DELETE Functions dengan Supabase
+async function deleteProjectNode(id) {
     projects = projects.filter(p => p.id !== id);
     setStorage('leoly_projects', projects);
     
     if (!useLocalStorage && supabase) {
-        supabase.from('projects').delete().eq('id', id).then(() => {
-            console.log("Deleted from Supabase");
-        });
+        await supabase.from('projects').delete().eq('id', id);
     }
     
     renderAppProjects();
@@ -940,14 +909,12 @@ function deleteProjectNode(id) {
     Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Project berhasil dihapus.', timer: 1500, showConfirmButton: false });
 }
 
-function deleteProductNode(id) {
+async function deleteProductNode(id) {
     products = products.filter(p => p.id !== id);
     setStorage('leoly_products', products);
     
     if (!useLocalStorage && supabase) {
-        supabase.from('products').delete().eq('id', id).then(() => {
-            console.log("Deleted from Supabase");
-        });
+        await supabase.from('products').delete().eq('id', id);
     }
     
     renderAppProducts();
@@ -955,14 +922,12 @@ function deleteProductNode(id) {
     Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Produk berhasil dihapus.', timer: 1500, showConfirmButton: false });
 }
 
-function deleteFaqNode(id) {
+async function deleteFaqNode(id) {
     faqs = faqs.filter(f => f.id !== id);
     setStorage('leoly_faqs', faqs);
     
     if (!useLocalStorage && supabase) {
-        supabase.from('faqs').delete().eq('id', id).then(() => {
-            console.log("Deleted from Supabase");
-        });
+        await supabase.from('faqs').delete().eq('id', id);
     }
     
     renderAppFAQs();
@@ -970,14 +935,12 @@ function deleteFaqNode(id) {
     Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'FAQ berhasil dihapus.', timer: 1500, showConfirmButton: false });
 }
 
-function deleteTestimonialNode(id) {
+async function deleteTestimonialNode(id) {
     testimonials = testimonials.filter(t => t.id !== id);
     setStorage('leoly_testimonials', testimonials);
     
     if (!useLocalStorage && supabase) {
-        supabase.from('testimonials').delete().eq('id', id).then(() => {
-            console.log("Deleted from Supabase");
-        });
+        await supabase.from('testimonials').delete().eq('id', id);
     }
     
     renderAppTestimonials();
@@ -985,8 +948,8 @@ function deleteTestimonialNode(id) {
     Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Testimoni berhasil dihapus.', timer: 1500, showConfirmButton: false });
 }
 
-// Edit functions
-function editProjectNode(id) {
+// EDIT Functions dengan Supabase
+async function editProjectNode(id) {
     const project = projects.find(p => p.id === id);
     if(!project) return;
     
@@ -998,15 +961,11 @@ function editProjectNode(id) {
     bodyNode.innerHTML = `
         <form id="form-edit-project">
             <div class="form-group"><label>Judul Project</label><input type="text" id="ep-title" value="${escapeHtml(project.title)}" required></div>
-            <div class="form-group"><label>Kategori</label><select id="ep-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;">
-                <option ${project.category === 'Web' ? 'selected' : ''}>Web</option>
-                <option ${project.category === 'Server' ? 'selected' : ''}>Server</option>
-                <option ${project.category === 'UI/UX' ? 'selected' : ''}>UI/UX</option>
-            </select></div>
+            <div class="form-group"><label>Kategori</label><select id="ep-category"><option ${project.category === 'Web' ? 'selected' : ''}>Web</option><option ${project.category === 'Server' ? 'selected' : ''}>Server</option><option ${project.category === 'UI/UX' ? 'selected' : ''}>UI/UX</option></select></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="ep-desc" rows="3" required>${escapeHtml(project.desc)}</textarea></div>
             <div class="form-group"><label>Gambar Thumbnail</label><input type="file" id="ep-image" accept="image/*"></div>
-            ${project.image ? `<div class="form-group"><img src="${project.image}" style="max-width:100%; border-radius:8px; margin-top:10px;"><p style="font-size:12px;">Gambar saat ini</p></div>` : ''}
-            <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
+            ${project.image ? `<div><img src="${project.image}" style="max-width:100%; border-radius:8px;"><p>Gambar saat ini</p></div>` : ''}
+            <button type="submit" class="btn btn-primary btn-block">Simpan</button>
         </form>
     `;
     overlay.classList.add("modal-active");
@@ -1019,21 +978,17 @@ function editProjectNode(id) {
         const imageFile = document.getElementById("ep-image").files[0];
         
         let imageBase64 = project.image;
-        if(imageFile) {
-            imageBase64 = await imageToBase64(imageFile);
-        }
+        if(imageFile) imageBase64 = await imageToBase64(imageFile);
         
         const index = projects.findIndex(p => p.id === id);
-        projects[index] = { ...project, title, category, desc: desc, image: imageBase64 };
+        projects[index] = { ...project, title, category, desc, image: imageBase64 };
         
-        // Simpan ke localStorage
+        // Save ke localStorage
         setStorage('leoly_projects', projects);
         
-        // Simpan ke Supabase jika memungkinkan
+        // Save ke Supabase jika tersedia
         if (!useLocalStorage && supabase) {
-            supabase.from('projects').update(projects[index]).eq('id', id).then(() => {
-                console.log("Updated in Supabase");
-            });
+            await supabase.from('projects').update(projects[index]).eq('id', id);
         }
         
         renderAppProjects();
@@ -1043,7 +998,7 @@ function editProjectNode(id) {
     });
 }
 
-function editProductNode(id) {
+async function editProductNode(id) {
     const product = products.find(p => p.id === id);
     if(!product) return;
     
@@ -1055,16 +1010,12 @@ function editProductNode(id) {
     bodyNode.innerHTML = `
         <form id="form-edit-product">
             <div class="form-group"><label>Nama Produk</label><input type="text" id="epr-name" value="${escapeHtml(product.name)}" required></div>
-            <div class="form-group"><label>Kategori</label><select id="epr-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;">
-                <option ${product.category === 'Template' ? 'selected' : ''}>Template</option>
-                <option ${product.category === 'Module' ? 'selected' : ''}>Module</option>
-                <option ${product.category === 'Asset' ? 'selected' : ''}>Asset</option>
-            </select></div>
-            <div class="form-group"><label>Harga (Rp)</label><input type="number" id="epr-price" value="${product.price}" required></div>
+            <div class="form-group"><label>Kategori</label><select id="epr-category"><option ${product.category === 'Template' ? 'selected' : ''}>Template</option><option ${product.category === 'Module' ? 'selected' : ''}>Module</option><option ${product.category === 'Asset' ? 'selected' : ''}>Asset</option></select></div>
+            <div class="form-group"><label>Harga</label><input type="number" id="epr-price" value="${product.price}" required></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="epr-desc" rows="3" required>${escapeHtml(product.desc)}</textarea></div>
             <div class="form-group"><label>Gambar Thumbnail</label><input type="file" id="epr-image" accept="image/*"></div>
-            ${product.image ? `<div class="form-group"><img src="${product.image}" style="max-width:100%; border-radius:8px; margin-top:10px;"><p style="font-size:12px;">Gambar saat ini</p></div>` : ''}
-            <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
+            ${product.image ? `<div><img src="${product.image}" style="max-width:100%; border-radius:8px;"><p>Gambar saat ini</p></div>` : ''}
+            <button type="submit" class="btn btn-primary btn-block">Simpan</button>
         </form>
     `;
     overlay.classList.add("modal-active");
@@ -1078,19 +1029,17 @@ function editProductNode(id) {
         const imageFile = document.getElementById("epr-image").files[0];
         
         let imageBase64 = product.image;
-        if(imageFile) {
-            imageBase64 = await imageToBase64(imageFile);
-        }
+        if(imageFile) imageBase64 = await imageToBase64(imageFile);
         
         const index = products.findIndex(p => p.id === id);
-        products[index] = { ...product, name, category, price, desc: desc, image: imageBase64 };
+        products[index] = { ...product, name, category, price, desc, image: imageBase64 };
         
+        // Save ke localStorage
         setStorage('leoly_products', products);
         
+        // Save ke Supabase jika tersedia
         if (!useLocalStorage && supabase) {
-            supabase.from('products').update(products[index]).eq('id', id).then(() => {
-                console.log("Updated in Supabase");
-            });
+            await supabase.from('products').update(products[index]).eq('id', id);
         }
         
         renderAppProducts();
@@ -1100,7 +1049,7 @@ function editProductNode(id) {
     });
 }
 
-/* --- MODAL SETUP --- */
+// ADD Functions dengan Supabase
 function setupAdminModalTriggers() {
     const overlay = document.getElementById("global-data-modal");
     const closeBtn = document.getElementById("modal-close-trigger");
@@ -1118,7 +1067,7 @@ function setupAdminModalTriggers() {
             document.getElementById("modal-body-node").innerHTML = `
                 <form id="form-crud-project">
                     <div class="form-group"><label>Judul Project</label><input type="text" id="cp-title" required></div>
-                    <div class="form-group"><label>Kategori</label><select id="cp-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;"><option>Web</option><option>Server</option><option>UI/UX</option></select></div>
+                    <div class="form-group"><label>Kategori</label><select id="cp-category"><option>Web</option><option>Server</option><option>UI/UX</option></select></div>
                     <div class="form-group"><label>Deskripsi</label><textarea id="cp-desc" rows="3" required></textarea></div>
                     <div class="form-group"><label>Gambar (Opsional)</label><input type="file" id="cp-image" accept="image/*"></div>
                     <button type="submit" class="btn btn-primary btn-block">Simpan</button>
@@ -1131,28 +1080,27 @@ function setupAdminModalTriggers() {
                 const imgFile = document.getElementById("cp-image").files[0];
                 if(imgFile) imageBase64 = await imageToBase64(imgFile);
                 
-                const newProject = {
-                    id: 'p_' + Date.now(),
-                    title: document.getElementById("cp-title").value,
-                    category: document.getElementById("cp-category").value,
-                    desc: document.getElementById("cp-desc").value,
-                    likes: 0,
-                    image: imageBase64
+                const newProject = { 
+                    id: 'p_' + Date.now(), 
+                    title: document.getElementById("cp-title").value, 
+                    category: document.getElementById("cp-category").value, 
+                    desc: document.getElementById("cp-desc").value, 
+                    likes: 0, 
+                    image: imageBase64,
+                    created_at: new Date().toISOString()
                 };
                 
                 projects.unshift(newProject);
                 setStorage('leoly_projects', projects);
                 
                 if (!useLocalStorage && supabase) {
-                    supabase.from('projects').insert([newProject]).then(() => {
-                        console.log("Added to Supabase");
-                    });
+                    await supabase.from('projects').insert([newProject]);
                 }
                 
                 renderAppProjects();
                 renderAdminTables();
                 overlay.classList.remove("modal-active");
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Project berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1500, showConfirmButton: false });
             });
         });
     }
@@ -1164,8 +1112,8 @@ function setupAdminModalTriggers() {
             document.getElementById("modal-body-node").innerHTML = `
                 <form id="form-crud-product">
                     <div class="form-group"><label>Nama Produk</label><input type="text" id="cpr-name" required></div>
-                    <div class="form-group"><label>Kategori</label><select id="cpr-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;"><option>Template</option><option>Module</option><option>Asset</option></select></div>
-                    <div class="form-group"><label>Harga (Rp)</label><input type="number" id="cpr-price" required></div>
+                    <div class="form-group"><label>Kategori</label><select id="cpr-category"><option>Template</option><option>Module</option><option>Asset</option></select></div>
+                    <div class="form-group"><label>Harga</label><input type="number" id="cpr-price" required></div>
                     <div class="form-group"><label>Deskripsi</label><textarea id="cpr-desc" rows="3" required></textarea></div>
                     <div class="form-group"><label>Gambar (Opsional)</label><input type="file" id="cpr-image" accept="image/*"></div>
                     <button type="submit" class="btn btn-primary btn-block">Simpan</button>
@@ -1178,28 +1126,27 @@ function setupAdminModalTriggers() {
                 const imgFile = document.getElementById("cpr-image").files[0];
                 if(imgFile) imageBase64 = await imageToBase64(imgFile);
                 
-                const newProduct = {
-                    id: 'pr_' + Date.now(),
-                    name: document.getElementById("cpr-name").value,
-                    category: document.getElementById("cpr-category").value,
-                    price: Number(document.getElementById("cpr-price").value),
-                    desc: document.getElementById("cpr-desc").value,
-                    image: imageBase64
+                const newProduct = { 
+                    id: 'pr_' + Date.now(), 
+                    name: document.getElementById("cpr-name").value, 
+                    category: document.getElementById("cpr-category").value, 
+                    price: Number(document.getElementById("cpr-price").value), 
+                    desc: document.getElementById("cpr-desc").value, 
+                    image: imageBase64,
+                    created_at: new Date().toISOString()
                 };
                 
                 products.unshift(newProduct);
                 setStorage('leoly_products', products);
                 
                 if (!useLocalStorage && supabase) {
-                    supabase.from('products').insert([newProduct]).then(() => {
-                        console.log("Added to Supabase");
-                    });
+                    await supabase.from('products').insert([newProduct]);
                 }
                 
                 renderAppProducts();
                 renderAdminTables();
                 overlay.classList.remove("modal-active");
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Produk berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1500, showConfirmButton: false });
             });
         });
     }
@@ -1216,27 +1163,26 @@ function setupAdminModalTriggers() {
                 </form>
             `;
             overlay.classList.add("modal-active");
-            document.getElementById("form-crud-faq").addEventListener("submit", (e) => {
+            document.getElementById("form-crud-faq").addEventListener("submit", async (e) => {
                 e.preventDefault();
-                const newFaq = {
-                    id: 'f_' + Date.now(),
-                    question: document.getElementById("cf-q").value,
-                    answer: document.getElementById("cf-a").value
+                const newFaq = { 
+                    id: 'f_' + Date.now(), 
+                    question: document.getElementById("cf-q").value, 
+                    answer: document.getElementById("cf-a").value,
+                    created_at: new Date().toISOString()
                 };
                 
                 faqs.push(newFaq);
                 setStorage('leoly_faqs', faqs);
                 
                 if (!useLocalStorage && supabase) {
-                    supabase.from('faqs').insert([newFaq]).then(() => {
-                        console.log("Added to Supabase");
-                    });
+                    await supabase.from('faqs').insert([newFaq]);
                 }
                 
                 renderAppFAQs();
                 renderAdminTables();
                 overlay.classList.remove("modal-active");
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'FAQ berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1500, showConfirmButton: false });
             });
         });
     }
@@ -1249,35 +1195,34 @@ function setupAdminModalTriggers() {
                 <form id="form-crud-testi">
                     <div class="form-group"><label>Nama</label><input type="text" id="ct-name" required></div>
                     <div class="form-group"><label>Perusahaan</label><input type="text" id="ct-comp" required></div>
-                    <div class="form-group"><label>Rating (1-5)</label><input type="number" id="ct-star" min="1" max="5" value="5" required></div>
+                    <div class="form-group"><label>Rating</label><input type="number" id="ct-star" min="1" max="5" value="5" required></div>
                     <div class="form-group"><label>Testimoni</label><textarea id="ct-text" rows="3" required></textarea></div>
                     <button type="submit" class="btn btn-primary btn-block">Simpan</button>
                 </form>
             `;
             overlay.classList.add("modal-active");
-            document.getElementById("form-crud-testi").addEventListener("submit", (e) => {
+            document.getElementById("form-crud-testi").addEventListener("submit", async (e) => {
                 e.preventDefault();
-                const newTestimonial = {
-                    id: 't_' + Date.now(),
-                    name: document.getElementById("ct-name").value,
-                    company: document.getElementById("ct-comp").value,
-                    stars: Number(document.getElementById("ct-star").value),
-                    text: document.getElementById("ct-text").value
+                const newTestimonial = { 
+                    id: 't_' + Date.now(), 
+                    name: document.getElementById("ct-name").value, 
+                    company: document.getElementById("ct-comp").value, 
+                    stars: Number(document.getElementById("ct-star").value), 
+                    text: document.getElementById("ct-text").value,
+                    created_at: new Date().toISOString()
                 };
                 
                 testimonials.unshift(newTestimonial);
                 setStorage('leoly_testimonials', testimonials);
                 
                 if (!useLocalStorage && supabase) {
-                    supabase.from('testimonials').insert([newTestimonial]).then(() => {
-                        console.log("Added to Supabase");
-                    });
+                    await supabase.from('testimonials').insert([newTestimonial]);
                 }
                 
                 renderAppTestimonials();
                 renderAdminTables();
                 overlay.classList.remove("modal-active");
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Testimoni berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1500, showConfirmButton: false });
             });
         });
     }
