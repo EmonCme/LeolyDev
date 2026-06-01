@@ -1,88 +1,621 @@
-// ==========================================================================
-// 1. KREDENSIAL DEVELOPER ACCOUNT & KONSTANTA GAMBAR ASSET
-// ==========================================================================
-const DEV_USER = "leoly";
-const DEV_PASS = "dev123";
+/* --- ECOSYSTEM CONFIGURATION & LOCALSTORAGE INITIATION --- */
+const DEFAULT_PROJECTS = [
+    { id: "p1", title: "E-Commerce Platform Modern", category: "Web", desc: "Platform belanja online dengan fitur keranjang, pembayaran, dan dashboard admin real-time.", likes: 45, image: null },
+    { id: "p2", title: "Portfolio Glassmorphism", category: "UI/UX", desc: "Desain portfolio premium dengan efek glassmorphism dan animasi halus.", likes: 38, image: null },
+    { id: "p3", title: "RESTful API Service", category: "Server", desc: "Backend service dengan autentikasi JWT dan dokumentasi API lengkap.", likes: 29, image: null },
+    { id: "p4", title: "Task Management App", category: "Web", desc: "Aplikasi manajemen tugas kolaboratif dengan real-time update.", likes: 52, image: null }
+];
 
-// Silakan ganti dengan nomor WhatsApp kamu (Gunakan format kode negara tanpa tanda + atau spasi)
-// Contoh: 6281234567890 (62 adalah kode Indonesia)
-const WHATSAPP_NUMBER = "6281234567890"; 
+const DEFAULT_PRODUCTS = [
+    { id: "pr1", name: "Premium Portfolio Template", category: "Template", price: 199000, desc: "Template portfolio modern dengan desain glassmorphism dan animasi menarik.", image: null },
+    { id: "pr2", name: "React Component Library", category: "Module", price: 349000, desc: "Koleksi komponen React siap pakai untuk mempercepat development.", image: null },
+    { id: "pr3", name: "Icon Pack - Minimalist", category: "Asset", price: 99000, desc: "Paket 200+ ikon minimalist untuk berbagai kebutuhan desain.", image: null },
+    { id: "pr4", name: "Dashboard Admin Template", category: "Template", price: 299000, desc: "Template dashboard admin dengan fitur lengkap dan responsif.", image: null }
+];
 
-const DEFAULT_PROJECT_IMG = "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?q=80&w=600";
-const DEFAULT_SHOP_IMG = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600";
+const DEFAULT_FAQS = [
+    { id: "f1", question: "Berapa lama waktu pengerjaan project?", answer: "Durasi pengerjaan tergantung kompleksitas project. Rata-rata 2-4 minggu untuk website company profile, dan 1-3 bulan untuk aplikasi kompleks." },
+    { id: "f2", question: "Apakah menerima kerjasama jangka panjang?", answer: "Ya, saya terbuka untuk kerjasama retainer atau kontrak jangka panjang untuk maintenance dan pengembangan berkelanjutan." },
+    { id: "f3", question: "Teknologi apa yang biasa digunakan?", answer: "Saya menggunakan React/Next.js untuk frontend, Node.js/Python untuk backend, dan berbagai database sesuai kebutuhan project." }
+];
 
-const DEFAULT_AVATAR_IMG = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150";
-const DEFAULT_BANNER_IMG = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200";
+const DEFAULT_TESTIMONIALS = [
+    { id: "t1", name: "Budi Santoso", company: "TechCorp ID", text: "Leoly sangat profesional dan cepat dalam mengerjakan project. Hasilnya melebihi ekspektasi!", stars: 5 },
+    { id: "t2", name: "Sarah Wijaya", company: "Creative Studio", text: "Desain yang dihasilkan sangat modern dan user-friendly. Sangat merekomendasikan!", stars: 5 }
+];
 
-// ==========================================================================
-// 2. STATE STORAGE MANAGEMENT (LOCAL STORAGE PERSISTENCE)
-// ==========================================================================
-let currentUserRole = localStorage.getItem('userRole') || "guest"; 
-
-let profileData = JSON.parse(localStorage.getItem('leoly_profile')) || {
-    name: "Leoly.dev",
-    tag: "Mobile-Based Developer",
-    bio: "Fokus membangun antarmuka web interaktif yang bersih, minimalis, dan nyaman dipandang dengan optimasi kode modern.",
-    avatar: "", 
-    banner: ""  
+// Default Home Content
+const DEFAULT_HOME_CONTENT = {
+    tagline: "Hi, I'm Leoly 👋",
+    titlePrefix: "Fullstack Developer &",
+    description: "Saya seorang Fullstack Developer yang berdedikasi menciptakan pengalaman digital yang bermakna. Menggabungkan kode yang elegan dengan desain yang indah.",
+    typingWords: ["Creative Technologist", "Fullstack Developer", "UI/UX Enthusiast"]
 };
 
-let projectsData = JSON.parse(localStorage.getItem('leoly_projects')) || [
-    { 
-        title: "Personal Website V1", 
-        desc: "Desain portofolio minimalis black & white dengan sistem smooth glass blur effect.",
-        image: ""
-    },
-    { 
-        title: "Dashboard Layout", 
-        desc: "Template UI dashboard interaktif premium berbasis penataan web mobile responsive.",
-        image: ""
-    }
-];
+// Helper functions
+function getStorage(key, fallback) {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : fallback;
+}
+function setStorage(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+}
 
-let shopData = JSON.parse(localStorage.getItem('leoly_shop')) || [
-    { 
-        title: "Premium UI Slicing Kit", 
-        desc: "Kumpulan komponen CSS modern modular siap pakai.", 
-        price: "Rp 35.000",
-        image: ""
-    },
-    { 
-        title: "Custom Sidebar Code", 
-        desc: "Source code efek right-floating sidebar blur transparan.", 
-        price: "Free",
-        image: ""
-    }
-];
+// Global State
+let projects = getStorage('leoly_projects', DEFAULT_PROJECTS);
+let products = getStorage('leoly_products', DEFAULT_PRODUCTS);
+let faqs = getStorage('leoly_faqs', DEFAULT_FAQS);
+let testimonials = getStorage('leoly_testimonials', DEFAULT_TESTIMONIALS);
+let donations = getStorage('leoly_donations', []);
+let cart = [];
+let homeContent = getStorage('leoly_home_content', DEFAULT_HOME_CONTENT);
+let typingTimeout = null;
 
-let messagesData = JSON.parse(localStorage.getItem('leoly_messages')) || [
-    {
-        contact: "HDFv_Member#001",
-        subject: "Akses Server Terkunci",
-        message: "Halo admin Leoly, saya tidak bisa mengakses dashboard info server utama HDFv sejak tadi pagi. Mohon bantuannya."
-    }
-];
-
-let donationData = JSON.parse(localStorage.getItem('leoly_donations')) || [
-    { name: "HDFv_Duda", amount: 50000, method: "DANA", msg: "Semangat urus server info HDFv banh!" },
-    { name: "Anonymous", amount: 25000, method: "Bank BCA", msg: "Slicing web UI-nya clean bgt, mantap bro." }
-];
-
-// OPTIMASI HP: VALIDASI UKURAN FILE SEBELUM CONVERT BASE64
-function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        if (!file) {
-            resolve("");
-            return;
+/* --- INITIALIZER --- */
+document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+        const loader = document.getElementById("loading-screen");
+        if(loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
         }
+    }, 800);
+
+    AOS.init({ duration: 800, once: true });
+    initParticles();
+    
+    // Render semua konten
+    renderHomeContent();
+    renderAppProjects();
+    renderAppProducts();
+    renderAppFAQs();
+    renderAppTestimonials();
+    updateCartCount();
+
+    setupGlobalEventListeners();
+});
+
+function initParticles() {
+    if(document.getElementById('particles-js')) {
+        particlesJS('particles-js', {
+            "particles": {
+                "number": { "value": 40, "density": { "enable": true, "value_area": 800 } },
+                "color": { "value": "#ffffff" },
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.08, "random": false },
+                "size": { "value": 2, "random": true },
+                "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.03, "width": 1 },
+                "move": { "enable": true, "speed": 1, "direction": "none", "random": true }
+            },
+            "interactivity": { "events": { "onhover": { "enable": false }, "onclick": { "enable": false } } },
+            "retina_detect": true
+        });
+    }
+}
+
+// Render Home Content ke halaman
+function renderHomeContent() {
+    // Update tagline
+    const taglineElement = document.querySelector("#home .tagline");
+    if(taglineElement) taglineElement.textContent = homeContent.tagline;
+    
+    // Update title - pertahankan span typing-text
+    const titleElement = document.querySelector("#home h1");
+    if(titleElement) {
+        // Simpan konten yang sudah ada
+        const existingTypingSpan = titleElement.querySelector(".typing-text");
+        if(existingTypingSpan) {
+            // Hanya update teks sebelum typing span
+            const prefixText = homeContent.titlePrefix;
+            titleElement.innerHTML = `${escapeHtml(prefixText)} <br><span class="typing-text"></span>`;
+        }
+    }
+    
+    // Update description
+    const descElement = document.querySelector("#home .hero-text > p");
+    if(descElement) descElement.textContent = homeContent.description;
+    
+    // Restart typing effect
+    if(typingTimeout) clearTimeout(typingTimeout);
+    initTypingEffect();
+}
+
+function initTypingEffect() {
+    const node = document.querySelector(".typing-text");
+    if(!node) return;
+    
+    // Gunakan kata-kata dari homeContent
+    const words = homeContent.typingWords && homeContent.typingWords.length > 0 ? 
+        homeContent.typingWords : ["Creative Technologist", "Fullstack Developer", "UI/UX Enthusiast"];
+    let wordIdx = 0, charIdx = 0, isDeleting = false;
+    
+    function type() {
+        const current = words[wordIdx];
+        if(!current) return;
         
-        const maxSizeBytes = 1024 * 1024; // 1MB
-        if (file.size > maxSizeBytes) {
-            showToast("Ukuran gambar terlalu besar! Maksimal ukuran file adalah 1MB.", "error");
-            resolve(""); 
-            return;
+        node.textContent = isDeleting ? current.substring(0, charIdx - 1) : current.substring(0, charIdx + 1);
+        charIdx = isDeleting ? charIdx - 1 : charIdx + 1;
+        
+        let typeSpeed = isDeleting ? 50 : 120;
+        if (!isDeleting && charIdx === current.length) {
+            typeSpeed = 2000; 
+            isDeleting = true;
+        } else if (isDeleting && charIdx === 0) {
+            isDeleting = false; 
+            wordIdx = (wordIdx + 1) % words.length; 
+            typeSpeed = 500;
         }
+        typingTimeout = setTimeout(type, typeSpeed);
+    }
+    type();
+}
 
+function escapeHtml(str) {
+    if(!str) return '';
+    return String(str).replace(/[&<>]/g, function(m) {
+        if(m === '&') return '&amp;';
+        if(m === '<') return '&lt;';
+        if(m === '>') return '&gt;';
+        return m;
+    });
+}
+
+/* --- RENDER FUNCTIONS --- */
+function renderAppProjects(filter = "all", query = "") {
+    const container = document.getElementById("project-display-grid");
+    if(!container) return;
+    container.innerHTML = "";
+    
+    const filtered = projects.filter(p => {
+        const matchCat = filter === "all" || p.category.toLowerCase() === filter.toLowerCase();
+        const matchSrc = p.title.toLowerCase().includes(query.toLowerCase()) || p.desc.toLowerCase().includes(query.toLowerCase());
+        return matchCat && matchSrc;
+    });
+
+    if(filtered.length === 0) {
+        container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; padding: 40px 0; color: var(--text-muted);">Tidak ada project yang cocok.</p>`;
+        return;
+    }
+
+    filtered.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "glass-card render-card";
+        
+        const imageHtml = p.image ? 
+            `<img src="${p.image}" alt="${escapeHtml(p.title)}" style="width:100%; height:100%; object-fit:cover;">` : 
+            `<i class="fa-solid fa-laptop-code"></i>`;
+        
+        card.innerHTML = `
+            <div class="card-img-container" style="overflow:hidden;">
+                ${imageHtml}
+            </div>
+            <h3>${escapeHtml(p.title)}</h3>
+            <p class="desc">${escapeHtml(p.desc)}</p>
+            <div class="card-meta-bottom">
+                <span class="tag">${escapeHtml(p.category)}</span>
+                <div class="card-actions-row">
+                    <button class="icon-btn btn-like" onclick="actionLikeProject('${p.id}')"><i class="fa-solid fa-heart"></i> ${p.likes}</button>
+                    <button class="icon-btn" onclick="actionShareProject('${p.title}')"><i class="fa-solid fa-share-nodes"></i></button>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function renderAppProducts(filter = "all", query = "") {
+    const container = document.getElementById("shop-display-grid");
+    if(!container) return;
+    container.innerHTML = "";
+
+    const filtered = products.filter(p => {
+        const matchCat = filter === "all" || p.category.toLowerCase() === filter.toLowerCase();
+        const matchSrc = p.name.toLowerCase().includes(query.toLowerCase()) || p.desc.toLowerCase().includes(query.toLowerCase());
+        return matchCat && matchSrc;
+    });
+
+    if(filtered.length === 0) {
+        container.innerHTML = `<p style="grid-column: 1/-1; text-align:center; padding: 40px 0; color: var(--text-muted);">Produk tidak ditemukan.</p>`;
+        return;
+    }
+
+    filtered.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "glass-card render-card";
+        
+        const imageHtml = p.image ? 
+            `<img src="${p.image}" alt="${escapeHtml(p.name)}" style="width:100%; height:100%; object-fit:cover;">` : 
+            `<i class="fa-solid fa-cube"></i>`;
+        
+        card.innerHTML = `
+            <div class="card-img-container" style="overflow:hidden;">
+                ${imageHtml}
+            </div>
+            <h3>${escapeHtml(p.name)}</h3>
+            <p class="desc">${escapeHtml(p.desc)}</p>
+            <div class="card-meta-bottom">
+                <span class="card-price">Rp ${p.price.toLocaleString('id-ID')}</span>
+                <button class="btn btn-primary btn-sm" onclick="actionAddProductToCart('${p.id}')"><i class="fa-solid fa-cart-plus"></i> Beli</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function renderAppFAQs() {
+    const container = document.getElementById("faq-accordion-container");
+    if(!container) return;
+    container.innerHTML = "";
+    faqs.forEach((f) => {
+        const item = document.createElement("div");
+        item.className = "accordion-item";
+        item.innerHTML = `
+            <div class="accordion-header" onclick="toggleAccordionNode(this)">
+                <h4>${escapeHtml(f.question)}</h4>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="accordion-body"><p>${escapeHtml(f.answer)}</p></div>
+        `;
+        container.appendChild(item);
+    });
+}
+
+function renderAppTestimonials() {
+    const container = document.getElementById("testimonial-render-box");
+    if(!container) return;
+    container.innerHTML = "";
+    
+    if(testimonials.length === 0) return;
+    
+    testimonials.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "testimonial-item-card";
+        div.style.marginBottom = "20px";
+        div.innerHTML = `
+            <p>"${escapeHtml(t.text)}"</p>
+            <div class="testi-profile">
+                <div class="testi-info">
+                    <h5>${escapeHtml(t.name)}</h5>
+                    <span>${escapeHtml(t.company)}</span>
+                    <div class="stars-row">${'<i class="fa-solid fa-star"></i>'.repeat(t.stars)}</div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function toggleAccordionNode(header) {
+    const item = header.parentElement;
+    item.classList.toggle("active");
+}
+
+/* --- ACTIONS --- */
+function actionLikeProject(id) {
+    projects = projects.map(p => p.id === id ? { ...p, likes: p.likes + 1 } : p);
+    setStorage('leoly_projects', projects);
+    renderAppProjects();
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Project disukai!', showConfirmButton: false, timer: 1500 });
+}
+
+function actionShareProject(title) {
+    navigator.clipboard.writeText(`${window.location.href} - Project: ${title}`);
+    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Tautan project disalin!', confirmButtonColor: '#000' });
+}
+
+function actionAddProductToCart(id) {
+    const prod = products.find(p => p.id === id);
+    if(!prod) return;
+    cart.push(prod);
+    updateCartCount();
+    renderCartPanelItems();
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `${prod.name} masuk keranjang`, showConfirmButton: false, timer: 2000 });
+}
+
+function updateCartCount() {
+    const node = document.getElementById("cart-count");
+    if(node) node.textContent = cart.length;
+}
+
+function renderCartPanelItems() {
+    const container = document.getElementById("cart-items-container");
+    const totalNode = document.getElementById("cart-total-price");
+    if(!container) return;
+    container.innerHTML = "";
+
+    let total = 0;
+    if(cart.length === 0) {
+        container.innerHTML = `<p style="text-align:center; padding:30px 0; color: var(--text-muted);">Keranjang kosong</p>`;
+        if(totalNode) totalNode.textContent = "Rp 0";
+        return;
+    }
+
+    cart.forEach((item, idx) => {
+        total += item.price;
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.justifyContent = "space-between";
+        row.style.alignItems = "center";
+        row.style.marginBottom = "12px";
+        row.style.paddingBottom = "8px";
+        row.style.borderBottom = "1px solid var(--border-color)";
+        row.innerHTML = `
+            <div style="flex:1;">
+                <h5 style="font-size:13px;">${escapeHtml(item.name)}</h5>
+                <span style="font-size:12px; color:var(--text-muted);">Rp ${item.price.toLocaleString('id-ID')}</span>
+            </div>
+            <button class="icon-btn" style="width:28px; height:28px; font-size:11px;" onclick="actionRemoveCartItem(${idx})"><i class="fa-solid fa-trash"></i></button>
+        `;
+        container.appendChild(row);
+    });
+    if(totalNode) totalNode.textContent = `Rp ${total.toLocaleString('id-ID')}`;
+}
+
+function actionRemoveCartItem(idx) {
+    cart.splice(idx, 1);
+    updateCartCount();
+    renderCartPanelItems();
+}
+
+/* --- EVENT LISTENERS --- */
+function setupGlobalEventListeners() {
+    // Mobile menu toggle
+    const menuToggle = document.getElementById("menu-toggle");
+    const navMenu = document.querySelector(".nav-menu");
+
+    if (menuToggle && navMenu) {
+        menuToggle.addEventListener("click", () => {
+            navMenu.classList.toggle("mobile-active");
+            const icon = menuToggle.querySelector("i");
+            if (icon) {
+                icon.classList.toggle("fa-bars");
+                icon.classList.toggle("fa-xmark");
+            }
+        });
+        
+        document.addEventListener("click", function(event) {
+            if (navMenu.classList.contains("mobile-active") && 
+                !navMenu.contains(event.target) && 
+                !menuToggle.contains(event.target)) {
+                navMenu.classList.remove("mobile-active");
+                const icon = menuToggle.querySelector("i");
+                if (icon) {
+                    icon.classList.add("fa-bars");
+                    icon.classList.remove("fa-xmark");
+                }
+            }
+        });
+    }
+
+    // Navigation
+    const navLinks = document.querySelectorAll(".nav-link");
+    const sections = document.querySelectorAll(".app-section");
+
+    navLinks.forEach(link => {
+        link.addEventListener("click", (e) => {
+            const targetId = link.getAttribute("href").substring(1);
+            if(!document.getElementById(targetId)) return;
+            e.preventDefault();
+            
+            navLinks.forEach(l => l.classList.remove("active"));
+            sections.forEach(s => s.classList.remove("active-section"));
+
+            link.classList.add("active");
+            document.getElementById(targetId).classList.add("active-section");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+
+            if (navMenu && navMenu.classList.contains("mobile-active")) {
+                navMenu.classList.remove("mobile-active");
+                const icon = menuToggle.querySelector("i");
+                if (icon) {
+                    icon.classList.add("fa-bars");
+                    icon.classList.remove("fa-xmark");
+                }
+            }
+        });
+    });
+
+    // Theme toggle
+    const themeBtn = document.getElementById("theme-toggle");
+    if(themeBtn) {
+        themeBtn.addEventListener("click", () => {
+            document.body.classList.toggle("light-theme");
+            const isLight = document.body.classList.contains("light-theme");
+            themeBtn.innerHTML = isLight ? `<i class="fa-solid fa-sun"></i>` : `<i class="fa-solid fa-moon"></i>`;
+        });
+    }
+
+    // Cart panel
+    const cartBtn = document.getElementById("cart-toggle-btn");
+    const cartClose = document.getElementById("cart-close-btn");
+    const cartPanel = document.getElementById("shopping-cart-panel");
+
+    if(cartBtn && cartPanel) cartBtn.addEventListener("click", () => cartPanel.classList.add("panel-open"));
+    if(cartClose && cartPanel) cartClose.addEventListener("click", () => cartPanel.classList.remove("panel-open"));
+
+    // Checkout
+    const checkoutBtn = document.getElementById("checkout-action-btn");
+    if(checkoutBtn) {
+        checkoutBtn.addEventListener("click", () => {
+            if(cart.length === 0) {
+                Swal.fire({ icon: 'warning', title: 'Oops!', text: 'Keranjang masih kosong!', confirmButtonColor: '#000' });
+                return;
+            }
+            Swal.fire({ icon: 'success', title: 'Checkout Berhasil!', text: 'Terima kasih telah membeli produk saya. Link download akan dikirim ke email Anda.', confirmButtonColor: '#000' });
+            cart = [];
+            updateCartCount();
+            renderCartPanelItems();
+            cartPanel.classList.remove("panel-open");
+        });
+    }
+
+    // Search & Filter Projects
+    const projSearch = document.getElementById("project-search");
+    if(projSearch) {
+        projSearch.addEventListener("input", (e) => {
+            const activeTag = document.querySelector("#project-filters .tag.active");
+            renderAppProjects(activeTag ? activeTag.dataset.filter : "all", e.target.value);
+        });
+    }
+
+    const projFilters = document.querySelectorAll("#project-filters .tag");
+    projFilters.forEach(tag => {
+        tag.addEventListener("click", () => {
+            projFilters.forEach(t => t.classList.remove("active"));
+            tag.classList.add("active");
+            renderAppProjects(tag.dataset.filter, projSearch ? projSearch.value : "");
+        });
+    });
+
+    // Search & Filter Products
+    const shopSearch = document.getElementById("shop-search");
+    if(shopSearch) {
+        shopSearch.addEventListener("input", (e) => {
+            const activeTag = document.querySelector("#shop-filters .tag.active");
+            renderAppProducts(activeTag ? activeTag.dataset.filter : "all", e.target.value);
+        });
+    }
+
+    const shopFilters = document.querySelectorAll("#shop-filters .tag");
+    shopFilters.forEach(tag => {
+        tag.addEventListener("click", () => {
+            shopFilters.forEach(t => t.classList.remove("active"));
+            tag.classList.add("active");
+            renderAppProducts(tag.dataset.filter, shopSearch ? shopSearch.value : "");
+        });
+    });
+
+    // Contact Form
+    const contactForm = document.getElementById("main-contact-form");
+    if(contactForm) {
+        contactForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            Swal.fire({ icon: 'success', title: 'Pesan Terkirim!', text: 'Terima kasih, saya akan segera merespons pesan Anda.', confirmButtonColor: '#000' });
+            contactForm.reset();
+        });
+    }
+
+    // Back to Top
+    const btt = document.getElementById("back-to-top");
+    window.addEventListener("scroll", () => {
+        if(window.scrollY > 400 && btt) btt.style.display = "inline-flex";
+        else if(btt) btt.style.display = "none";
+    });
+    if(btt) btt.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+    // Navbar scroll
+    const glassNav = document.querySelector(".glass-nav");
+    window.addEventListener("scroll", () => {
+        if(window.scrollY > 50 && glassNav) glassNav.classList.add("scrolled");
+        else if(glassNav) glassNav.classList.remove("scrolled");
+    });
+
+    setupAdminSubsystem();
+}
+
+/* --- ADMIN SUBSYSTEM --- */
+function setupAdminSubsystem() {
+    const loginForm = document.getElementById("admin-login-form");
+    const loginBox = document.getElementById("admin-login-box");
+    const workspace = document.getElementById("admin-workspace");
+    const logoutBtn = document.getElementById("admin-logout-btn");
+
+    if(loginForm) {
+        loginForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const user = document.getElementById("admin-username").value;
+            const pass = document.getElementById("admin-password").value;
+
+            if(user === "admin" && pass === "leoly2026") {
+                loginBox.classList.add("d-none");
+                workspace.classList.remove("d-none");
+                renderAdminTables();
+                Swal.fire({ icon: 'success', title: 'Welcome Back!', text: 'Selamat datang di dashboard admin.', timer: 1500, showConfirmButton: false });
+            } else {
+                Swal.fire({ icon: 'error', title: 'Akses Ditolak', text: 'Username atau password salah!', confirmButtonColor: '#000' });
+            }
+        });
+    }
+
+    if(logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+            workspace.classList.add("d-none");
+            loginBox.classList.remove("d-none");
+            loginForm.reset();
+        });
+    }
+
+    const tabBtns = document.querySelectorAll(".admin-tab-btn");
+    const tabPanes = document.querySelectorAll(".admin-tab-pane");
+    tabBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            tabBtns.forEach(b => b.classList.remove("active"));
+            tabPanes.forEach(p => p.classList.remove("active-pane"));
+            btn.classList.add("active");
+            document.getElementById(btn.dataset.target).classList.add("active-pane");
+        });
+    });
+
+    setupAdminModalTriggers();
+}
+
+function renderAdminTables() {
+    // Projects table
+    const tbodyProj = document.getElementById("admin-project-table-body");
+    if(tbodyProj) {
+        tbodyProj.innerHTML = "";
+        projects.forEach(p => {
+            const tr = document.createElement("tr");
+            const hasImage = p.image ? '<i class="fa-solid fa-image" style="color:green"></i>' : '<i class="fa-solid fa-image-slash" style="color:gray"></i>';
+            tr.innerHTML = `<td>${hasImage} ${escapeHtml(p.title)}</td><td>${escapeHtml(p.category)}</td><td>${p.likes}</td>
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="editProjectNode('${p.id}')"><i class="fa-solid fa-edit"></i></button>
+                <button class="btn btn-secondary btn-sm" onclick="deleteProjectNode('${p.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+            tbodyProj.appendChild(tr);
+        });
+    }
+
+    // Products table
+    const tbodyProd = document.getElementById("admin-product-table-body");
+    if(tbodyProd) {
+        tbodyProd.innerHTML = "";
+        products.forEach(p => {
+            const tr = document.createElement("tr");
+            const hasImage = p.image ? '<i class="fa-solid fa-image" style="color:green"></i>' : '<i class="fa-solid fa-image-slash" style="color:gray"></i>';
+            tr.innerHTML = `<td>${hasImage} ${escapeHtml(p.name)}</td><td>${escapeHtml(p.category)}</td><td>Rp ${p.price.toLocaleString('id-ID')}</td>
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="editProductNode('${p.id}')"><i class="fa-solid fa-edit"></i></button>
+                <button class="btn btn-secondary btn-sm" onclick="deleteProductNode('${p.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+            tbodyProd.appendChild(tr);
+        });
+    }
+
+    // FAQ table
+    const tbodyFaq = document.getElementById("admin-faq-table-body");
+    if(tbodyFaq) {
+        tbodyFaq.innerHTML = "";
+        faqs.forEach(f => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${escapeHtml(f.question)}</td>
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="deleteFaqNode('${f.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+            tbodyFaq.appendChild(tr);
+        });
+    }
+
+    // Testimonials table
+    const tbodyTesti = document.getElementById("admin-testimonial-table-body");
+    if(tbodyTesti) {
+        tbodyTesti.innerHTML = "";
+        testimonials.forEach(t => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td>${escapeHtml(t.name)}</td><td>${escapeHtml(t.company)}</td><td>${t.stars} ★</td>
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="deleteTestimonialNode('${t.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+            tbodyTesti.appendChild(tr);
+        });
+    }
+}
+
+// Fungsi untuk konversi file image ke base64
+function imageToBase64(file) {
+    return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => resolve(reader.result);
@@ -90,536 +623,341 @@ function fileToBase64(file) {
     });
 }
 
-// ==========================================================================
-// 3. SYSTEM NOTIFICATION TOAST & WHATSAPP REDIRECT ENGINE
-// ==========================================================================
-function showToast(message, type = "success") {
-    const oldToast = document.querySelector('.toast-notif');
-    if (oldToast) oldToast.remove();
-
-    const toast = document.createElement('div');
-    toast.className = `toast-notif ${type}`;
-    toast.innerHTML = `<span>${message}</span>`;
-    document.body.appendChild(toast);
-
-    setTimeout(() => { toast.classList.add('show'); }, 100);
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 400);
-    }, 3000);
-}
-
-function copyToClipboard(textToCopy, providerName) {
-    navigator.clipboard.writeText(textToCopy).then(() => {
-        showToast(`Nomor ${providerName} berhasil disalin!`);
-    }).catch(() => {
-        showToast("Gagal menyalin nomor otomatis.", "error");
+// Fungsi Edit Home Content
+function editHomeContent() {
+    const overlay = document.getElementById("global-data-modal");
+    const titleNode = document.getElementById("modal-title-node");
+    const bodyNode = document.getElementById("modal-body-node");
+    
+    // Menyiapkan string untuk typing words
+    const typingWordsStr = homeContent.typingWords.join(', ');
+    
+    titleNode.textContent = "Edit Home Page Content";
+    bodyNode.innerHTML = `
+        <form id="form-edit-home">
+            <div class="form-group">
+                <label>Tagline (contoh: Hi, I'm Leoly 👋)</label>
+                <input type="text" id="eh-tagline" value="${escapeHtml(homeContent.tagline)}" required>
+            </div>
+            <div class="form-group">
+                <label>Title Prefix (teks sebelum typing effect)</label>
+                <input type="text" id="eh-title-prefix" value="${escapeHtml(homeContent.titlePrefix)}" required>
+            </div>
+            <div class="form-group">
+                <label>Kata-kata Typing Effect (pisahkan dengan koma)</label>
+                <input type="text" id="eh-typing-words" value="${escapeHtml(typingWordsStr)}" required>
+                <small style="color: var(--text-muted); font-size: 12px; display: block; margin-top: 5px;">Contoh: Creative Technologist, Fullstack Developer, UI/UX Enthusiast</small>
+            </div>
+            <div class="form-group">
+                <label>Deskripsi / Bio</label>
+                <textarea id="eh-description" rows="4" required>${escapeHtml(homeContent.description)}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
+        </form>
+    `;
+    overlay.classList.add("modal-active");
+    
+    document.getElementById("form-edit-home").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const tagline = document.getElementById("eh-tagline").value;
+        const titlePrefix = document.getElementById("eh-title-prefix").value;
+        const typingWordsStr = document.getElementById("eh-typing-words").value;
+        const description = document.getElementById("eh-description").value;
+        
+        // Parse typing words dari string yang dipisah koma
+        const typingWords = typingWordsStr.split(',').map(word => word.trim()).filter(word => word.length > 0);
+        
+        homeContent = {
+            tagline: tagline,
+            titlePrefix: titlePrefix,
+            description: description,
+            typingWords: typingWords
+        };
+        
+        setStorage('leoly_home_content', homeContent);
+        renderHomeContent();
+        overlay.classList.remove("modal-active");
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Home page berhasil diupdate.', timer: 1500, showConfirmButton: false });
     });
 }
-window.copyToClipboard = copyToClipboard;
 
-// Fungsi Utama untuk Mengarahkan Transaksi ke WhatsApp
-function redirectToWhatsApp(itemTitle, itemPrice) {
-    const baseText = `Halo Leoly, saya ingin membeli/memesan item berikut:\n\n` +
-                     `📦 *Nama Item:* ${itemTitle}\n` +
-                     `💰 *Harga:* ${itemPrice}\n\n` +
-                     `Mohon info detail untuk langkah selanjutnya. Terima kasih!`;
+/* --- CRUD ACTIONS --- */
+function deleteProjectNode(id) {
+    projects = projects.filter(p => p.id !== id);
+    setStorage('leoly_projects', projects);
+    renderAdminTables();
+    renderAppProjects();
+}
+
+function deleteProductNode(id) {
+    products = products.filter(p => p.id !== id);
+    setStorage('leoly_products', products);
+    renderAdminTables();
+    renderAppProducts();
+}
+
+function deleteFaqNode(id) {
+    faqs = faqs.filter(f => f.id !== id);
+    setStorage('leoly_faqs', faqs);
+    renderAdminTables();
+    renderAppFAQs();
+}
+
+function deleteTestimonialNode(id) {
+    testimonials = testimonials.filter(t => t.id !== id);
+    setStorage('leoly_testimonials', testimonials);
+    renderAdminTables();
+    renderAppTestimonials();
+}
+
+// Edit functions untuk project
+function editProjectNode(id) {
+    const project = projects.find(p => p.id === id);
+    if(!project) return;
     
-    const encodedText = encodeURIComponent(baseText);
-    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedText}`;
-    window.open(waUrl, '_blank');
-}
-window.redirectToWhatsApp = redirectToWhatsApp;
-
-// ==========================================================================
-// 4. DOM ELEMENT SELECTION BINDING
-// ==========================================================================
-const openMenuBtn = document.getElementById('openMenu');
-const closeMenuBtn = document.getElementById('closeMenu');
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('overlay');
-const navItems = document.querySelectorAll('.nav-item');
-const viewSections = document.querySelectorAll('.view-section');
-
-const menuAdmin = document.getElementById('menu-admin');
-const roleIndicator = document.getElementById('role-indicator');
-const btnAuthAction = document.getElementById('btn-auth-action');
-const authBoxDesc = document.getElementById('auth-box-desc');
-
-const loginModal = document.getElementById('loginModal');
-const closeLogin = document.getElementById('closeLogin');
-const loginForm = document.getElementById('login-form');
-const loginUsernameInput = document.getElementById('login-username');
-const loginPasswordInput = document.getElementById('login-password');
-const loginError = document.getElementById('login-error');
-
-const projectContainer = document.getElementById('project-container');
-const shopContainer = document.getElementById('shop-container');
-const contentForm = document.getElementById('content-form');
-const formTarget = document.getElementById('form-target');
-const priceGroup = document.getElementById('price-group');
-const contentImageFile = document.getElementById('content-image-file');
-
-const helpForm = document.getElementById('help-form');
-const adminMessagesList = document.getElementById('admin-messages-list');
-const btnClearMessages = document.getElementById('btn-clear-messages');
-
-const profileForm = document.getElementById('profile-form');
-const profileNameInput = document.getElementById('profile-name');
-const profileTagInput = document.getElementById('profile-tag');
-const profileBioInput = document.getElementById('profile-bio');
-const profileAvatarFile = document.getElementById('profile-avatar-file'); 
-const profileBannerFile = document.getElementById('profile-banner-file'); 
-
-const displayName = document.getElementById('display-name');
-const displayTag = document.getElementById('display-tag');
-const displayBio = document.getElementById('display-bio');
-const displayAvatar = document.getElementById('display-avatar');
-const displayBanner = document.getElementById('display-banner');
-
-const donationFeedList = document.getElementById('donation-feed-list');
-const adminDonatorForm = document.getElementById('admin-donator-form');
-
-// ==========================================================================
-// 5. FLOATING GLASS SIDEBAR CONTROLLER SYNC (RIGHT ALIGNED POJOK KANAN)
-// ==========================================================================
-function toggleSidebar(open) {
-    if (open) {
-        sidebar.classList.add('active');
-        overlay.classList.add('active');
-    } else {
-        sidebar.classList.remove('active');
-        overlay.classList.remove('active');
-    }
-}
-
-if (openMenuBtn) openMenuBtn.addEventListener('click', () => toggleSidebar(true));
-if (closeMenuBtn) closeMenuBtn.addEventListener('click', () => toggleSidebar(false));
-if (overlay) overlay.addEventListener('click', () => toggleSidebar(false));
-
-navItems.forEach(item => {
-    item.addEventListener('click', () => {
-        const targetView = item.getAttribute('data-target');
-
-        if (targetView === "admin-view" && currentUserRole !== "developer") {
-            showToast("Akses ditolak! Menu terkunci.", "error");
-            toggleSidebar(false);
-            return;
+    const overlay = document.getElementById("global-data-modal");
+    const titleNode = document.getElementById("modal-title-node");
+    const bodyNode = document.getElementById("modal-body-node");
+    
+    titleNode.textContent = "Edit Project";
+    bodyNode.innerHTML = `
+        <form id="form-edit-project">
+            <div class="form-group"><label>Judul Project</label><input type="text" id="ep-title" value="${escapeHtml(project.title)}" required></div>
+            <div class="form-group"><label>Kategori</label><select id="ep-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; color:var(--text-primary);">
+                <option ${project.category === 'Web' ? 'selected' : ''}>Web</option>
+                <option ${project.category === 'Server' ? 'selected' : ''}>Server</option>
+                <option ${project.category === 'UI/UX' ? 'selected' : ''}>UI/UX</option>
+            </select></div>
+            <div class="form-group"><label>Deskripsi</label><textarea id="ep-desc" rows="3" required>${escapeHtml(project.desc)}</textarea></div>
+            <div class="form-group"><label>Gambar Thumbnail</label><input type="file" id="ep-image" accept="image/*"></div>
+            ${project.image ? `<div class="form-group"><img src="${project.image}" style="max-width:100%; border-radius:8px; margin-top:10px;"><p style="font-size:12px; margin-top:5px;">Gambar saat ini</p></div>` : ''}
+            <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
+        </form>
+    `;
+    overlay.classList.add("modal-active");
+    
+    document.getElementById("form-edit-project").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const title = document.getElementById("ep-title").value;
+        const category = document.getElementById("ep-category").value;
+        const desc = document.getElementById("ep-desc").value;
+        const imageFile = document.getElementById("ep-image").files[0];
+        
+        let imageBase64 = project.image;
+        if(imageFile) {
+            imageBase64 = await imageToBase64(imageFile);
         }
+        
+        const index = projects.findIndex(p => p.id === id);
+        projects[index] = { ...project, title, category, desc, image: imageBase64 };
+        setStorage('leoly_projects', projects);
+        renderAdminTables();
+        renderAppProjects();
+        overlay.classList.remove("modal-active");
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Project berhasil diupdate.', timer: 1500, showConfirmButton: false });
+    });
+}
 
-        navItems.forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
+// Edit functions untuk product
+function editProductNode(id) {
+    const product = products.find(p => p.id === id);
+    if(!product) return;
+    
+    const overlay = document.getElementById("global-data-modal");
+    const titleNode = document.getElementById("modal-title-node");
+    const bodyNode = document.getElementById("modal-body-node");
+    
+    titleNode.textContent = "Edit Produk";
+    bodyNode.innerHTML = `
+        <form id="form-edit-product">
+            <div class="form-group"><label>Nama Produk</label><input type="text" id="epr-name" value="${escapeHtml(product.name)}" required></div>
+            <div class="form-group"><label>Kategori</label><select id="epr-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;">
+                <option ${product.category === 'Template' ? 'selected' : ''}>Template</option>
+                <option ${product.category === 'Module' ? 'selected' : ''}>Module</option>
+                <option ${product.category === 'Asset' ? 'selected' : ''}>Asset</option>
+            </select></div>
+            <div class="form-group"><label>Harga (Rp)</label><input type="number" id="epr-price" value="${product.price}" required></div>
+            <div class="form-group"><label>Deskripsi</label><textarea id="epr-desc" rows="3" required>${escapeHtml(product.desc)}</textarea></div>
+            <div class="form-group"><label>Gambar Thumbnail</label><input type="file" id="epr-image" accept="image/*"></div>
+            ${product.image ? `<div class="form-group"><img src="${product.image}" style="max-width:100%; border-radius:8px; margin-top:10px;"><p style="font-size:12px; margin-top:5px;">Gambar saat ini</p></div>` : ''}
+            <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
+        </form>
+    `;
+    overlay.classList.add("modal-active");
+    
+    document.getElementById("form-edit-product").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = document.getElementById("epr-name").value;
+        const category = document.getElementById("epr-category").value;
+        const price = Number(document.getElementById("epr-price").value);
+        const desc = document.getElementById("epr-desc").value;
+        const imageFile = document.getElementById("epr-image").files[0];
+        
+        let imageBase64 = product.image;
+        if(imageFile) {
+            imageBase64 = await imageToBase64(imageFile);
+        }
+        
+        const index = products.findIndex(p => p.id === id);
+        products[index] = { ...product, name, category, price, desc, image: imageBase64 };
+        setStorage('leoly_products', products);
+        renderAdminTables();
+        renderAppProducts();
+        overlay.classList.remove("modal-active");
+        Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Produk berhasil diupdate.', timer: 1500, showConfirmButton: false });
+    });
+}
 
-        viewSections.forEach(section => {
-            if (section.id === targetView) {
-                section.classList.add('active');
-            } else {
-                section.classList.remove('active');
-            }
+/* --- MODAL SETUP --- */
+function setupAdminModalTriggers() {
+    const overlay = document.getElementById("global-data-modal");
+    const closeBtn = document.getElementById("modal-close-trigger");
+    const titleNode = document.getElementById("modal-title-node");
+    const bodyNode = document.getElementById("modal-body-node");
+
+    if(!overlay || !closeBtn) return;
+
+    closeBtn.addEventListener("click", () => overlay.classList.remove("modal-active"));
+
+    // Tombol Edit Home
+    const editHomeBtn = document.getElementById("btn-edit-home");
+    if(editHomeBtn) {
+        editHomeBtn.addEventListener("click", () => {
+            editHomeContent();
         });
-        toggleSidebar(false);
-    });
-});
-
-// ==========================================================================
-// 6. MODAL SECURITY & ROLE CONTROLLER
-// ==========================================================================
-function updateAuthUI() {
-    const lockIconContainer = document.getElementById('admin-lock-icon');
-    
-    if (currentUserRole === "developer") {
-        roleIndicator.textContent = "Dev Mode";
-        roleIndicator.className = "role-badge developer";
-        btnAuthAction.textContent = "Sign Out Device";
-        authBoxDesc.textContent = "Kamu masuk sebagai Owner.";
-        menuAdmin.classList.remove('locked');
-        if (lockIconContainer) lockIconContainer.innerHTML = `<i data-lucide="external-link" style="width: 14px; height: 14px;"></i>`;
-    } else {
-        roleIndicator.textContent = "Guest Mode";
-        roleIndicator.className = "role-badge guest";
-        btnAuthAction.textContent = "Sign In Developer";
-        authBoxDesc.textContent = "Ingin mengelola konten web?";
-        menuAdmin.classList.add('locked');
-        if (lockIconContainer) lockIconContainer.innerHTML = `<i data-lucide="lock" style="width: 14px; height: 14px;"></i>`;
-    }
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-}
-
-btnAuthAction.addEventListener('click', () => {
-    if (currentUserRole === "guest") {
-        toggleSidebar(false);
-        loginModal.classList.add('show');
-    } else {
-        currentUserRole = "guest";
-        localStorage.setItem('userRole', 'guest');
-        updateAuthUI();
-        renderHubContent();
-        showToast("Keluar dari Mode Developer", "info");
-        const berandaNav = document.querySelector('[data-target="beranda-view"]');
-        if (berandaNav) berandaNav.click();
-        toggleSidebar(false);
-    }
-});
-
-closeLogin.addEventListener('click', () => {
-    loginModal.classList.remove('show');
-    loginError.style.display = 'none';
-    loginForm.reset();
-});
-
-loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const username = loginUsernameInput.value.trim();
-    const password = loginPasswordInput.value;
-
-    if (username === DEV_USER && password === DEV_PASS) {
-        currentUserRole = "developer";
-        localStorage.setItem('userRole', 'developer');
-        updateAuthUI();
-        renderHubContent();
-        loginModal.classList.remove('show');
-        loginError.style.display = 'none';
-        loginForm.reset();
-        showToast("Selamat Datang Kembali, Leoly!");
-        const adminNav = document.querySelector('[data-target="admin-view"]');
-        if (adminNav) adminNav.click();
-    } else {
-        loginError.style.display = 'block';
-        showToast("Kredensial login salah!", "error");
-    }
-});
-
-// ==========================================================================
-// 7. OPERASI MANIPULASI DATA (LIVE CRUD ENGINE)
-// ==========================================================================
-function deleteProject(index) {
-    if(confirm("Hapus project ini dari showcase?")) {
-        projectsData.splice(index, 1);
-        localStorage.setItem('leoly_projects', JSON.stringify(projectsData));
-        renderHubContent();
-        showToast("Project berhasil dihapus", "info");
-    }
-}
-window.deleteProject = deleteProject;
-
-function deleteShopItem(index) {
-    if(confirm("Hapus produk ini dari toko?")) {
-        shopData.splice(index, 1);
-        localStorage.setItem('leoly_shop', JSON.stringify(shopData));
-        renderHubContent();
-        showToast("Produk berhasil dihapus", "info");
-    }
-}
-window.deleteShopItem = deleteShopItem;
-
-function deleteMessage(index) {
-    if(confirm("Tandai tiket ini sebagai SELESAI?")) {
-        messagesData.splice(index, 1);
-        localStorage.setItem('leoly_messages', JSON.stringify(messagesData));
-        renderHubContent();
-        showToast("Tiket aduan berhasil dihapus.", "success");
-    }
-}
-window.deleteMessage = deleteMessage;
-
-function clearAllMessages() {
-    if (messagesData.length === 0) {
-        showToast("Kotak masuk sudah bersih!", "info");
-        return;
-    }
-    if (confirm("⚠️ PERINGATAN: Apakah kamu yakin ingin membersihkan seluruh tiket masuk secara permanen?")) {
-        messagesData = []; 
-        localStorage.setItem('leoly_messages', JSON.stringify(messagesData)); 
-        renderHubContent(); 
-        showToast("🧹 Seluruh tiket bantuan berhasil dibersihkan!", "success");
-    }
-}
-window.clearAllMessages = clearAllMessages;
-
-if (btnClearMessages) {
-    btnClearMessages.onclick = () => clearAllMessages();
-}
-
-function deleteDonator(index) {
-    if(confirm("Hapus riwayat donatur ini dari papan apresiasi?")) {
-        donationData.splice(index, 1);
-        localStorage.setItem('leoly_donations', JSON.stringify(donationData));
-        renderHubContent();
-        showToast("Riwayat donatur berhasil dihapus.", "info");
-    }
-}
-window.deleteDonator = deleteDonator;
-
-if (adminDonatorForm) {
-    adminDonatorForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const dName = document.getElementById('adm-don-name').value.trim();
-        const dAmount = parseInt(document.getElementById('adm-don-amount').value) || 0;
-        const dMethod = document.getElementById('adm-don-method').value;
-        const dMsg = document.getElementById('adm-don-msg').value.trim() || "Terima kasih atas dukungannya!";
-
-        donationData.unshift({ name: dName, amount: dAmount, method: dMethod, msg: dMsg });
-        localStorage.setItem('leoly_donations', JSON.stringify(donationData));
-        showToast(`Berhasil menambahkan ${dName} ke Papan Apresiasi!`);
-        
-        adminDonatorForm.reset();
-        renderHubContent();
-        const donateNav = document.querySelector('[data-target="donate-view"]');
-        if (donateNav) donateNav.click();
-    });
-}
-
-if (helpForm) {
-    helpForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const contactInput = document.getElementById('help-email');
-        const subjectInput = document.getElementById('help-subject');
-        const messageInput = document.getElementById('help-message');
-
-        messagesData.push({
-            contact: contactInput.value.trim(),
-            subject: subjectInput.value.trim(),
-            message: messageInput.value.trim()
-        });
-
-        localStorage.setItem('leoly_messages', JSON.stringify(messagesData));
-        showToast("Tiket bantuan terkirim! Developer akan segera memproses.");
-        helpForm.reset();
-        renderHubContent();
-        const berandaNav = document.querySelector('[data-target="beranda-view"]');
-        if (berandaNav) berandaNav.click();
-    });
-}
-
-if (formTarget) {
-    formTarget.addEventListener('change', () => {
-        if (formTarget.value === 'shop') {
-            priceGroup.style.display = 'block';
-        } else {
-            priceGroup.style.display = 'none';
-        }
-    });
-}
-
-if (contentForm) {
-    contentForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const titleInput = document.getElementById('content-title');
-        const descInput = document.getElementById('content-desc');
-        const priceInput = document.getElementById('content-price');
-        const imageFile = contentImageFile.files[0];
-        
-        const imageBase64 = await fileToBase64(imageFile);
-
-        if (formTarget.value === 'project') {
-            projectsData.push({ title: titleInput.value.trim(), desc: descInput.value.trim(), image: imageBase64 });
-            localStorage.setItem('leoly_projects', JSON.stringify(projectsData));
-            showToast("Showcase project berhasil ditambahkan!");
-            const projNav = document.querySelector('[data-target="project-view"]');
-            if (projNav) projNav.click();
-        } else {
-            shopData.push({ title: titleInput.value.trim(), desc: descInput.value.trim(), price: priceInput.value.trim() || "Free", image: imageBase64 });
-            localStorage.setItem('leoly_shop', JSON.stringify(shopData));
-            showToast("Item produk baru berhasil dipajang!");
-            const shopNav = document.querySelector('[data-target="shop-view"]');
-            if (shopNav) shopNav.click();
-        }
-        renderHubContent();
-        contentForm.reset();
-        priceGroup.style.display = 'none';
-    });
-}
-
-// ==========================================================================
-// 8. DATA PROFILE UPDATE CONTROLLER
-// ==========================================================================
-if (profileForm) {
-    profileForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const inputNama = profileNameInput.value.trim();
-        const inputTag = profileTagInput.value.trim();
-        const inputBio = profileBioInput.value.trim();
-        const avatarFile = profileAvatarFile.files[0];
-        const bannerFile = profileBannerFile.files[0];
-        
-        profileData.name = inputNama;
-        profileData.tag = inputTag;
-        profileData.bio = inputBio;
-        
-        if (avatarFile) {
-            const avBase64 = await fileToBase64(avatarFile);
-            if (avBase64) profileData.avatar = avBase64;
-        }
-        if (bannerFile) {
-            const bnBase64 = await fileToBase64(bannerFile);
-            if (bnBase64) profileData.banner = bnBase64;
-        }
-
-        localStorage.setItem('leoly_profile', JSON.stringify(profileData));
-        renderHubContent();
-        profileAvatarFile.value = ""; 
-        profileBannerFile.value = "";
-        showToast("Profil berhasil diperbarui!");
-        const berandaNav = document.querySelector('[data-target="beranda-view"]');
-        if (berandaNav) berandaNav.click();
-    });
-}
-
-// ==========================================================================
-// 9. REFRESH ENGINE INTERFACE UI RENDER
-// ==========================================================================
-function renderHubContent() {
-    if(displayName) displayName.textContent = profileData.name;
-    if(displayTag) displayTag.textContent = profileData.tag;
-    if(displayBio) displayBio.textContent = profileData.bio;
-    
-    if (displayAvatar) {
-        if (profileData.avatar && profileData.avatar.trim() !== "") {
-            displayAvatar.src = profileData.avatar;
-        } else {
-            displayAvatar.src = DEFAULT_AVATAR_IMG;
-        }
-        displayAvatar.onerror = function() { this.src = DEFAULT_AVATAR_IMG; };
-    }
-    
-    if (displayBanner) {
-        if (profileData.banner && profileData.banner.trim() !== "") {
-            displayBanner.style.backgroundImage = `url('${profileData.banner}')`;
-        } else {
-            displayBanner.style.backgroundImage = `url('${DEFAULT_BANNER_IMG}')`;
-        }
     }
 
-    if(profileNameInput) profileNameInput.value = profileData.name;
-    if(profileTagInput) profileTagInput.value = profileData.tag;
-    if(profileBioInput) profileBioInput.value = profileData.bio;
-
-    if (document.getElementById('count-projects')) {
-        document.getElementById('count-projects').textContent = projectsData.length;
-        document.getElementById('count-shop').textContent = shopData.length;
-        document.getElementById('count-messages').textContent = messagesData.length;
-    }
-
-    if (btnClearMessages) {
-        btnClearMessages.style.opacity = (messagesData.length === 0) ? "0.5" : "1";
-        btnClearMessages.style.cursor = (messagesData.length === 0) ? "not-allowed" : "pointer";
-    }
-
-    const isDev = (currentUserRole === "developer");
-
-    // Render Project
-    if (projectContainer) {
-        projectContainer.innerHTML = '';
-        projectsData.forEach((proj, idx) => {
-            const item = document.createElement('div');
-            item.className = 'card';
-            const imgUrl = (proj.image && proj.image.trim() !== "") ? proj.image : DEFAULT_PROJECT_IMG;
-            item.innerHTML = `
-                <div class="card-img-wrapper">
-                    <img src="${imgUrl}" class="card-preview-img" alt="${proj.title}" onerror="this.src='${DEFAULT_PROJECT_IMG}'">
-                    ${isDev ? `<button class="btn-delete-item" onclick="deleteProject(${idx})">✕ Hapus</button>` : ''}
-                </div>
-                <div class="card-header"><span>${proj.title}</span></div>
-                <p style="color: var(--text-muted); font-size:0.9rem; line-height:1.6;">${proj.desc}</p>
+    // Add Project Modal
+    const addProjBtn = document.getElementById("btn-add-project-modal");
+    if(addProjBtn) {
+        addProjBtn.addEventListener("click", () => {
+            titleNode.textContent = "Tambah Project Baru";
+            bodyNode.innerHTML = `
+                <form id="form-crud-project">
+                    <div class="form-group"><label>Judul Project</label><input type="text" id="cp-title" required></div>
+                    <div class="form-group"><label>Kategori</label><select id="cp-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; color:var(--text-primary);">
+                        <option>Web</option><option>Server</option><option>UI/UX</option>
+                    </select></div>
+                    <div class="form-group"><label>Deskripsi</label><textarea id="cp-desc" rows="3" required></textarea></div>
+                    <div class="form-group"><label>Gambar Thumbnail (Opsional)</label><input type="file" id="cp-image" accept="image/*"></div>
+                    <button type="submit" class="btn btn-primary btn-block">Simpan Project</button>
+                </form>
             `;
-            projectContainer.appendChild(item);
+            overlay.classList.add("modal-active");
+            
+            document.getElementById("form-crud-project").addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const title = document.getElementById("cp-title").value;
+                const category = document.getElementById("cp-category").value;
+                const desc = document.getElementById("cp-desc").value;
+                const imageFile = document.getElementById("cp-image").files[0];
+                
+                let imageBase64 = null;
+                if(imageFile) {
+                    imageBase64 = await imageToBase64(imageFile);
+                }
+                
+                projects.push({ id: 'p_' + Date.now(), title, category, desc, likes: 0, image: imageBase64 });
+                setStorage('leoly_projects', projects);
+                renderAdminTables();
+                renderAppProjects();
+                overlay.classList.remove("modal-active");
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Project berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+            });
         });
     }
 
-    // Render Shop (Aman dari Bug Tanda Kutip Satu/Dua)
-    if (shopContainer) {
-        shopContainer.innerHTML = '';
-        shopData.forEach((prod, idx) => {
-            const item = document.createElement('div');
-            item.className = 'card';
-            const imgUrl = (prod.image && prod.image.trim() !== "") ? prod.image : DEFAULT_SHOP_IMG;
-            item.innerHTML = `
-                <div class="card-img-wrapper">
-                    <img src="${imgUrl}" class="card-preview-img" alt="${prod.title}" onerror="this.src='${DEFAULT_SHOP_IMG}'">
-                    ${isDev ? `<button class="btn-delete-item" onclick="deleteShopItem(${idx})">✕ Hapus</button>` : ''}
-                </div>
-                <div class="card-header">
-                    <span>${prod.title}</span>
-                    <span style="font-size:0.8rem; font-weight:700; color:#ffffff; background:rgba(255,255,255,0.04); padding: 4px 10px; border-radius:100px; border: 1px solid var(--border);">${prod.price}</span>
-                </div>
-                <p style="color: var(--text-muted); font-size:0.9rem; line-height:1.6; margin-bottom:0.25rem;">${prod.desc}</p>
-                <button class="btn btn-primary btn-order-wa" style="padding:0.75rem; font-size:0.85rem; margin-top:auto;">Beli Item</button>
+    // Add Product Modal
+    const addProdBtn = document.getElementById("btn-add-product-modal");
+    if(addProdBtn) {
+        addProdBtn.addEventListener("click", () => {
+            titleNode.textContent = "Tambah Produk Digital";
+            bodyNode.innerHTML = `
+                <form id="form-crud-product">
+                    <div class="form-group"><label>Nama Produk</label><input type="text" id="cpr-name" required></div>
+                    <div class="form-group"><label>Kategori</label><select id="cpr-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;">
+                        <option>Template</option><option>Module</option><option>Asset</option>
+                    </select></div>
+                    <div class="form-group"><label>Harga (Rp)</label><input type="number" id="cpr-price" required></div>
+                    <div class="form-group"><label>Deskripsi</label><textarea id="cpr-desc" rows="3" required></textarea></div>
+                    <div class="form-group"><label>Gambar Thumbnail (Opsional)</label><input type="file" id="cpr-image" accept="image/*"></div>
+                    <button type="submit" class="btn btn-primary btn-block">Simpan Produk</button>
+                </form>
             `;
+            overlay.classList.add("modal-active");
             
-            // Menggunakan event listener langsung agar karakter string unik bebas error parsing
-            const orderBtn = item.querySelector('.btn-order-wa');
-            if (orderBtn) {
-                orderBtn.addEventListener('click', () => redirectToWhatsApp(prod.title, prod.price));
-            }
-            
-            shopContainer.appendChild(item);
+            document.getElementById("form-crud-product").addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const name = document.getElementById("cpr-name").value;
+                const category = document.getElementById("cpr-category").value;
+                const price = Number(document.getElementById("cpr-price").value);
+                const desc = document.getElementById("cpr-desc").value;
+                const imageFile = document.getElementById("cpr-image").files[0];
+                
+                let imageBase64 = null;
+                if(imageFile) {
+                    imageBase64 = await imageToBase64(imageFile);
+                }
+                
+                products.push({ id: 'pr_' + Date.now(), name, category, price, desc, image: imageBase64 });
+                setStorage('leoly_products', products);
+                renderAdminTables();
+                renderAppProducts();
+                overlay.classList.remove("modal-active");
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Produk berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+            });
         });
     }
 
-    // Render Papan Donasi
-    if (donationFeedList) {
-        donationFeedList.innerHTML = '';
-        if (donationData.length === 0) {
-            donationFeedList.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 2.5rem; letter-spacing: 0.5px;">Belum ada riwayat dukungan apresiasi.</p>`;
-        } else {
-            donationData.forEach((don, idx) => {
-                const feedItem = document.createElement('div');
-                feedItem.className = 'donation-premium-card';
-                
-                feedItem.style.background = 'rgba(255, 255, 255, 0.02)';
-                feedItem.style.backdropFilter = 'blur(12px)';
-                feedItem.style.webkitBackdropFilter = 'blur(12px)';
-                feedItem.style.border = '1px solid rgba(255, 255, 255, 0.05)';
-                feedItem.style.borderRadius = '12px';
-                feedItem.style.padding = '1.25rem';
-                feedItem.style.marginBottom = '1rem';
-                feedItem.style.position = 'relative';
-                feedItem.style.boxShadow = '0 8px 32px 0 rgba(0, 0, 0, 0.2)';
-                feedItem.style.transition = 'all 0.3s ease';
-                
-                const formattedAmount = "Rp " + don.amount.toLocaleString('id-ID');
-                const deleteButtonHtml = isDev ? `<button onclick="deleteDonator(${idx})" style="position: absolute; right: 12px; bottom: 12px; background: rgba(255,69,58,0.12); border: 1px solid rgba(255,69,58,0.25); color: #ff453a; font-size: 0.75rem; font-weight: 500; padding: 4px 10px; border-radius: 6px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;">Hapus</button>` : '';
-
-                feedItem.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%; gap: 1rem; margin-bottom: 0.75rem;">
-                        <div style="display: flex; flex-direction: column; gap: 0.2rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                <strong style="color: #ffffff; font-size: 1rem; font-weight: 600; letter-spacing: 0.3px;">${don.name}</strong>
-                                <span style="font-size: 0.7rem; font-weight: 600; color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 4px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.05); letter-spacing: 0.5px;">${don.method}</span>
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            <span style="color: #ffffff; font-weight: 700; font-size: 1.1rem; letter-spacing: -0.3px; background: linear-gradient(135deg, #ffffff 0%, #a3a3a3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${formattedAmount}</span>
-                        </div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.01); border-left: 2px solid rgba(255,255,255,0.4); padding: 0.5rem 0.75rem; margin-top: 0.5rem; border-radius: 0 6px 6px 0; padding-right: ${isDev ? '65px' : '0.75rem'};">
-                        <p style="color: #d4d4d4; font-size: 0.88rem; font-style: normal; font-weight: 400; line-height: 1.5; margin: 0; letter-spacing: 0.2px;">"${don.msg}"</p>
-                    </div>
-                    ${deleteButtonHtml}
-                `;
-                donationFeedList.appendChild(feedItem);
+    // Add FAQ Modal
+    const addFaqBtn = document.getElementById("btn-add-faq-modal");
+    if(addFaqBtn) {
+        addFaqBtn.addEventListener("click", () => {
+            titleNode.textContent = "Tambah FAQ";
+            bodyNode.innerHTML = `
+                <form id="form-crud-faq">
+                    <div class="form-group"><label>Pertanyaan</label><input type="text" id="cf-q" required></div>
+                    <div class="form-group"><label>Jawaban</label><textarea id="cf-a" rows="3" required></textarea></div>
+                    <button type="submit" class="btn btn-primary btn-block">Simpan FAQ</button>
+                </form>
+            `;
+            overlay.classList.add("modal-active");
+            document.getElementById("form-crud-faq").addEventListener("submit", (e) => {
+                e.preventDefault();
+                faqs.push({ id: 'f_' + Date.now(), question: document.getElementById("cf-q").value, answer: document.getElementById("cf-a").value });
+                setStorage('leoly_faqs', faqs);
+                renderAdminTables();
+                renderAppFAQs();
+                overlay.classList.remove("modal-active");
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'FAQ berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
             });
-        }
+        });
     }
 
-    // Render Inbox Tiket
-    if (adminMessagesList) {
-        adminMessagesList.innerHTML = '';
-        if (messagesData.length === 0) {
-            adminMessagesList.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted); padding: 2.5rem;">Kotak masuk kosong.</td></tr>`;
-        } else {
-            messagesData.forEach((msg, idx) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td>${msg.contact}</td><td>${msg.subject}</td><td style="max-width: 300px; white-space: pre-wrap;">${msg.message}</td><td><button class="btn-table-action" onclick="deleteMessage(${idx})">Selesai</button></td>`;
-                adminMessagesList.appendChild(row);
+    // Add Testimonial Modal
+    const addTestiBtn = document.getElementById("btn-add-testimonial-modal");
+    if(addTestiBtn) {
+        addTestiBtn.addEventListener("click", () => {
+            titleNode.textContent = "Tambah Testimoni";
+            bodyNode.innerHTML = `
+                <form id="form-crud-testi">
+                    <div class="form-group"><label>Nama</label><input type="text" id="ct-name" required></div>
+                    <div class="form-group"><label>Perusahaan</label><input type="text" id="ct-comp" required></div>
+                    <div class="form-group"><label>Rating (1-5)</label><input type="number" id="ct-star" min="1" max="5" value="5" required></div>
+                    <div class="form-group"><label>Testimoni</label><textarea id="ct-text" rows="3" required></textarea></div>
+                    <button type="submit" class="btn btn-primary btn-block">Simpan Testimoni</button>
+                </form>
+            `;
+            overlay.classList.add("modal-active");
+            document.getElementById("form-crud-testi").addEventListener("submit", (e) => {
+                e.preventDefault();
+                testimonials.push({ id: 't_' + Date.now(), name: document.getElementById("ct-name").value, company: document.getElementById("ct-comp").value, stars: Number(document.getElementById("ct-star").value), text: document.getElementById("ct-text").value });
+                setStorage('leoly_testimonials', testimonials);
+                renderAdminTables();
+                renderAppTestimonials();
+                overlay.classList.remove("modal-active");
+                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Testimoni berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
             });
-        }
+        });
     }
 }
-
-// ==========================================================================
-// 10. BOOT EXECUTION INITIALIZER
-// ==========================================================================
-updateAuthUI();
-renderHubContent();
-if (typeof lucide !== 'undefined') lucide.createIcons();
