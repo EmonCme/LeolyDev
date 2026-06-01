@@ -1,361 +1,403 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leoly Hub - Server Info Dashboard</title>
+    <title>Leoly - Fullstack Developer & Creative Technologist</title>
+    
+    <meta name="description" content="Portofolio personal Leoly - Fullstack Developer & Creative Technologist. Spesialis dalam pengembangan web modern, UI/UX design, dan solusi digital kreatif.">
+    <meta name="keywords" content="Leoly, Fullstack Developer, Web Developer, Portofolio, Creative Technologist">
+    
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Leoly - Fullstack Developer & Creative Technologist">
+    <meta property="og:description" content="Portofolio personal Leoly - Membangun solusi digital yang inovatif dan berkelas.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1531297484001-80022131f5a1?q=80&w=2020">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body>
+<body class="dark-theme">
 
-    <div class="glow-orb orb-1"></div>
-    <div class="glow-orb orb-2"></div>
-
-    <header>
-        <div class="logo-area">
-            <h1>LEOLY<span class="logo-dot">.</span><span class="logo-sub">HUB</span></h1>
+    <div id="loading-screen">
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <h2>LEOLY</h2>
         </div>
-        <div class="header-actions">
-            <span id="role-indicator" class="role-badge guest">Guest Mode</span>
-            <button class="menu-toggle" id="openMenu"><i data-lucide="menu" style="width: 18px; height: 18px;"></i></button>
+    </div>
+
+    <div id="particles-js"></div>
+    <div class="blur-bg-layer">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <header class="glass-nav">
+        <div class="nav-container">
+            <a href="#" class="brand">LEOLY</a>
+            
+            <nav class="nav-menu">
+                <a href="#home" class="nav-link active"><i class="fa-solid fa-house"></i> Home</a>
+                <a href="#about" class="nav-link"><i class="fa-solid fa-user"></i> About</a>
+                <a href="#project" class="nav-link"><i class="fa-solid fa-code"></i> Projects</a>
+                <a href="#shop" class="nav-link"><i class="fa-solid fa-store"></i> Store</a>
+                <a href="#contact" class="nav-link"><i class="fa-solid fa-envelope"></i> Contact</a>
+                <a href="#admin" class="nav-link" id="nav-admin-btn"><i class="fa-solid fa-lock"></i> Admin</a>
+            </nav>
+
+            <div class="nav-actions">
+                <button id="theme-toggle" class="icon-btn" title="Ubah Tema">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+                <button id="cart-toggle-btn" class="icon-btn position-relative" title="Keranjang">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                    <span id="cart-count" class="badge">0</span>
+                </button>
+                <button id="menu-toggle" class="icon-btn mobile-only" title="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
         </div>
     </header>
 
-    <div class="sidebar-overlay" id="overlay"></div>
-    <nav id="sidebar">
-        <div class="sidebar-header">
-            <span class="sidebar-title">NAVIGATION MENU</span>
-            <button class="close-sidebar" id="closeMenu"><i data-lucide="x" style="width: 14px; height: 14px;"></i></button>
-        </div>
-        
-        <ul class="nav-links">
-            <li class="nav-item active" data-target="beranda-view">
-                <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span> Beranda Hub
-            </li>
-            <li class="nav-item" data-target="project-view">
-                <span class="nav-icon"><i data-lucide="folder-git-2"></i></span> Project List
-            </li>
-            <li class="nav-item" data-target="shop-view">
-                <span class="nav-icon"><i data-lucide="shopping-bag"></i></span> Toko Slicing
-            </li>
-            <li class="nav-item" data-target="donate-view">
-                <span class="nav-icon"><i data-lucide="heart"></i></span> Dukung Donasi
-            </li>
-            <li class="nav-item" data-target="help-view">
-                <span class="nav-icon"><i data-lucide="life-buoy"></i></span> Help Center
-            </li>
-            
-            <li class="menu-divider">Developer Control</li>
-            <li class="nav-item locked" id="menu-admin" data-target="admin-view">
-                <span class="nav-icon"><i data-lucide="sliders"></i></span> Admin Panel
-                <span class="lock-icon" id="admin-lock-icon"><i data-lucide="lock" style="width: 14px; height: 14px;"></i></span>
-            </li>
-        </ul>
-        
-        <div class="role-switcher-box">
-            <p id="auth-box-desc">Ingin mengelola konten web?</p>
-            <button class="btn-role" id="btn-auth-action">Sign In Developer</button>
-        </div>
-    </nav>
+    <main class="main-app">
 
-    <main>
-        
-        <section class="view-section active" id="beranda-view">
-            <div class="welcome-back">
-                <h2>Ringkasan Server Info Dashboard</h2>
-                <p>Selamat datang di pusat data dashboard personal Leoly.</p>
+        <!-- HOME SECTION -->
+        <section id="home" class="app-section active-section">
+            <div class="hero-container" style="justify-content: center; min-height: 70vh;">
+                <div class="hero-text" data-aos="fade-up">
+                    <span class="tagline">Hi, I'm Leoly 👋</span>
+                    <h1>Fullstack Developer & <br><span class="typing-text"></span></h1>
+                    <p style="max-width: 700px;">Saya seorang Fullstack Developer yang berdedikasi menciptakan pengalaman digital yang bermakna. Menggabungkan kode yang elegan dengan desain yang indah.</p>
+                </div>
             </div>
-            
-            <div class="beranda-grid">
-                <div class="profile-card-v2">
-                    <div class="p-banner" id="display-banner"></div>
-                    <div class="p-avatar-area">
-                        <img id="display-avatar" src="" alt="Avatar" onerror="this.src='https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150'">
-                    </div>
-                    <div class="p-details">
-                        <h3 id="display-name">Leoly.dev</h3>
-                        <span id="display-tag" class="p-badge">Mobile Developer</span>
-                        <p class="p-bio" id="display-bio">Loading bio...</p>
+        </section>
+
+        <!-- ABOUT SECTION -->
+        <section id="about" class="app-section">
+            <div class="section-container">
+                <div class="section-header" data-aos="fade-up">
+                    <h2>Tentang Saya</h2>
+                    <p>Kenali lebih dekat perjalanan dan passion saya di dunia teknologi</p>
+                </div>
+
+                <div class="about-grid" style="grid-template-columns: 1fr;">
+                    <div class="about-profile glass-card" data-aos="fade-up">
+                        <div class="avatar-container">
+                            <i class="fa-solid fa-user-astronaut professional-avatar-icon"></i>
+                        </div>
+                        <h3>Leoly</h3>
+                        <p class="role">Fullstack Developer & Creative Technologist</p>
+                        <p class="bio" style="max-width: 600px; margin: 0 auto;">Saya adalah pengembang web dengan passion dalam menciptakan solusi digital yang inovatif dan estetis. Berdomisili di Indonesia dan bekerja secara remote untuk klien dari berbagai negara. Saya percaya bahwa teknologi yang baik adalah teknologi yang tidak hanya fungsional tetapi juga memberikan pengalaman yang menyenangkan bagi penggunanya.</p>
                     </div>
                 </div>
 
-                <div class="server-status-card">
-                    <div class="quick-action-area">
-                        <p class="card-title-mini">STATISTIK HUB LAYANAN</p>
-                        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1.5rem; min-height: auto;">
-                            <div class="card" style="min-height: auto; padding: 1rem; text-align: center; gap: 0.25rem;">
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Project</span>
-                                <div class="card-value" id="count-projects" style="font-size: 1.5rem;">0</div>
-                            </div>
-                            <div class="card" style="min-height: auto; padding: 1rem; text-align: center; gap: 0.25rem;">
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Produk</span>
-                                <div class="card-value" id="count-shop" style="font-size: 1.5rem;">0</div>
-                            </div>
-                            <div class="card" style="min-height: auto; padding: 1rem; text-align: center; gap: 0.25rem;">
-                                <span style="font-size: 0.75rem; color: var(--text-muted);">Tiket</span>
-                                <div class="card-value" id="count-messages" style="font-size: 1.5rem;">0</div>
-                            </div>
-                        </div>
-                        <p class="card-title-mini">AKSI CEPAT</p>
-                        <div class="action-buttons-flex">
-                            <button class="action-btn-item" onclick="document.querySelector('[data-target=\'project-view\']').click();">
-                                <span class="action-icon">📂</span> Lihat Portofolio
-                            </button>
-                            <button class="action-btn-item" onclick="document.querySelector('[data-target=\'donate-view\']').click();">
-                                <span class="action-icon">❤️</span> Beri Dukungan Donasi
-                            </button>
-                        </div>
+                <div class="services-grid" style="margin-top: 40px;">
+                    <div class="service-card glass-card" data-aos="zoom-in">
+                        <i class="fa-brands fa-react"></i>
+                        <h3>React & Next.js</h3>
+                        <p>Membangun aplikasi modern dengan performa tinggi.</p>
+                    </div>
+                    <div class="service-card glass-card" data-aos="zoom-in" data-aos-delay="100">
+                        <i class="fa-brands fa-node-js"></i>
+                        <h3>Node.js & Express</h3>
+                        <p>Backend API yang scalable dan efisien.</p>
+                    </div>
+                    <div class="service-card glass-card" data-aos="zoom-in" data-aos-delay="200">
+                        <i class="fa-solid fa-database"></i>
+                        <h3>Database Expert</h3>
+                        <p>Desain dan optimasi database untuk performa maksimal.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="view-section" id="project-view">
-            <div class="welcome-back">
-                <h2>Showcase Konten Project</h2>
-                <p>Kumpulan portofolio dan hasil pengerjaan sistem UI dashboard.</p>
+        <!-- PROJECTS SECTION -->
+        <section id="project" class="app-section">
+            <div class="section-container">
+                <div class="section-header" data-aos="fade-up">
+                    <h2>Project Terbaru</h2>
+                    <p>Beberapa karya yang telah saya kerjakan untuk klien dan personal</p>
+                </div>
+
+                <div class="filter-bar glass-card" data-aos="fade-up">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="project-search" placeholder="Cari project...">
+                    </div>
+                    <div class="filter-tags" id="project-filters">
+                        <button class="tag active" data-filter="all">Semua</button>
+                        <button class="tag" data-filter="Web">Web App</button>
+                        <button class="tag" data-filter="Server">Backend</button>
+                        <button class="tag" data-filter="UI/UX">UI/UX</button>
+                    </div>
+                </div>
+
+                <div class="items-grid" id="project-display-grid" data-aos="fade-up">
+                    </div>
             </div>
-            <div class="stats-grid" id="project-container"></div>
         </section>
 
-        <section class="view-section" id="shop-view">
-            <div class="welcome-back">
-                <h2>Toko File UI Kit</h2>
-                <p>Slicing modular komponen web siap pasang untuk mempercepat pembuatan desain.</p>
+        <!-- DIGITAL STORE SECTION -->
+        <section id="shop" class="app-section">
+            <div class="section-container">
+                <div class="section-header" data-aos="fade-up">
+                    <h2>Digital Store</h2>
+                    <p>Karya digital yang bisa Anda dapatkan - template, kode, dan aset kreatif</p>
+                </div>
+
+                <div class="filter-bar glass-card" data-aos="fade-up">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="shop-search" placeholder="Cari produk...">
+                    </div>
+                    <div class="filter-tags" id="shop-filters">
+                        <button class="tag active" data-filter="all">Semua Produk</button>
+                        <button class="tag" data-filter="Template">Template</button>
+                        <button class="tag" data-filter="Module">Module</button>
+                        <button class="tag" data-filter="Asset">Asset</button>
+                    </div>
+                </div>
+
+                <div class="items-grid" id="shop-display-grid" data-aos="fade-up">
+                    </div>
             </div>
-            <div class="stats-grid" id="shop-container"></div>
         </section>
 
-        <section class="view-section" id="donate-view">
-            <div class="welcome-back">
-                <h2>Dukung Pengembangan Leoly Hub</h2>
-                <p>Donasi kamu sangat membantu dalam menyewa server info HDFv dan pengembangan template UI gratis kedepannya.</p>
-            </div>
-
-            <div class="admin-grid-layout" style="max-width: 900px; margin: 0 auto; gap: 1.5rem;">
+        <!-- FAQ & TESTIMONIALS SECTION -->
+        <section id="faq-testimonials" class="app-section">
+            <div class="section-container twin-grid">
                 
-                <div class="admin-controls" style="display: flex; flex-direction: column; gap: 1rem;">
-                    <h3>Metode Pembayaran Resmi</h3>
-                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">Silakan pilih salah satu channel pembayaran di bawah ini untuk mengirimkan dukungan dana:</p>
-                    
-                    <div class="card" style="min-height: auto; padding: 1.25rem; flex-direction: row; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.015); border: 1px solid var(--border);">
-                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="font-size: 0.7rem; font-weight: 800; background: #008cff; color: #fff; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;">DANA</span>
-                                <span style="font-size: 0.85rem; color: var(--accent-sub);">A/N: Leoly DANA</span>
-                            </div>
-                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); letter-spacing: 0.5px;">08123456789</span>
+                <div class="faq-column glass-card" data-aos="fade-right">
+                    <h3>Pertanyaan Umum (FAQ)</h3>
+                    <div class="accordion-wrapper" id="faq-accordion-container">
                         </div>
-                        <button type="button" class="btn" style="padding: 0.5rem 0.85rem; font-size: 0.8rem; min-width: auto; background: rgba(255,255,255,0.04); border: 1px solid var(--border);" onclick="copyToClipboard('08123456789', 'DANA')">
-                            Salin
-                        </button>
-                    </div>
-
-                    <div class="card" style="min-height: auto; padding: 1.25rem; flex-direction: row; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.015); border: 1px solid var(--border);">
-                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="font-size: 0.7rem; font-weight: 800; background: #00aa13; color: #fff; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;">GOPAY</span>
-                                <span style="font-size: 0.85rem; color: var(--accent-sub);">A/N: Leoly Gopay</span>
-                            </div>
-                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); letter-spacing: 0.5px;">08123456789</span>
-                        </div>
-                        <button type="button" class="btn" style="padding: 0.5rem 0.85rem; font-size: 0.8rem; min-width: auto; background: rgba(255,255,255,0.04); border: 1px solid var(--border);" onclick="copyToClipboard('08123456789', 'Gopay')">
-                            Salin
-                        </button>
-                    </div>
-
-                    <div class="card" style="min-height: auto; padding: 1.25rem; flex-direction: row; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.015); border: 1px solid var(--border);">
-                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <span style="font-size: 0.7rem; font-weight: 800; background: #ffffff; color: #000; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px;">BCA</span>
-                                <span style="font-size: 0.85rem; color: var(--accent-sub);">A/N: Leoly Developer</span>
-                            </div>
-                            <span style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); letter-spacing: 0.5px;">1234567890</span>
-                        </div>
-                        <button type="button" class="btn" style="padding: 0.5rem 0.85rem; font-size: 0.8rem; min-width: auto; background: rgba(255,255,255,0.04); border: 1px solid var(--border);" onclick="copyToClipboard('1234567890', 'Bank BCA')">
-                            Salin
-                        </button>
-                    </div>
-
-                    <p style="font-size: 0.75rem; color: var(--text-muted); font-style: italic; margin-top: 0.25rem; line-height: 1.4;">
-                        *Setelah melakukan transfer, kamu dapat mengirimkan pemberitahuan/bukti lewat formulir tiket di menu <strong>Help Center</strong> agar namamu dimasukkan ke papan donatur.
-                    </p>
                 </div>
 
-                <div class="admin-controls" style="display: flex; flex-direction: column;">
-                    <h3>Papan Apresiasi Donatur</h3>
-                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Terima kasih banyak kepada seluruh pihak yang telah mendukung kelancaran proyek ini.</p>
-                    
-                    <div id="donation-feed-list" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 410px; overflow-y: auto; padding-right: 5px;">
-                        </div>
+                <div class="testimonial-column glass-card" data-aos="fade-left">
+                    <h3>Testimoni Klien</h3>
+                    <div class="testimonial-slider-container">
+                        <div id="testimonial-render-box">
+                            </div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section class="view-section" id="help-view">
-            <div class="welcome-back">
-                <h2>Kirim Tiket / Aduan Layanan</h2>
-                <p>Laporkan kendala akses server info atau ajukan permintaan modifikasi script.</p>
-            </div>
-            <div class="admin-controls" style="max-width: 600px; margin: 0 auto;">
-                <form id="help-form">
-                    <div class="form-group">
-                        <label for="help-email">Kontak / Nickname Discord / Email</label>
-                        <input type="text" id="help-email" placeholder="Contoh: Member#1234" required>
+        <!-- CONTACT SECTION -->
+        <section id="contact" class="app-section">
+            <div class="section-container">
+                <div class="section-header" data-aos="fade-up">
+                    <h2>Hubungi Saya</h2>
+                    <p>Tertarik untuk berkolaborasi? Mari kita diskusikan ide Anda</p>
+                </div>
+
+                <div class="contact-grid">
+                    <div class="contact-form-box glass-card" data-aos="fade-right">
+                        <form id="main-contact-form">
+                            <div class="form-group">
+                                <label>Nama Lengkap</label>
+                                <input type="text" id="contact-name" required placeholder="Masukkan nama Anda">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="contact-email" required placeholder="nama@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Pesan</label>
+                                <textarea id="contact-message" rows="5" required placeholder="Tuliskan pesan atau detail project Anda..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Kirim Pesan</button>
+                        </form>
                     </div>
-                    <div class="form-group">
-                        <label for="help-subject">Subjek Masalah</label>
-                        <input type="text" id="help-subject" placeholder="Akses dashboard macet / Request script" required>
+
+                    <div class="contact-info-box glass-card" data-aos="fade-left">
+                        <h3>Social Media & Kontak</h3>
+                        <div class="social-buttons-list">
+                            <a href="mailto:emosoft.mail@gmail.com" class="social-btn mail"><i class="fa-solid fa-envelope"></i> Email</a>
+                            <a href="https://github.com/EmonCme" target="_blank" class="social-btn" style="background: #333;"><i class="fa-brands fa-github"></i> GitHub</a>
+                            <a href="https://instagram.com/emon_leoly" target="_blank" class="social-btn" style="background: #e4405f;"><i class="fa-brands fa-instagram"></i> Instagram</a>
+                            <a href="https://wa.me/6285198224557" target="_blank" class="social-btn wa"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="help-message">Detail Pesan Kendala</label>
-                        <textarea id="help-message" rows="4" placeholder="Tulis rincian keluhan secara lengkap..." required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Kirim Tiket Sekarang</button>
-                </form>
+                </div>
             </div>
         </section>
 
-        <section class="view-section" id="admin-view">
-            <div class="welcome-back">
-                <h2>Developer Admin Control</h2>
-                <p>Pusat kendali manipulasi data visual, portofolio, dan kotak masuk sistem.</p>
-            </div>
-            
-            <div class="admin-grid-layout" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        <!-- ADMIN SECTION -->
+        <section id="admin" class="app-section">
+            <div class="section-container">
                 
-                <div class="admin-controls">
-                    <h3>Ubah Data Profil Beranda</h3>
-                    <form id="profile-form">
+                <div id="admin-login-box" class="glass-card authentication-card" data-aos="zoom-in">
+                    <h3>Admin Login</h3>
+                    <p>Akses terbatas untuk pengelola konten website</p>
+                    <form id="admin-login-form">
                         <div class="form-group">
-                            <label for="profile-name">Nama Developer</label>
-                            <input type="text" id="profile-name" required>
+                            <label>Username</label>
+                            <input type="text" id="admin-username" required placeholder="Masukkan username">
                         </div>
                         <div class="form-group">
-                            <label for="profile-tag">Badge / Status</label>
-                            <input type="text" id="profile-tag" required>
+                            <label>Password</label>
+                            <input type="password" id="admin-password" required placeholder="Masukkan password">
                         </div>
-                        <div class="form-group">
-                            <label for="profile-bio">Bio Singkat</label>
-                            <textarea id="profile-bio" rows="2" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="profile-avatar-file">Upload Foto Profil (PNG/JPG)</label>
-                            <input type="file" id="profile-avatar-file" accept="image/*">
-                        </div>
-                        <div class="form-group">
-                            <label for="profile-banner-file">Upload Background Banner (PNG/JPG)</label>
-                            <input type="file" id="profile-banner-file" accept="image/*">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Simpan Profil</button>
+                        <button type="submit" class="btn btn-primary btn-block">Masuk Panel</button>
                     </form>
                 </div>
 
-                <div class="admin-controls">
-                    <h3>Tambah Item Showcase</h3>
-                    <form id="content-form">
-                        <div class="form-group">
-                            <label for="form-target">Kategori Upload</label>
-                            <select id="form-target">
-                                <option value="project">Project Portofolio</option>
-                                <option value="shop">Produk Toko Digital</option>
-                            </select>
+                <div id="admin-workspace" class="d-none">
+                    <div class="admin-workspace-header glass-card">
+                        <div>
+                            <h2>Dashboard Admin</h2>
+                            <p>Kelola project, produk, dan konten website Anda</p>
                         </div>
-                        <div class="form-group">
-                            <label for="content-title">Judul Item</label>
-                            <input type="text" id="content-title" required>
+                        <button id="admin-logout-btn" class="btn btn-secondary"><i class="fa-solid fa-power-off"></i> Keluar</button>
+                    </div>
+
+                    <div class="admin-dashboard-layout">
+                        <div class="admin-nav-tabs glass-card">
+                            <button class="admin-tab-btn active" data-target="tab-home"><i class="fa-solid fa-house"></i> Edit Home</button>
+                            <button class="admin-tab-btn" data-target="tab-project"><i class="fa-solid fa-code"></i> Projects</button>
+                            <button class="admin-tab-btn" data-target="tab-product"><i class="fa-solid fa-bag-shopping"></i> Produk</button>
+                            <button class="admin-tab-btn" data-target="tab-faq"><i class="fa-solid fa-circle-question"></i> FAQ</button>
+                            <button class="admin-tab-btn" data-target="tab-testimonial"><i class="fa-solid fa-comment-dots"></i> Testimoni</button>
                         </div>
-                        <div class="form-group" id="price-group" style="display: none;">
-                            <label for="content-price">Harga Produk</label>
-                            <input type="text" id="content-price" placeholder="Rp 25.000 / Free">
+
+                        <div class="admin-tab-content-holder glass-card">
+                            
+                            <!-- Tab Edit Home -->
+                            <div id="tab-home" class="admin-tab-pane active-pane">
+                                <div class="pane-header">
+                                    <h3>Edit Home Page</h3>
+                                    <button class="btn btn-primary btn-sm" id="btn-edit-home"><i class="fa-solid fa-pen"></i> Edit Home Content</button>
+                                </div>
+                                <div class="table-responsive">
+                                    <p style="padding: 20px; text-align: center; color: var(--text-secondary);">
+                                        <i class="fa-solid fa-info-circle"></i> Klik tombol "Edit Home Content" untuk mengubah:<br><br>
+                                        • Tagline (contoh: "Hi, I'm Leoly 👋")<br>
+                                        • Title Prefix (teks sebelum efek mengetik)<br>
+                                        • Kata-kata Typing Effect (akan berjalan otomatis)<br>
+                                        • Deskripsi / Bio singkat
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Tab Projects -->
+                            <div id="tab-project" class="admin-tab-pane">
+                                <div class="pane-header">
+                                    <h3>Kelola Project</h3>
+                                    <button class="btn btn-primary btn-sm" id="btn-add-project-modal"><i class="fa-solid fa-plus"></i> Tambah Project</button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr><th>Judul</th><th>Kategori</th><th>Likes</th><th>Aksi</th></tr>
+                                        </thead>
+                                        <tbody id="admin-project-table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Tab Products -->
+                            <div id="tab-product" class="admin-tab-pane">
+                                <div class="pane-header">
+                                    <h3>Kelola Produk Digital</h3>
+                                    <button class="btn btn-primary btn-sm" id="btn-add-product-modal"><i class="fa-solid fa-plus"></i> Tambah Produk</button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr><th>Nama Produk</th><th>Kategori</th><th>Harga</th><th>Aksi</th></tr>
+                                        </thead>
+                                        <tbody id="admin-product-table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Tab FAQ -->
+                            <div id="tab-faq" class="admin-tab-pane">
+                                <div class="pane-header">
+                                    <h3>Kelola FAQ</h3>
+                                    <button class="btn btn-primary btn-sm" id="btn-add-faq-modal"><i class="fa-solid fa-plus"></i> Tambah FAQ</button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr><th>Pertanyaan</th><th>Aksi</th></tr>
+                                        </thead>
+                                        <tbody id="admin-faq-table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Tab Testimonials -->
+                            <div id="tab-testimonial" class="admin-tab-pane">
+                                <div class="pane-header">
+                                    <h3>Kelola Testimoni</h3>
+                                    <button class="btn btn-primary btn-sm" id="btn-add-testimonial-modal"><i class="fa-solid fa-plus"></i> Tambah Testimoni</button>
+                                </div>
+                                <div class="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr><th>Nama</th><th>Perusahaan</th><th>Bintang</th><th>Aksi</th></tr>
+                                        </thead>
+                                        <tbody id="admin-testimonial-table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
                         </div>
-                        <div class="form-group">
-                            <label for="content-desc">Deskripsi Informasi</label>
-                            <input type="text" id="content-desc" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="content-image-file">Upload Gambar Thumbnail</label>
-                            <input type="file" id="content-image-file" accept="image/*">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Publish Item</button>
-                    </form>
+                    </div>
                 </div>
 
-                <div class="admin-controls">
-                    <h3>Tambah Donatur Manual</h3>
-                    <form id="admin-donator-form">
-                        <div class="form-group">
-                            <label for="adm-don-name">Nama Donatur</label>
-                            <input type="text" id="adm-don-name" placeholder="Contoh: HDFv_Duda" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="adm-don-amount">Nominal Uang (Rp)</label>
-                            <input type="number" id="adm-don-amount" placeholder="Contoh: 50000" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="adm-don-method">Metode Transfer</label>
-                            <select id="adm-don-method" required>
-                                <option value="DANA">DANA</option>
-                                <option value="Gopay">Gopay</option>
-                                <option value="Bank BCA">Bank BCA</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="adm-don-msg">Pesan Apresiasi</label>
-                            <input type="text" id="adm-don-msg" placeholder="Contoh: Sukses selalu!">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Suntik Donatur</button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="admin-controls" style="margin-top: 2rem;">
-                <div class="inbox-header-flex">
-                    <h3>Kotak Masuk Tiket Bantuan (User)</h3>
-                    <button class="btn-clear-all" id="btn-clear-messages" onclick="clearAllMessages()">🧹 Bersihkan Semua</button>
-                </div>
-                <div style="width: 100%; overflow-x: auto;">
-                    <table class="admin-inbox-table">
-                        <thead>
-                            <tr>
-                                <th>Kontak</th>
-                                <th>Subjek</th>
-                                <th>Isi Pesan</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-messages-list"></tbody>
-                    </table>
-                </div>
             </div>
         </section>
+
     </main>
 
-    <div class="login-modal" id="loginModal">
-        <div class="login-box">
-            <div class="login-header">
-                <h3>Verification Mode</h3>
-                <button id="closeLogin">✕</button>
+    <!-- SHOPPING CART PANEL -->
+    <div id="shopping-cart-panel" class="glass-panel">
+        <div class="panel-header">
+            <h3>Keranjang Belanja</h3>
+            <button id="cart-close-btn" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="panel-body" id="cart-items-container">
+        </div>
+        <div class="panel-footer">
+            <div class="total-box">
+                <span>Total:</span>
+                <span id="cart-total-price">Rp 0</span>
             </div>
-            <p class="login-subtitle">Gunakan kredensial owner sistem Leoly Hub.</p>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="login-username">Username</label>
-                    <input type="text" id="login-username" required>
-                </div>
-                <div class="form-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" required>
-                </div>
-                <div class="error-msg" id="login-error">⚠️ Username atau Password salah!</div>
-                <button type="submit" class="btn btn-primary" style="margin-top: 0.5rem;">Verify Access</button>
-            </form>
+            <button id="checkout-action-btn" class="btn btn-primary btn-block">Checkout</button>
         </div>
     </div>
+
+    <!-- MODAL -->
+    <div id="global-data-modal" class="modal-overlay">
+        <div class="modal-window glass-card">
+            <div class="modal-header">
+                <h3 id="modal-title-node">Form</h3>
+                <button id="modal-close-trigger" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" id="modal-body-node">
+            </div>
+        </div>
+    </div>
+
+    <footer class="glass-footer">
+        <p>© 2026 <strong>Leoly</strong>. Built with <i class="fa-solid fa-heart" style="color: #ff6b6b;"></i> for the digital world.</p>
+    </footer>
+
+    <button id="back-to-top" class="icon-btn"><i class="fa-solid fa-arrow-up"></i></button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="script.js"></script>
 </body>
