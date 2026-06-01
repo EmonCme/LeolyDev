@@ -24,7 +24,6 @@ const DEFAULT_TESTIMONIALS = [
     { id: "t2", name: "Sarah Wijaya", company: "Creative Studio", text: "Desain yang dihasilkan sangat modern dan user-friendly. Sangat merekomendasikan!", stars: 5 }
 ];
 
-// Default Home Content
 const DEFAULT_HOME_CONTENT = {
     tagline: "Hi, I'm Leoly 👋",
     titlePrefix: "Fullstack Developer &",
@@ -32,7 +31,8 @@ const DEFAULT_HOME_CONTENT = {
     typingWords: ["Creative Technologist", "Fullstack Developer", "UI/UX Enthusiast"]
 };
 
-// Helper functions
+const WHATSAPP_NUMBER = "6285198224557";
+
 function getStorage(key, fallback) {
     const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : fallback;
@@ -41,17 +41,15 @@ function setStorage(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
 }
 
-// Global State
 let projects = getStorage('leoly_projects', DEFAULT_PROJECTS);
 let products = getStorage('leoly_products', DEFAULT_PRODUCTS);
 let faqs = getStorage('leoly_faqs', DEFAULT_FAQS);
 let testimonials = getStorage('leoly_testimonials', DEFAULT_TESTIMONIALS);
-let donations = getStorage('leoly_donations', []);
-let cart = [];
+let cart = getStorage('leoly_cart', []);
 let homeContent = getStorage('leoly_home_content', DEFAULT_HOME_CONTENT);
 let typingTimeout = null;
+let cartPanel = null;
 
-/* --- INITIALIZER --- */
 document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
         const loader = document.getElementById("loading-screen");
@@ -64,16 +62,33 @@ document.addEventListener("DOMContentLoaded", () => {
     AOS.init({ duration: 800, once: true });
     initParticles();
     
-    // Render semua konten
     renderHomeContent();
     renderAppProjects();
     renderAppProducts();
     renderAppFAQs();
     renderAppTestimonials();
     updateCartCount();
+    renderCartPanelItems();
 
     setupGlobalEventListeners();
 });
+
+function saveCart() {
+    setStorage('leoly_cart', cart);
+}
+
+function clearCart() {
+    cart = [];
+    saveCart();
+    updateCartCount();
+    renderCartPanelItems();
+}
+
+function closeCartPanel() {
+    if(cartPanel) {
+        cartPanel.classList.remove("panel-open");
+    }
+}
 
 function initParticles() {
     if(document.getElementById('particles-js')) {
@@ -93,29 +108,21 @@ function initParticles() {
     }
 }
 
-// Render Home Content ke halaman
 function renderHomeContent() {
-    // Update tagline
     const taglineElement = document.querySelector("#home .tagline");
     if(taglineElement) taglineElement.textContent = homeContent.tagline;
     
-    // Update title - pertahankan span typing-text
     const titleElement = document.querySelector("#home h1");
     if(titleElement) {
-        // Simpan konten yang sudah ada
         const existingTypingSpan = titleElement.querySelector(".typing-text");
         if(existingTypingSpan) {
-            // Hanya update teks sebelum typing span
-            const prefixText = homeContent.titlePrefix;
-            titleElement.innerHTML = `${escapeHtml(prefixText)} <br><span class="typing-text"></span>`;
+            titleElement.innerHTML = `${escapeHtml(homeContent.titlePrefix)} <br><span class="typing-text"></span>`;
         }
     }
     
-    // Update description
     const descElement = document.querySelector("#home .hero-text > p");
     if(descElement) descElement.textContent = homeContent.description;
     
-    // Restart typing effect
     if(typingTimeout) clearTimeout(typingTimeout);
     initTypingEffect();
 }
@@ -124,7 +131,6 @@ function initTypingEffect() {
     const node = document.querySelector(".typing-text");
     if(!node) return;
     
-    // Gunakan kata-kata dari homeContent
     const words = homeContent.typingWords && homeContent.typingWords.length > 0 ? 
         homeContent.typingWords : ["Creative Technologist", "Fullstack Developer", "UI/UX Enthusiast"];
     let wordIdx = 0, charIdx = 0, isDeleting = false;
@@ -160,7 +166,6 @@ function escapeHtml(str) {
     });
 }
 
-/* --- RENDER FUNCTIONS --- */
 function renderAppProjects(filter = "all", query = "") {
     const container = document.getElementById("project-display-grid");
     if(!container) return;
@@ -182,7 +187,7 @@ function renderAppProjects(filter = "all", query = "") {
         card.className = "glass-card render-card";
         
         const imageHtml = p.image ? 
-            `<img src="${p.image}" alt="${escapeHtml(p.title)}" style="width:100%; height:100%; object-fit:cover;">` : 
+            `<img src="${p.image}" alt="${escapeHtml(p.title)}">` : 
             `<i class="fa-solid fa-laptop-code"></i>`;
         
         card.innerHTML = `
@@ -224,7 +229,7 @@ function renderAppProducts(filter = "all", query = "") {
         card.className = "glass-card render-card";
         
         const imageHtml = p.image ? 
-            `<img src="${p.image}" alt="${escapeHtml(p.name)}" style="width:100%; height:100%; object-fit:cover;">` : 
+            `<img src="${p.image}" alt="${escapeHtml(p.name)}">` : 
             `<i class="fa-solid fa-cube"></i>`;
         
         card.innerHTML = `
@@ -290,7 +295,6 @@ function toggleAccordionNode(header) {
     item.classList.toggle("active");
 }
 
-/* --- ACTIONS --- */
 function actionLikeProject(id) {
     projects = projects.map(p => p.id === id ? { ...p, likes: p.likes + 1 } : p);
     setStorage('leoly_projects', projects);
@@ -307,6 +311,7 @@ function actionAddProductToCart(id) {
     const prod = products.find(p => p.id === id);
     if(!prod) return;
     cart.push(prod);
+    saveCart();
     updateCartCount();
     renderCartPanelItems();
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `${prod.name} masuk keranjang`, showConfirmButton: false, timer: 2000 });
@@ -353,13 +358,51 @@ function renderCartPanelItems() {
 
 function actionRemoveCartItem(idx) {
     cart.splice(idx, 1);
+    saveCart();
     updateCartCount();
     renderCartPanelItems();
 }
 
-/* --- EVENT LISTENERS --- */
+function checkoutToWhatsApp() {
+    if(cart.length === 0) {
+        Swal.fire({ icon: 'warning', title: 'Keranjang Kosong!', text: 'Silakan tambahkan produk terlebih dahulu ke keranjang.', confirmButtonColor: '#000' });
+        return;
+    }
+    
+    let total = 0;
+    let productList = "";
+    
+    cart.forEach((item, index) => {
+        total += item.price;
+        productList += `${index + 1}. ${item.name} - Rp ${item.price.toLocaleString('id-ID')}\n`;
+    });
+    
+    sessionStorage.setItem('last_order', JSON.stringify({ items: cart, total: total, date: new Date().toISOString() }));
+    
+    const message = `Halo Leoly! Saya ingin memesan produk berikut:%0A%0A${encodeURIComponent(productList)}%0A────────────────%0A*Total: Rp ${total.toLocaleString('id-ID')}*%0A%0ASaya tertarik dengan produk di atas. Mohon informasi lebih lanjut untuk proses pemesanan. Terima kasih!`;
+    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+    
+    closeCartPanel();
+    
+    Swal.fire({
+        icon: 'question',
+        title: 'Konfirmasi Checkout',
+        text: `Anda akan diarahkan ke WhatsApp untuk melanjutkan pemesanan dengan total Rp ${total.toLocaleString('id-ID')}. Keranjang akan dikosongkan setelah checkout. Lanjutkan?`,
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Lanjutkan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#000',
+        cancelButtonColor: '#666'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.open(waUrl, '_blank');
+            clearCart();
+            Swal.fire({ icon: 'success', title: 'Checkout Berhasil!', text: 'Pesanan Anda telah dikirim. Keranjang sudah dikosongkan.', confirmButtonColor: '#000', timer: 2000 });
+        }
+    });
+}
+
 function setupGlobalEventListeners() {
-    // Mobile menu toggle
     const menuToggle = document.getElementById("menu-toggle");
     const navMenu = document.querySelector(".nav-menu");
 
@@ -387,7 +430,6 @@ function setupGlobalEventListeners() {
         });
     }
 
-    // Navigation
     const navLinks = document.querySelectorAll(".nav-link");
     const sections = document.querySelectorAll(".app-section");
 
@@ -415,7 +457,6 @@ function setupGlobalEventListeners() {
         });
     });
 
-    // Theme toggle
     const themeBtn = document.getElementById("theme-toggle");
     if(themeBtn) {
         themeBtn.addEventListener("click", () => {
@@ -425,31 +466,18 @@ function setupGlobalEventListeners() {
         });
     }
 
-    // Cart panel
+    cartPanel = document.getElementById("shopping-cart-panel");
     const cartBtn = document.getElementById("cart-toggle-btn");
     const cartClose = document.getElementById("cart-close-btn");
-    const cartPanel = document.getElementById("shopping-cart-panel");
 
     if(cartBtn && cartPanel) cartBtn.addEventListener("click", () => cartPanel.classList.add("panel-open"));
     if(cartClose && cartPanel) cartClose.addEventListener("click", () => cartPanel.classList.remove("panel-open"));
 
-    // Checkout
     const checkoutBtn = document.getElementById("checkout-action-btn");
     if(checkoutBtn) {
-        checkoutBtn.addEventListener("click", () => {
-            if(cart.length === 0) {
-                Swal.fire({ icon: 'warning', title: 'Oops!', text: 'Keranjang masih kosong!', confirmButtonColor: '#000' });
-                return;
-            }
-            Swal.fire({ icon: 'success', title: 'Checkout Berhasil!', text: 'Terima kasih telah membeli produk saya. Link download akan dikirim ke email Anda.', confirmButtonColor: '#000' });
-            cart = [];
-            updateCartCount();
-            renderCartPanelItems();
-            cartPanel.classList.remove("panel-open");
-        });
+        checkoutBtn.addEventListener("click", () => checkoutToWhatsApp());
     }
 
-    // Search & Filter Projects
     const projSearch = document.getElementById("project-search");
     if(projSearch) {
         projSearch.addEventListener("input", (e) => {
@@ -467,7 +495,6 @@ function setupGlobalEventListeners() {
         });
     });
 
-    // Search & Filter Products
     const shopSearch = document.getElementById("shop-search");
     if(shopSearch) {
         shopSearch.addEventListener("input", (e) => {
@@ -485,17 +512,24 @@ function setupGlobalEventListeners() {
         });
     });
 
-    // Contact Form
     const contactForm = document.getElementById("main-contact-form");
     if(contactForm) {
         contactForm.addEventListener("submit", (e) => {
             e.preventDefault();
-            Swal.fire({ icon: 'success', title: 'Pesan Terkirim!', text: 'Terima kasih, saya akan segera merespons pesan Anda.', confirmButtonColor: '#000' });
+            const name = document.getElementById("contact-name").value;
+            const email = document.getElementById("contact-email").value;
+            const message = document.getElementById("contact-message").value;
+            
+            const waMessage = `Halo Leoly!%0A%0ANama: ${encodeURIComponent(name)}%0AEmail: ${encodeURIComponent(email)}%0APesan: ${encodeURIComponent(message)}%0A%0AMohon direspons. Terima kasih!`;
+            const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${waMessage}`;
+            
+            Swal.fire({ icon: 'success', title: 'Pesan Terkirim!', text: 'Terima kasih, Anda akan diarahkan ke WhatsApp untuk melanjutkan.', confirmButtonColor: '#000' }).then(() => {
+                window.open(waUrl, '_blank');
+            });
             contactForm.reset();
         });
     }
 
-    // Back to Top
     const btt = document.getElementById("back-to-top");
     window.addEventListener("scroll", () => {
         if(window.scrollY > 400 && btt) btt.style.display = "inline-flex";
@@ -503,17 +537,16 @@ function setupGlobalEventListeners() {
     });
     if(btt) btt.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
 
-    // Navbar scroll
     const glassNav = document.querySelector(".glass-nav");
     window.addEventListener("scroll", () => {
         if(window.scrollY > 50 && glassNav) glassNav.classList.add("scrolled");
         else if(glassNav) glassNav.classList.remove("scrolled");
     });
 
+
     setupAdminSubsystem();
 }
 
-/* --- ADMIN SUBSYSTEM --- */
 function setupAdminSubsystem() {
     const loginForm = document.getElementById("admin-login-form");
     const loginBox = document.getElementById("admin-login-box");
@@ -560,7 +593,6 @@ function setupAdminSubsystem() {
 }
 
 function renderAdminTables() {
-    // Projects table
     const tbodyProj = document.getElementById("admin-project-table-body");
     if(tbodyProj) {
         tbodyProj.innerHTML = "";
@@ -574,7 +606,6 @@ function renderAdminTables() {
         });
     }
 
-    // Products table
     const tbodyProd = document.getElementById("admin-product-table-body");
     if(tbodyProd) {
         tbodyProd.innerHTML = "";
@@ -588,7 +619,6 @@ function renderAdminTables() {
         });
     }
 
-    // FAQ table
     const tbodyFaq = document.getElementById("admin-faq-table-body");
     if(tbodyFaq) {
         tbodyFaq.innerHTML = "";
@@ -600,7 +630,6 @@ function renderAdminTables() {
         });
     }
 
-    // Testimonials table
     const tbodyTesti = document.getElementById("admin-testimonial-table-body");
     if(tbodyTesti) {
         tbodyTesti.innerHTML = "";
@@ -613,7 +642,6 @@ function renderAdminTables() {
     }
 }
 
-// Fungsi untuk konversi file image ke base64
 function imageToBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -623,35 +651,20 @@ function imageToBase64(file) {
     });
 }
 
-// Fungsi Edit Home Content
 function editHomeContent() {
     const overlay = document.getElementById("global-data-modal");
     const titleNode = document.getElementById("modal-title-node");
     const bodyNode = document.getElementById("modal-body-node");
     
-    // Menyiapkan string untuk typing words
     const typingWordsStr = homeContent.typingWords.join(', ');
     
     titleNode.textContent = "Edit Home Page Content";
     bodyNode.innerHTML = `
         <form id="form-edit-home">
-            <div class="form-group">
-                <label>Tagline (contoh: Hi, I'm Leoly 👋)</label>
-                <input type="text" id="eh-tagline" value="${escapeHtml(homeContent.tagline)}" required>
-            </div>
-            <div class="form-group">
-                <label>Title Prefix (teks sebelum typing effect)</label>
-                <input type="text" id="eh-title-prefix" value="${escapeHtml(homeContent.titlePrefix)}" required>
-            </div>
-            <div class="form-group">
-                <label>Kata-kata Typing Effect (pisahkan dengan koma)</label>
-                <input type="text" id="eh-typing-words" value="${escapeHtml(typingWordsStr)}" required>
-                <small style="color: var(--text-muted); font-size: 12px; display: block; margin-top: 5px;">Contoh: Creative Technologist, Fullstack Developer, UI/UX Enthusiast</small>
-            </div>
-            <div class="form-group">
-                <label>Deskripsi / Bio</label>
-                <textarea id="eh-description" rows="4" required>${escapeHtml(homeContent.description)}</textarea>
-            </div>
+            <div class="form-group"><label>Tagline</label><input type="text" id="eh-tagline" value="${escapeHtml(homeContent.tagline)}" required></div>
+            <div class="form-group"><label>Title Prefix</label><input type="text" id="eh-title-prefix" value="${escapeHtml(homeContent.titlePrefix)}" required></div>
+            <div class="form-group"><label>Kata-kata Typing Effect (pisahkan dengan koma)</label><input type="text" id="eh-typing-words" value="${escapeHtml(typingWordsStr)}" required><small style="color: var(--text-muted); font-size: 12px;">Contoh: Creative Technologist, Fullstack Developer, UI/UX Enthusiast</small></div>
+            <div class="form-group"><label>Deskripsi</label><textarea id="eh-description" rows="4" required>${escapeHtml(homeContent.description)}</textarea></div>
             <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
         </form>
     `;
@@ -664,16 +677,9 @@ function editHomeContent() {
         const typingWordsStr = document.getElementById("eh-typing-words").value;
         const description = document.getElementById("eh-description").value;
         
-        // Parse typing words dari string yang dipisah koma
         const typingWords = typingWordsStr.split(',').map(word => word.trim()).filter(word => word.length > 0);
         
-        homeContent = {
-            tagline: tagline,
-            titlePrefix: titlePrefix,
-            description: description,
-            typingWords: typingWords
-        };
-        
+        homeContent = { tagline, titlePrefix, description, typingWords };
         setStorage('leoly_home_content', homeContent);
         renderHomeContent();
         overlay.classList.remove("modal-active");
@@ -681,7 +687,6 @@ function editHomeContent() {
     });
 }
 
-/* --- CRUD ACTIONS --- */
 function deleteProjectNode(id) {
     projects = projects.filter(p => p.id !== id);
     setStorage('leoly_projects', projects);
@@ -710,7 +715,6 @@ function deleteTestimonialNode(id) {
     renderAppTestimonials();
 }
 
-// Edit functions untuk project
 function editProjectNode(id) {
     const project = projects.find(p => p.id === id);
     if(!project) return;
@@ -723,15 +727,11 @@ function editProjectNode(id) {
     bodyNode.innerHTML = `
         <form id="form-edit-project">
             <div class="form-group"><label>Judul Project</label><input type="text" id="ep-title" value="${escapeHtml(project.title)}" required></div>
-            <div class="form-group"><label>Kategori</label><select id="ep-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; color:var(--text-primary);">
-                <option ${project.category === 'Web' ? 'selected' : ''}>Web</option>
-                <option ${project.category === 'Server' ? 'selected' : ''}>Server</option>
-                <option ${project.category === 'UI/UX' ? 'selected' : ''}>UI/UX</option>
-            </select></div>
+            <div class="form-group"><label>Kategori</label><select id="ep-category"><option ${project.category === 'Web' ? 'selected' : ''}>Web</option><option ${project.category === 'Server' ? 'selected' : ''}>Server</option><option ${project.category === 'UI/UX' ? 'selected' : ''}>UI/UX</option></select></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="ep-desc" rows="3" required>${escapeHtml(project.desc)}</textarea></div>
             <div class="form-group"><label>Gambar Thumbnail</label><input type="file" id="ep-image" accept="image/*"></div>
-            ${project.image ? `<div class="form-group"><img src="${project.image}" style="max-width:100%; border-radius:8px; margin-top:10px;"><p style="font-size:12px; margin-top:5px;">Gambar saat ini</p></div>` : ''}
-            <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
+            ${project.image ? `<div><img src="${project.image}" style="max-width:100%; border-radius:8px;"><p>Gambar saat ini</p></div>` : ''}
+            <button type="submit" class="btn btn-primary btn-block">Simpan</button>
         </form>
     `;
     overlay.classList.add("modal-active");
@@ -744,9 +744,7 @@ function editProjectNode(id) {
         const imageFile = document.getElementById("ep-image").files[0];
         
         let imageBase64 = project.image;
-        if(imageFile) {
-            imageBase64 = await imageToBase64(imageFile);
-        }
+        if(imageFile) imageBase64 = await imageToBase64(imageFile);
         
         const index = projects.findIndex(p => p.id === id);
         projects[index] = { ...project, title, category, desc, image: imageBase64 };
@@ -758,7 +756,6 @@ function editProjectNode(id) {
     });
 }
 
-// Edit functions untuk product
 function editProductNode(id) {
     const product = products.find(p => p.id === id);
     if(!product) return;
@@ -771,16 +768,12 @@ function editProductNode(id) {
     bodyNode.innerHTML = `
         <form id="form-edit-product">
             <div class="form-group"><label>Nama Produk</label><input type="text" id="epr-name" value="${escapeHtml(product.name)}" required></div>
-            <div class="form-group"><label>Kategori</label><select id="epr-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;">
-                <option ${product.category === 'Template' ? 'selected' : ''}>Template</option>
-                <option ${product.category === 'Module' ? 'selected' : ''}>Module</option>
-                <option ${product.category === 'Asset' ? 'selected' : ''}>Asset</option>
-            </select></div>
-            <div class="form-group"><label>Harga (Rp)</label><input type="number" id="epr-price" value="${product.price}" required></div>
+            <div class="form-group"><label>Kategori</label><select id="epr-category"><option ${product.category === 'Template' ? 'selected' : ''}>Template</option><option ${product.category === 'Module' ? 'selected' : ''}>Module</option><option ${product.category === 'Asset' ? 'selected' : ''}>Asset</option></select></div>
+            <div class="form-group"><label>Harga</label><input type="number" id="epr-price" value="${product.price}" required></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="epr-desc" rows="3" required>${escapeHtml(product.desc)}</textarea></div>
             <div class="form-group"><label>Gambar Thumbnail</label><input type="file" id="epr-image" accept="image/*"></div>
-            ${product.image ? `<div class="form-group"><img src="${product.image}" style="max-width:100%; border-radius:8px; margin-top:10px;"><p style="font-size:12px; margin-top:5px;">Gambar saat ini</p></div>` : ''}
-            <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
+            ${product.image ? `<div><img src="${product.image}" style="max-width:100%; border-radius:8px;"><p>Gambar saat ini</p></div>` : ''}
+            <button type="submit" class="btn btn-primary btn-block">Simpan</button>
         </form>
     `;
     overlay.classList.add("modal-active");
@@ -794,9 +787,7 @@ function editProductNode(id) {
         const imageFile = document.getElementById("epr-image").files[0];
         
         let imageBase64 = product.image;
-        if(imageFile) {
-            imageBase64 = await imageToBase64(imageFile);
-        }
+        if(imageFile) imageBase64 = await imageToBase64(imageFile);
         
         const index = products.findIndex(p => p.id === id);
         products[index] = { ...product, name, category, price, desc, image: imageBase64 };
@@ -808,117 +799,84 @@ function editProductNode(id) {
     });
 }
 
-/* --- MODAL SETUP --- */
 function setupAdminModalTriggers() {
     const overlay = document.getElementById("global-data-modal");
     const closeBtn = document.getElementById("modal-close-trigger");
-    const titleNode = document.getElementById("modal-title-node");
-    const bodyNode = document.getElementById("modal-body-node");
 
     if(!overlay || !closeBtn) return;
-
     closeBtn.addEventListener("click", () => overlay.classList.remove("modal-active"));
 
-    // Tombol Edit Home
     const editHomeBtn = document.getElementById("btn-edit-home");
-    if(editHomeBtn) {
-        editHomeBtn.addEventListener("click", () => {
-            editHomeContent();
-        });
-    }
+    if(editHomeBtn) editHomeBtn.addEventListener("click", () => editHomeContent());
 
-    // Add Project Modal
     const addProjBtn = document.getElementById("btn-add-project-modal");
     if(addProjBtn) {
         addProjBtn.addEventListener("click", () => {
-            titleNode.textContent = "Tambah Project Baru";
-            bodyNode.innerHTML = `
+            document.getElementById("modal-title-node").textContent = "Tambah Project Baru";
+            document.getElementById("modal-body-node").innerHTML = `
                 <form id="form-crud-project">
                     <div class="form-group"><label>Judul Project</label><input type="text" id="cp-title" required></div>
-                    <div class="form-group"><label>Kategori</label><select id="cp-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px; color:var(--text-primary);">
-                        <option>Web</option><option>Server</option><option>UI/UX</option>
-                    </select></div>
+                    <div class="form-group"><label>Kategori</label><select id="cp-category"><option>Web</option><option>Server</option><option>UI/UX</option></select></div>
                     <div class="form-group"><label>Deskripsi</label><textarea id="cp-desc" rows="3" required></textarea></div>
-                    <div class="form-group"><label>Gambar Thumbnail (Opsional)</label><input type="file" id="cp-image" accept="image/*"></div>
-                    <button type="submit" class="btn btn-primary btn-block">Simpan Project</button>
+                    <div class="form-group"><label>Gambar (Opsional)</label><input type="file" id="cp-image" accept="image/*"></div>
+                    <button type="submit" class="btn btn-primary btn-block">Simpan</button>
                 </form>
             `;
             overlay.classList.add("modal-active");
-            
             document.getElementById("form-crud-project").addEventListener("submit", async (e) => {
                 e.preventDefault();
-                const title = document.getElementById("cp-title").value;
-                const category = document.getElementById("cp-category").value;
-                const desc = document.getElementById("cp-desc").value;
-                const imageFile = document.getElementById("cp-image").files[0];
-                
                 let imageBase64 = null;
-                if(imageFile) {
-                    imageBase64 = await imageToBase64(imageFile);
-                }
-                
-                projects.push({ id: 'p_' + Date.now(), title, category, desc, likes: 0, image: imageBase64 });
+                const imgFile = document.getElementById("cp-image").files[0];
+                if(imgFile) imageBase64 = await imageToBase64(imgFile);
+                projects.push({ id: 'p_' + Date.now(), title: document.getElementById("cp-title").value, category: document.getElementById("cp-category").value, desc: document.getElementById("cp-desc").value, likes: 0, image: imageBase64 });
                 setStorage('leoly_projects', projects);
                 renderAdminTables();
                 renderAppProjects();
                 overlay.classList.remove("modal-active");
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Project berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1500, showConfirmButton: false });
             });
         });
     }
 
-    // Add Product Modal
     const addProdBtn = document.getElementById("btn-add-product-modal");
     if(addProdBtn) {
         addProdBtn.addEventListener("click", () => {
-            titleNode.textContent = "Tambah Produk Digital";
-            bodyNode.innerHTML = `
+            document.getElementById("modal-title-node").textContent = "Tambah Produk";
+            document.getElementById("modal-body-node").innerHTML = `
                 <form id="form-crud-product">
                     <div class="form-group"><label>Nama Produk</label><input type="text" id="cpr-name" required></div>
-                    <div class="form-group"><label>Kategori</label><select id="cpr-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;">
-                        <option>Template</option><option>Module</option><option>Asset</option>
-                    </select></div>
-                    <div class="form-group"><label>Harga (Rp)</label><input type="number" id="cpr-price" required></div>
+                    <div class="form-group"><label>Kategori</label><select id="cpr-category"><option>Template</option><option>Module</option><option>Asset</option></select></div>
+                    <div class="form-group"><label>Harga</label><input type="number" id="cpr-price" required></div>
                     <div class="form-group"><label>Deskripsi</label><textarea id="cpr-desc" rows="3" required></textarea></div>
-                    <div class="form-group"><label>Gambar Thumbnail (Opsional)</label><input type="file" id="cpr-image" accept="image/*"></div>
-                    <button type="submit" class="btn btn-primary btn-block">Simpan Produk</button>
+                    <div class="form-group"><label>Gambar (Opsional)</label><input type="file" id="cpr-image" accept="image/*"></div>
+                    <button type="submit" class="btn btn-primary btn-block">Simpan</button>
                 </form>
             `;
             overlay.classList.add("modal-active");
-            
             document.getElementById("form-crud-product").addEventListener("submit", async (e) => {
                 e.preventDefault();
-                const name = document.getElementById("cpr-name").value;
-                const category = document.getElementById("cpr-category").value;
-                const price = Number(document.getElementById("cpr-price").value);
-                const desc = document.getElementById("cpr-desc").value;
-                const imageFile = document.getElementById("cpr-image").files[0];
-                
                 let imageBase64 = null;
-                if(imageFile) {
-                    imageBase64 = await imageToBase64(imageFile);
-                }
-                
-                products.push({ id: 'pr_' + Date.now(), name, category, price, desc, image: imageBase64 });
+                const imgFile = document.getElementById("cpr-image").files[0];
+                if(imgFile) imageBase64 = await imageToBase64(imgFile);
+                products.push({ id: 'pr_' + Date.now(), name: document.getElementById("cpr-name").value, category: document.getElementById("cpr-category").value, price: Number(document.getElementById("cpr-price").value), desc: document.getElementById("cpr-desc").value, image: imageBase64 });
                 setStorage('leoly_products', products);
                 renderAdminTables();
                 renderAppProducts();
                 overlay.classList.remove("modal-active");
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Produk berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1500, showConfirmButton: false });
             });
         });
     }
 
-    // Add FAQ Modal
     const addFaqBtn = document.getElementById("btn-add-faq-modal");
     if(addFaqBtn) {
         addFaqBtn.addEventListener("click", () => {
-            titleNode.textContent = "Tambah FAQ";
-            bodyNode.innerHTML = `
+            document.getElementById("modal-title-node").textContent = "Tambah FAQ";
+            document.getElementById("modal-body-node").innerHTML = `
                 <form id="form-crud-faq">
                     <div class="form-group"><label>Pertanyaan</label><input type="text" id="cf-q" required></div>
                     <div class="form-group"><label>Jawaban</label><textarea id="cf-a" rows="3" required></textarea></div>
-                    <button type="submit" class="btn btn-primary btn-block">Simpan FAQ</button>
+                    <button type="submit" class="btn btn-primary btn-block">Simpan</button>
                 </form>
             `;
             overlay.classList.add("modal-active");
@@ -929,23 +887,22 @@ function setupAdminModalTriggers() {
                 renderAdminTables();
                 renderAppFAQs();
                 overlay.classList.remove("modal-active");
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'FAQ berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1500, showConfirmButton: false });
             });
         });
     }
 
-    // Add Testimonial Modal
     const addTestiBtn = document.getElementById("btn-add-testimonial-modal");
     if(addTestiBtn) {
         addTestiBtn.addEventListener("click", () => {
-            titleNode.textContent = "Tambah Testimoni";
-            bodyNode.innerHTML = `
+            document.getElementById("modal-title-node").textContent = "Tambah Testimoni";
+            document.getElementById("modal-body-node").innerHTML = `
                 <form id="form-crud-testi">
                     <div class="form-group"><label>Nama</label><input type="text" id="ct-name" required></div>
                     <div class="form-group"><label>Perusahaan</label><input type="text" id="ct-comp" required></div>
-                    <div class="form-group"><label>Rating (1-5)</label><input type="number" id="ct-star" min="1" max="5" value="5" required></div>
+                    <div class="form-group"><label>Rating</label><input type="number" id="ct-star" min="1" max="5" value="5" required></div>
                     <div class="form-group"><label>Testimoni</label><textarea id="ct-text" rows="3" required></textarea></div>
-                    <button type="submit" class="btn btn-primary btn-block">Simpan Testimoni</button>
+                    <button type="submit" class="btn btn-primary btn-block">Simpan</button>
                 </form>
             `;
             overlay.classList.add("modal-active");
@@ -956,7 +913,7 @@ function setupAdminModalTriggers() {
                 renderAdminTables();
                 renderAppTestimonials();
                 overlay.classList.remove("modal-active");
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Testimoni berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1500, showConfirmButton: false });
             });
         });
     }
