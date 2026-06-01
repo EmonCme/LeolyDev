@@ -1,4 +1,3 @@
-// Netlify Function - API untuk MongoDB Atlas
 const { MongoClient } = require('mongodb');
 
 let cachedClient = null;
@@ -9,12 +8,9 @@ async function connectToDatabase() {
         return { client: cachedClient, db: cachedDb };
     }
     
-    const uri = process.env.MONGODB_URI;
-    const dbName = process.env.MONGODB_DB || 'leoly_portfolio';
-    
-    if (!uri) {
-        throw new Error('MONGODB_URI environment variable is not set');
-    }
+    // Password tanpa < dan >, hanya plain text
+    const uri = "mongodb+srv://Leoly:Bangsat88@leoly.9rhahjy.mongodb.net/";
+    const dbName = "leoly_portfolio";
     
     const client = new MongoClient(uri);
     await client.connect();
@@ -52,19 +48,18 @@ exports.handler = async (event, context) => {
         
         // GET: Ambil data
         if (event.httpMethod === 'GET') {
-            const data = await collection.find({}).sort({ created_at: -1 }).toArray();
+            const data = await collection.find({}).toArray();
             return { statusCode: 200, headers, body: JSON.stringify(data) };
         }
         
         // POST: Tambah data
         if (event.httpMethod === 'POST') {
             const body = JSON.parse(event.body);
-            const { _id, ...dataToInsert } = body;
             const result = await collection.insertOne({
-                ...dataToInsert,
+                ...body,
                 created_at: new Date().toISOString()
             });
-            return { statusCode: 200, headers, body: JSON.stringify({ ...dataToInsert, _id: result.insertedId }) };
+            return { statusCode: 200, headers, body: JSON.stringify({ ...body, _id: result.insertedId }) };
         }
         
         // PUT: Update data
