@@ -4,7 +4,8 @@
 const SUPABASE_URL = "https://umpykccadfpnukoxbmep.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtcHlrY2NhZGZwbnVrb3hibWVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNzE1NTEsImV4cCI6MjA5NTg0NzU1MX0.oi0Hi1fXyQDYeB4QOeWSGyoxpaErnld5czV5Ym_8FV0";
 
-let supabase;
+let supabase = null;
+let useLocalStorage = true; // Fallback ke localStorage jika Supabase gagal
 
 // Default data untuk inisialisasi pertama kali
 const DEFAULT_PROJECTS = [
@@ -33,11 +34,10 @@ const DEFAULT_TESTIMONIALS = [
 ];
 
 const DEFAULT_HOME_CONTENT = {
-    id: 1,
     tagline: "Hi, I'm Leoly 👋",
-    title_prefix: "Fullstack Developer &",
+    titlePrefix: "Fullstack Developer &",
     description: "Saya seorang Fullstack Developer yang berdedikasi menciptakan pengalaman digital yang bermakna. Menggabungkan kode yang elegan dengan desain yang indah.",
-    typing_words: ["Creative Technologist", "Fullstack Developer", "UI/UX Enthusiast"]
+    typingWords: ["Creative Technologist", "Fullstack Developer", "UI/UX Enthusiast"]
 };
 
 // Global State
@@ -52,428 +52,7 @@ let cartPanel = null;
 
 const WHATSAPP_NUMBER = "6285198224557";
 
-/* --- INITIALIZER --- */
-document.addEventListener("DOMContentLoaded", async () => {
-    // Tampilkan loading screen
-    setTimeout(() => {
-        const loader = document.getElementById("loading-screen");
-        if(loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 500);
-        }
-    }, 1500);
-
-    AOS.init({ duration: 800, once: true });
-    initParticles();
-    
-    // Inisialisasi Supabase
-    await initSupabase();
-    
-    // Load semua data dari server
-    await loadAllData();
-    
-    renderHomeContent();
-    renderAppProjects();
-    renderAppProducts();
-    renderAppFAQs();
-    renderAppTestimonials();
-    
-    // Load cart dari localStorage (tetap lokal untuk keranjang)
-    cart = getStorage('leoly_cart', []);
-    updateCartCount();
-    renderCartPanelItems();
-
-    setupGlobalEventListeners();
-});
-
-async function initSupabase() {
-    // Cek apakah Supabase sudah tersedia
-    if (typeof supabaseJs !== 'undefined') {
-        supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log("Supabase initialized successfully");
-        
-        // Test koneksi
-        const { data, error } = await supabase.from('projects').select('count', { count: 'exact', head: true });
-        if (error) {
-            console.warn("Supabase connection test failed:", error);
-            console.warn("Using localStorage fallback");
-            supabase = null;
-        } else {
-            console.log("Supabase connection successful");
-        }
-    } else {
-        console.warn("Supabase library not loaded, using localStorage fallback");
-        supabase = null;
-    }
-    
-    // Fallback ke localStorage jika Supabase tidak tersedia
-    if (!supabase) {
-        projects = getStorage('leoly_projects', DEFAULT_PROJECTS);
-        products = getStorage('leoly_products', DEFAULT_PRODUCTS);
-        faqs = getStorage('leoly_faqs', DEFAULT_FAQS);
-        testimonials = getStorage('leoly_testimonials', DEFAULT_TESTIMONIALS);
-        homeContent = getStorage('leoly_home_content', DEFAULT_HOME_CONTENT);
-    }
-}
-
-async function loadAllData() {
-    if (supabase) {
-        await Promise.all([
-            loadProjects(),
-            loadProducts(),
-            loadFAQs(),
-            loadTestimonials(),
-            loadHomeContent()
-        ]);
-    }
-}
-
-// --- CREATE TABLES IF NOT EXISTS ---
-async function createTablesIfNotExists() {
-    if (!supabase) return;
-    
-    // Tabel Projects
-    const { error: createProjectsError } = await supabase.rpc('create_projects_table');
-    if (createProjectsError) {
-        console.log("Projects table might already exist or need to be created manually");
-    }
-    
-    // Tabel Products
-    const { error: createProductsError } = await supabase.rpc('create_products_table');
-    if (createProductsError) {
-        console.log("Products table might already exist or need to be created manually");
-    }
-}
-
-// --- CRUD OPERATIONS WITH SUPABASE ---
-async function loadProjects() {
-    try {
-        const { data, error } = await supabase
-            .from('projects')
-            .select('*')
-            .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-            projects = data;
-        } else {
-            // Seed default data
-            for (const project of DEFAULT_PROJECTS) {
-                await supabase.from('projects').insert([{ ...project, created_at: new Date().toISOString() }]);
-            }
-            projects = DEFAULT_PROJECTS;
-        }
-    } catch (error) {
-        console.error("Error loading projects:", error);
-        projects = getStorage('leoly_projects', DEFAULT_PROJECTS);
-    }
-}
-
-async function loadProducts() {
-    try {
-        const { data, error } = await supabase
-            .from('products')
-            .select('*')
-            .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-            products = data;
-        } else {
-            for (const product of DEFAULT_PRODUCTS) {
-                await supabase.from('products').insert([{ ...product, created_at: new Date().toISOString() }]);
-            }
-            products = DEFAULT_PRODUCTS;
-        }
-    } catch (error) {
-        console.error("Error loading products:", error);
-        products = getStorage('leoly_products', DEFAULT_PRODUCTS);
-    }
-}
-
-async function loadFAQs() {
-    try {
-        const { data, error } = await supabase
-            .from('faqs')
-            .select('*')
-            .order('created_at', { ascending: true });
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-            faqs = data;
-        } else {
-            for (const faq of DEFAULT_FAQS) {
-                await supabase.from('faqs').insert([{ ...faq, created_at: new Date().toISOString() }]);
-            }
-            faqs = DEFAULT_FAQS;
-        }
-    } catch (error) {
-        console.error("Error loading FAQs:", error);
-        faqs = getStorage('leoly_faqs', DEFAULT_FAQS);
-    }
-}
-
-async function loadTestimonials() {
-    try {
-        const { data, error } = await supabase
-            .from('testimonials')
-            .select('*')
-            .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-            testimonials = data;
-        } else {
-            for (const testimonial of DEFAULT_TESTIMONIALS) {
-                await supabase.from('testimonials').insert([{ ...testimonial, created_at: new Date().toISOString() }]);
-            }
-            testimonials = DEFAULT_TESTIMONIALS;
-        }
-    } catch (error) {
-        console.error("Error loading testimonials:", error);
-        testimonials = getStorage('leoly_testimonials', DEFAULT_TESTIMONIALS);
-    }
-}
-
-async function loadHomeContent() {
-    try {
-        const { data, error } = await supabase
-            .from('home_content')
-            .select('*')
-            .limit(1);
-        
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-            homeContent = data[0];
-        } else {
-            await supabase.from('home_content').insert([DEFAULT_HOME_CONTENT]);
-            homeContent = DEFAULT_HOME_CONTENT;
-        }
-    } catch (error) {
-        console.error("Error loading home content:", error);
-        homeContent = getStorage('leoly_home_content', DEFAULT_HOME_CONTENT);
-    }
-}
-
-// --- SAVE FUNCTIONS (Called from Admin Panel) ---
-async function saveProjectToDB(project) {
-    if (!supabase) return false;
-    try {
-        if (project.id && !project.id.startsWith('p_')) {
-            // Update existing
-            const { error } = await supabase
-                .from('projects')
-                .update(project)
-                .eq('id', project.id);
-            if (error) throw error;
-        } else {
-            // Insert new
-            const newId = project.id || 'p_' + Date.now();
-            const { error } = await supabase
-                .from('projects')
-                .insert([{ ...project, id: newId, created_at: new Date().toISOString() }]);
-            if (error) throw error;
-        }
-        await loadProjects();
-        renderAppProjects();
-        if (typeof renderAdminTables === 'function') renderAdminTables();
-        return true;
-    } catch (error) {
-        console.error("Error saving project:", error);
-        return false;
-    }
-}
-
-async function saveProductToDB(product) {
-    if (!supabase) return false;
-    try {
-        if (product.id && !product.id.startsWith('pr_')) {
-            const { error } = await supabase
-                .from('products')
-                .update(product)
-                .eq('id', product.id);
-            if (error) throw error;
-        } else {
-            const newId = product.id || 'pr_' + Date.now();
-            const { error } = await supabase
-                .from('products')
-                .insert([{ ...product, id: newId, created_at: new Date().toISOString() }]);
-            if (error) throw error;
-        }
-        await loadProducts();
-        renderAppProducts();
-        if (typeof renderAdminTables === 'function') renderAdminTables();
-        return true;
-    } catch (error) {
-        console.error("Error saving product:", error);
-        return false;
-    }
-}
-
-async function saveFAQToDB(faq) {
-    if (!supabase) return false;
-    try {
-        if (faq.id && !faq.id.startsWith('f_')) {
-            const { error } = await supabase
-                .from('faqs')
-                .update(faq)
-                .eq('id', faq.id);
-            if (error) throw error;
-        } else {
-            const newId = faq.id || 'f_' + Date.now();
-            const { error } = await supabase
-                .from('faqs')
-                .insert([{ ...faq, id: newId, created_at: new Date().toISOString() }]);
-            if (error) throw error;
-        }
-        await loadFAQs();
-        renderAppFAQs();
-        if (typeof renderAdminTables === 'function') renderAdminTables();
-        return true;
-    } catch (error) {
-        console.error("Error saving FAQ:", error);
-        return false;
-    }
-}
-
-async function saveTestimonialToDB(testimonial) {
-    if (!supabase) return false;
-    try {
-        if (testimonial.id && !testimonial.id.startsWith('t_')) {
-            const { error } = await supabase
-                .from('testimonials')
-                .update(testimonial)
-                .eq('id', testimonial.id);
-            if (error) throw error;
-        } else {
-            const newId = testimonial.id || 't_' + Date.now();
-            const { error } = await supabase
-                .from('testimonials')
-                .insert([{ ...testimonial, id: newId, created_at: new Date().toISOString() }]);
-            if (error) throw error;
-        }
-        await loadTestimonials();
-        renderAppTestimonials();
-        if (typeof renderAdminTables === 'function') renderAdminTables();
-        return true;
-    } catch (error) {
-        console.error("Error saving testimonial:", error);
-        return false;
-    }
-}
-
-async function saveHomeContentToDB(content) {
-    if (!supabase) return false;
-    try {
-        const { error } = await supabase
-            .from('home_content')
-            .upsert([{ ...content, id: 1, updated_at: new Date().toISOString() }], { onConflict: 'id' });
-        if (error) throw error;
-        
-        await loadHomeContent();
-        renderHomeContent();
-        return true;
-    } catch (error) {
-        console.error("Error saving home content:", error);
-        return false;
-    }
-}
-
-async function deleteProjectFromDB(id) {
-    if (!supabase) return false;
-    try {
-        const { error } = await supabase
-            .from('projects')
-            .delete()
-            .eq('id', id);
-        if (error) throw error;
-        await loadProjects();
-        renderAppProjects();
-        if (typeof renderAdminTables === 'function') renderAdminTables();
-        return true;
-    } catch (error) {
-        console.error("Error deleting project:", error);
-        return false;
-    }
-}
-
-async function deleteProductFromDB(id) {
-    if (!supabase) return false;
-    try {
-        const { error } = await supabase
-            .from('products')
-            .delete()
-            .eq('id', id);
-        if (error) throw error;
-        await loadProducts();
-        renderAppProducts();
-        if (typeof renderAdminTables === 'function') renderAdminTables();
-        return true;
-    } catch (error) {
-        console.error("Error deleting product:", error);
-        return false;
-    }
-}
-
-async function deleteFAQFromDB(id) {
-    if (!supabase) return false;
-    try {
-        const { error } = await supabase
-            .from('faqs')
-            .delete()
-            .eq('id', id);
-        if (error) throw error;
-        await loadFAQs();
-        renderAppFAQs();
-        if (typeof renderAdminTables === 'function') renderAdminTables();
-        return true;
-    } catch (error) {
-        console.error("Error deleting FAQ:", error);
-        return false;
-    }
-}
-
-async function deleteTestimonialFromDB(id) {
-    if (!supabase) return false;
-    try {
-        const { error } = await supabase
-            .from('testimonials')
-            .delete()
-            .eq('id', id);
-        if (error) throw error;
-        await loadTestimonials();
-        renderAppTestimonials();
-        if (typeof renderAdminTables === 'function') renderAdminTables();
-        return true;
-    } catch (error) {
-        console.error("Error deleting testimonial:", error);
-        return false;
-    }
-}
-
-// Simpan cart tetap di localStorage (bersifat per pengguna)
-function saveCart() {
-    setStorage('leoly_cart', cart);
-}
-
-function clearCart() {
-    cart = [];
-    saveCart();
-    updateCartCount();
-    renderCartPanelItems();
-}
-
-function closeCartPanel() {
-    if(cartPanel) {
-        cartPanel.classList.remove("panel-open");
-    }
-}
-
+// Helper functions untuk localStorage
 function getStorage(key, fallback) {
     const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : fallback;
@@ -481,6 +60,211 @@ function getStorage(key, fallback) {
 
 function setStorage(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
+}
+
+/* --- INITIALIZER --- */
+document.addEventListener("DOMContentLoaded", async () => {
+    console.log("DOM Loaded, initializing...");
+    
+    // Tampilkan loading screen
+    const loader = document.getElementById("loading-screen");
+    
+    AOS.init({ duration: 800, once: true });
+    initParticles();
+    
+    // Load data dari localStorage terlebih dahulu (cepat)
+    loadFromLocalStorage();
+    
+    // Kemudian coba load dari Supabase (opsional)
+    await initSupabase();
+    
+    // Render semua konten
+    renderHomeContent();
+    renderAppProjects();
+    renderAppProducts();
+    renderAppFAQs();
+    renderAppTestimonials();
+    
+    // Load cart dari localStorage
+    cart = getStorage('leoly_cart', []);
+    updateCartCount();
+    renderCartPanelItems();
+
+    setupGlobalEventListeners();
+    
+    // Sembunyikan loading screen setelah semua selesai (maksimal 2 detik)
+    setTimeout(() => {
+        if(loader) {
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 500);
+        }
+    }, 1000);
+});
+
+// Load dari localStorage (fallback)
+function loadFromLocalStorage() {
+    projects = getStorage('leoly_projects', DEFAULT_PROJECTS);
+    products = getStorage('leoly_products', DEFAULT_PRODUCTS);
+    faqs = getStorage('leoly_faqs', DEFAULT_FAQS);
+    testimonials = getStorage('leoly_testimonials', DEFAULT_TESTIMONIALS);
+    homeContent = getStorage('leoly_home_content', DEFAULT_HOME_CONTENT);
+    console.log("Loaded from localStorage");
+}
+
+async function initSupabase() {
+    try {
+        // Cek apakah Supabase library tersedia
+        if (typeof supabaseJs === 'undefined') {
+            console.warn("Supabase library not loaded");
+            return;
+        }
+        
+        // Inisialisasi client
+        supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log("Supabase client created");
+        
+        // Test koneksi dengan timeout 5 detik
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Supabase connection timeout")), 5000)
+        );
+        
+        const testPromise = supabase.from('projects').select('count', { count: 'exact', head: true });
+        
+        await Promise.race([testPromise, timeoutPromise]);
+        
+        console.log("Supabase connection successful");
+        useLocalStorage = false;
+        
+        // Load data dari Supabase
+        await loadAllDataFromSupabase();
+        
+    } catch (error) {
+        console.warn("Supabase connection failed, using localStorage:", error);
+        useLocalStorage = true;
+        // Sudah menggunakan localStorage dari loadFromLocalStorage()
+    }
+}
+
+async function loadAllDataFromSupabase() {
+    if (!supabase) return;
+    
+    try {
+        // Load Projects
+        const { data: projectsData, error: projectsError } = await supabase
+            .from('projects')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (!projectsError && projectsData && projectsData.length > 0) {
+            projects = projectsData;
+            setStorage('leoly_projects', projects);
+        }
+        
+        // Load Products
+        const { data: productsData, error: productsError } = await supabase
+            .from('products')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (!productsError && productsData && productsData.length > 0) {
+            products = productsData;
+            setStorage('leoly_products', products);
+        }
+        
+        // Load FAQs
+        const { data: faqsData, error: faqsError } = await supabase
+            .from('faqs')
+            .select('*')
+            .order('created_at', { ascending: true });
+        
+        if (!faqsError && faqsData && faqsData.length > 0) {
+            faqs = faqsData;
+            setStorage('leoly_faqs', faqs);
+        }
+        
+        // Load Testimonials
+        const { data: testimonialsData, error: testimonialsError } = await supabase
+            .from('testimonials')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (!testimonialsError && testimonialsData && testimonialsData.length > 0) {
+            testimonials = testimonialsData;
+            setStorage('leoly_testimonials', testimonials);
+        }
+        
+        // Load Home Content
+        const { data: homeData, error: homeError } = await supabase
+            .from('home_content')
+            .select('*')
+            .limit(1);
+        
+        if (!homeError && homeData && homeData.length > 0) {
+            const data = homeData[0];
+            homeContent = {
+                tagline: data.tagline || DEFAULT_HOME_CONTENT.tagline,
+                titlePrefix: data.title_prefix || DEFAULT_HOME_CONTENT.titlePrefix,
+                description: data.description || DEFAULT_HOME_CONTENT.description,
+                typingWords: Array.isArray(data.typing_words) ? data.typing_words : 
+                           (typeof data.typing_words === 'string' ? JSON.parse(data.typing_words) : DEFAULT_HOME_CONTENT.typingWords)
+            };
+            setStorage('leoly_home_content', homeContent);
+        }
+        
+        console.log("All data loaded from Supabase");
+        
+        // Refresh render
+        renderHomeContent();
+        renderAppProjects();
+        renderAppProducts();
+        renderAppFAQs();
+        renderAppTestimonials();
+        
+    } catch (error) {
+        console.error("Error loading from Supabase:", error);
+    }
+}
+
+// Fungsi untuk menyimpan ke Supabase (jika terhubung)
+async function saveToSupabase(table, data, idField = 'id') {
+    if (!supabase || useLocalStorage) return false;
+    
+    try {
+        if (data[idField]) {
+            // Update
+            const { error } = await supabase
+                .from(table)
+                .update(data)
+                .eq(idField, data[idField]);
+            if (error) throw error;
+        } else {
+            // Insert
+            const { error } = await supabase
+                .from(table)
+                .insert([data]);
+            if (error) throw error;
+        }
+        return true;
+    } catch (error) {
+        console.error(`Error saving to ${table}:`, error);
+        return false;
+    }
+}
+
+async function deleteFromSupabase(table, id, idField = 'id') {
+    if (!supabase || useLocalStorage) return false;
+    
+    try {
+        const { error } = await supabase
+            .from(table)
+            .delete()
+            .eq(idField, id);
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        console.error(`Error deleting from ${table}:`, error);
+        return false;
+    }
 }
 
 function initParticles() {
@@ -509,7 +293,7 @@ function renderHomeContent() {
     if(titleElement && homeContent) {
         const existingTypingSpan = titleElement.querySelector(".typing-text");
         if(existingTypingSpan) {
-            titleElement.innerHTML = `${escapeHtml(homeContent.title_prefix || "Fullstack Developer &")} <br><span class="typing-text"></span>`;
+            titleElement.innerHTML = `${escapeHtml(homeContent.titlePrefix || "Fullstack Developer &")} <br><span class="typing-text"></span>`;
         }
     }
     
@@ -524,8 +308,8 @@ function initTypingEffect() {
     const node = document.querySelector(".typing-text");
     if(!node) return;
     
-    let words = (homeContent && homeContent.typing_words && homeContent.typing_words.length > 0) ? 
-        homeContent.typing_words : ["Creative Technologist", "Fullstack Developer", "UI/UX Enthusiast"];
+    let words = (homeContent && homeContent.typingWords && homeContent.typingWords.length > 0) ? 
+        homeContent.typingWords : ["Creative Technologist", "Fullstack Developer", "UI/UX Enthusiast"];
     
     if (typeof words === 'string') {
         try {
@@ -700,19 +484,16 @@ function toggleAccordionNode(header) {
 async function actionLikeProject(id) {
     const project = projects.find(p => p.id === id);
     if(project) {
-        const newLikes = (project.likes || 0) + 1;
-        if (supabase) {
-            try {
-                const { error } = await supabase
-                    .from('projects')
-                    .update({ likes: newLikes })
-                    .eq('id', id);
-                if (error) throw error;
-            } catch (error) {
-                console.error("Error updating likes:", error);
-            }
+        project.likes = (project.likes || 0) + 1;
+        
+        // Update ke localStorage
+        setStorage('leoly_projects', projects);
+        
+        // Update ke Supabase jika memungkinkan
+        if (!useLocalStorage && supabase) {
+            await supabase.from('projects').update({ likes: project.likes }).eq('id', id);
         }
-        await loadProjects();
+        
         renderAppProjects();
     }
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Project disukai!', showConfirmButton: false, timer: 1500 });
@@ -727,7 +508,7 @@ function actionAddProductToCart(id) {
     const prod = products.find(p => p.id === id);
     if(!prod) return;
     cart.push(prod);
-    saveCart();
+    setStorage('leoly_cart', cart);
     updateCartCount();
     renderCartPanelItems();
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `${prod.name} masuk keranjang`, showConfirmButton: false, timer: 2000 });
@@ -774,7 +555,7 @@ function renderCartPanelItems() {
 
 function actionRemoveCartItem(idx) {
     cart.splice(idx, 1);
-    saveCart();
+    setStorage('leoly_cart', cart);
     updateCartCount();
     renderCartPanelItems();
 }
@@ -810,10 +591,30 @@ function checkoutToWhatsApp() {
     }).then((result) => {
         if (result.isConfirmed) {
             window.open(waUrl, '_blank');
-            clearCart();
+            cart = [];
+            setStorage('leoly_cart', cart);
+            updateCartCount();
+            renderCartPanelItems();
             Swal.fire({ icon: 'success', title: 'Checkout Berhasil!', text: 'Pesanan Anda telah dikirim. Keranjang sudah dikosongkan.', confirmButtonColor: '#000', timer: 2000 });
         }
     });
+}
+
+function closeCartPanel() {
+    if(cartPanel) {
+        cartPanel.classList.remove("panel-open");
+    }
+}
+
+function saveCart() {
+    setStorage('leoly_cart', cart);
+}
+
+function clearCart() {
+    cart = [];
+    saveCart();
+    updateCartCount();
+    renderCartPanelItems();
 }
 
 /* --- EVENT LISTENERS --- */
@@ -961,7 +762,7 @@ function setupGlobalEventListeners() {
     setupAdminSubsystem();
 }
 
-/* --- ADMIN SUBSYSTEM --- */
+/* --- ADMIN SUBSYSTEM (Sederhana) --- */
 function setupAdminSubsystem() {
     const loginForm = document.getElementById("admin-login-form");
     const loginBox = document.getElementById("admin-login-box");
@@ -1067,18 +868,18 @@ function imageToBase64(file) {
 }
 
 // Fungsi Edit Home Content
-async function editHomeContent() {
+function editHomeContent() {
     const overlay = document.getElementById("global-data-modal");
     const titleNode = document.getElementById("modal-title-node");
     const bodyNode = document.getElementById("modal-body-node");
     
-    const typingWordsStr = Array.isArray(homeContent.typing_words) ? homeContent.typing_words.join(', ') : "";
+    const typingWordsStr = Array.isArray(homeContent.typingWords) ? homeContent.typingWords.join(', ') : "";
     
     titleNode.textContent = "Edit Home Page Content";
     bodyNode.innerHTML = `
         <form id="form-edit-home">
             <div class="form-group"><label>Tagline</label><input type="text" id="eh-tagline" value="${escapeHtml(homeContent.tagline || '')}" required></div>
-            <div class="form-group"><label>Title Prefix</label><input type="text" id="eh-title-prefix" value="${escapeHtml(homeContent.title_prefix || '')}" required></div>
+            <div class="form-group"><label>Title Prefix</label><input type="text" id="eh-title-prefix" value="${escapeHtml(homeContent.titlePrefix || '')}" required></div>
             <div class="form-group"><label>Kata-kata Typing Effect (pisahkan dengan koma)</label><input type="text" id="eh-typing-words" value="${escapeHtml(typingWordsStr)}" required><small style="color: var(--text-muted); font-size: 12px;">Contoh: Creative Technologist, Fullstack Developer, UI/UX Enthusiast</small></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="eh-description" rows="4" required>${escapeHtml(homeContent.description || '')}</textarea></div>
             <button type="submit" class="btn btn-primary btn-block">Simpan Perubahan</button>
@@ -1086,7 +887,7 @@ async function editHomeContent() {
     `;
     overlay.classList.add("modal-active");
     
-    document.getElementById("form-edit-home").addEventListener("submit", async (e) => {
+    document.getElementById("form-edit-home").addEventListener("submit", (e) => {
         e.preventDefault();
         const tagline = document.getElementById("eh-tagline").value;
         const titlePrefix = document.getElementById("eh-title-prefix").value;
@@ -1095,77 +896,97 @@ async function editHomeContent() {
         
         const typingWords = typingWordsStr.split(',').map(word => word.trim()).filter(word => word.length > 0);
         
-        const newContent = {
-            id: 1,
+        homeContent = {
             tagline: tagline,
-            title_prefix: titlePrefix,
+            titlePrefix: titlePrefix,
             description: description,
-            typing_words: typingWords
+            typingWords: typingWords
         };
         
-        if (supabase) {
-            await saveHomeContentToDB(newContent);
-        } else {
-            homeContent = newContent;
-            setStorage('leoly_home_content', homeContent);
-            renderHomeContent();
+        // Simpan ke localStorage
+        setStorage('leoly_home_content', homeContent);
+        
+        // Simpan ke Supabase jika memungkinkan
+        if (!useLocalStorage && supabase) {
+            supabase.from('home_content').upsert([{
+                id: 1,
+                tagline: tagline,
+                title_prefix: titlePrefix,
+                description: description,
+                typing_words: JSON.stringify(typingWords),
+                updated_at: new Date().toISOString()
+            }]).then(() => console.log("Home content saved to Supabase"));
         }
+        
+        renderHomeContent();
         overlay.classList.remove("modal-active");
         Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Home page berhasil diupdate.', timer: 1500, showConfirmButton: false });
     });
 }
 
-// Delete Functions dengan Supabase
-async function deleteProjectNode(id) {
-    if (supabase) {
-        await deleteProjectFromDB(id);
-    } else {
-        projects = projects.filter(p => p.id !== id);
-        setStorage('leoly_projects', projects);
-        renderAppProjects();
-        renderAdminTables();
+// Delete Functions
+function deleteProjectNode(id) {
+    projects = projects.filter(p => p.id !== id);
+    setStorage('leoly_projects', projects);
+    
+    if (!useLocalStorage && supabase) {
+        supabase.from('projects').delete().eq('id', id).then(() => {
+            console.log("Deleted from Supabase");
+        });
     }
+    
+    renderAppProjects();
+    renderAdminTables();
     Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Project berhasil dihapus.', timer: 1500, showConfirmButton: false });
 }
 
-async function deleteProductNode(id) {
-    if (supabase) {
-        await deleteProductFromDB(id);
-    } else {
-        products = products.filter(p => p.id !== id);
-        setStorage('leoly_products', products);
-        renderAppProducts();
-        renderAdminTables();
+function deleteProductNode(id) {
+    products = products.filter(p => p.id !== id);
+    setStorage('leoly_products', products);
+    
+    if (!useLocalStorage && supabase) {
+        supabase.from('products').delete().eq('id', id).then(() => {
+            console.log("Deleted from Supabase");
+        });
     }
+    
+    renderAppProducts();
+    renderAdminTables();
     Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Produk berhasil dihapus.', timer: 1500, showConfirmButton: false });
 }
 
-async function deleteFaqNode(id) {
-    if (supabase) {
-        await deleteFAQFromDB(id);
-    } else {
-        faqs = faqs.filter(f => f.id !== id);
-        setStorage('leoly_faqs', faqs);
-        renderAppFAQs();
-        renderAdminTables();
+function deleteFaqNode(id) {
+    faqs = faqs.filter(f => f.id !== id);
+    setStorage('leoly_faqs', faqs);
+    
+    if (!useLocalStorage && supabase) {
+        supabase.from('faqs').delete().eq('id', id).then(() => {
+            console.log("Deleted from Supabase");
+        });
     }
+    
+    renderAppFAQs();
+    renderAdminTables();
     Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'FAQ berhasil dihapus.', timer: 1500, showConfirmButton: false });
 }
 
-async function deleteTestimonialNode(id) {
-    if (supabase) {
-        await deleteTestimonialFromDB(id);
-    } else {
-        testimonials = testimonials.filter(t => t.id !== id);
-        setStorage('leoly_testimonials', testimonials);
-        renderAppTestimonials();
-        renderAdminTables();
+function deleteTestimonialNode(id) {
+    testimonials = testimonials.filter(t => t.id !== id);
+    setStorage('leoly_testimonials', testimonials);
+    
+    if (!useLocalStorage && supabase) {
+        supabase.from('testimonials').delete().eq('id', id).then(() => {
+            console.log("Deleted from Supabase");
+        });
     }
+    
+    renderAppTestimonials();
+    renderAdminTables();
     Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Testimoni berhasil dihapus.', timer: 1500, showConfirmButton: false });
 }
 
-// Edit functions untuk project
-async function editProjectNode(id) {
+// Edit functions
+function editProjectNode(id) {
     const project = projects.find(p => p.id === id);
     if(!project) return;
     
@@ -1177,7 +998,11 @@ async function editProjectNode(id) {
     bodyNode.innerHTML = `
         <form id="form-edit-project">
             <div class="form-group"><label>Judul Project</label><input type="text" id="ep-title" value="${escapeHtml(project.title)}" required></div>
-            <div class="form-group"><label>Kategori</label><select id="ep-category" class="form-control"><option ${project.category === 'Web' ? 'selected' : ''}>Web</option><option ${project.category === 'Server' ? 'selected' : ''}>Server</option><option ${project.category === 'UI/UX' ? 'selected' : ''}>UI/UX</option></select></div>
+            <div class="form-group"><label>Kategori</label><select id="ep-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;">
+                <option ${project.category === 'Web' ? 'selected' : ''}>Web</option>
+                <option ${project.category === 'Server' ? 'selected' : ''}>Server</option>
+                <option ${project.category === 'UI/UX' ? 'selected' : ''}>UI/UX</option>
+            </select></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="ep-desc" rows="3" required>${escapeHtml(project.desc)}</textarea></div>
             <div class="form-group"><label>Gambar Thumbnail</label><input type="file" id="ep-image" accept="image/*"></div>
             ${project.image ? `<div class="form-group"><img src="${project.image}" style="max-width:100%; border-radius:8px; margin-top:10px;"><p style="font-size:12px;">Gambar saat ini</p></div>` : ''}
@@ -1198,24 +1023,27 @@ async function editProjectNode(id) {
             imageBase64 = await imageToBase64(imageFile);
         }
         
-        const updatedProject = { ...project, title, category, desc, image: imageBase64 };
+        const index = projects.findIndex(p => p.id === id);
+        projects[index] = { ...project, title, category, desc: desc, image: imageBase64 };
         
-        if (supabase) {
-            await saveProjectToDB(updatedProject);
-        } else {
-            const index = projects.findIndex(p => p.id === id);
-            projects[index] = updatedProject;
-            setStorage('leoly_projects', projects);
-            renderAppProjects();
-            renderAdminTables();
+        // Simpan ke localStorage
+        setStorage('leoly_projects', projects);
+        
+        // Simpan ke Supabase jika memungkinkan
+        if (!useLocalStorage && supabase) {
+            supabase.from('projects').update(projects[index]).eq('id', id).then(() => {
+                console.log("Updated in Supabase");
+            });
         }
+        
+        renderAppProjects();
+        renderAdminTables();
         overlay.classList.remove("modal-active");
         Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Project berhasil diupdate.', timer: 1500, showConfirmButton: false });
     });
 }
 
-// Edit functions untuk product
-async function editProductNode(id) {
+function editProductNode(id) {
     const product = products.find(p => p.id === id);
     if(!product) return;
     
@@ -1227,7 +1055,11 @@ async function editProductNode(id) {
     bodyNode.innerHTML = `
         <form id="form-edit-product">
             <div class="form-group"><label>Nama Produk</label><input type="text" id="epr-name" value="${escapeHtml(product.name)}" required></div>
-            <div class="form-group"><label>Kategori</label><select id="epr-category" class="form-control"><option ${product.category === 'Template' ? 'selected' : ''}>Template</option><option ${product.category === 'Module' ? 'selected' : ''}>Module</option><option ${product.category === 'Asset' ? 'selected' : ''}>Asset</option></select></div>
+            <div class="form-group"><label>Kategori</label><select id="epr-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;">
+                <option ${product.category === 'Template' ? 'selected' : ''}>Template</option>
+                <option ${product.category === 'Module' ? 'selected' : ''}>Module</option>
+                <option ${product.category === 'Asset' ? 'selected' : ''}>Asset</option>
+            </select></div>
             <div class="form-group"><label>Harga (Rp)</label><input type="number" id="epr-price" value="${product.price}" required></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="epr-desc" rows="3" required>${escapeHtml(product.desc)}</textarea></div>
             <div class="form-group"><label>Gambar Thumbnail</label><input type="file" id="epr-image" accept="image/*"></div>
@@ -1250,17 +1082,19 @@ async function editProductNode(id) {
             imageBase64 = await imageToBase64(imageFile);
         }
         
-        const updatedProduct = { ...product, name, category, price, desc, image: imageBase64 };
+        const index = products.findIndex(p => p.id === id);
+        products[index] = { ...product, name, category, price, desc: desc, image: imageBase64 };
         
-        if (supabase) {
-            await saveProductToDB(updatedProduct);
-        } else {
-            const index = products.findIndex(p => p.id === id);
-            products[index] = updatedProduct;
-            setStorage('leoly_products', products);
-            renderAppProducts();
-            renderAdminTables();
+        setStorage('leoly_products', products);
+        
+        if (!useLocalStorage && supabase) {
+            supabase.from('products').update(products[index]).eq('id', id).then(() => {
+                console.log("Updated in Supabase");
+            });
         }
+        
+        renderAppProducts();
+        renderAdminTables();
         overlay.classList.remove("modal-active");
         Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Produk berhasil diupdate.', timer: 1500, showConfirmButton: false });
     });
@@ -1284,7 +1118,7 @@ function setupAdminModalTriggers() {
             document.getElementById("modal-body-node").innerHTML = `
                 <form id="form-crud-project">
                     <div class="form-group"><label>Judul Project</label><input type="text" id="cp-title" required></div>
-                    <div class="form-group"><label>Kategori</label><select id="cp-category" class="form-control"><option>Web</option><option>Server</option><option>UI/UX</option></select></div>
+                    <div class="form-group"><label>Kategori</label><select id="cp-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;"><option>Web</option><option>Server</option><option>UI/UX</option></select></div>
                     <div class="form-group"><label>Deskripsi</label><textarea id="cp-desc" rows="3" required></textarea></div>
                     <div class="form-group"><label>Gambar (Opsional)</label><input type="file" id="cp-image" accept="image/*"></div>
                     <button type="submit" class="btn btn-primary btn-block">Simpan</button>
@@ -1303,18 +1137,20 @@ function setupAdminModalTriggers() {
                     category: document.getElementById("cp-category").value,
                     desc: document.getElementById("cp-desc").value,
                     likes: 0,
-                    image: imageBase64,
-                    created_at: new Date().toISOString()
+                    image: imageBase64
                 };
                 
-                if (supabase) {
-                    await saveProjectToDB(newProject);
-                } else {
-                    projects.push(newProject);
-                    setStorage('leoly_projects', projects);
-                    renderAppProjects();
-                    renderAdminTables();
+                projects.unshift(newProject);
+                setStorage('leoly_projects', projects);
+                
+                if (!useLocalStorage && supabase) {
+                    supabase.from('projects').insert([newProject]).then(() => {
+                        console.log("Added to Supabase");
+                    });
                 }
+                
+                renderAppProjects();
+                renderAdminTables();
                 overlay.classList.remove("modal-active");
                 Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Project berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
             });
@@ -1328,7 +1164,7 @@ function setupAdminModalTriggers() {
             document.getElementById("modal-body-node").innerHTML = `
                 <form id="form-crud-product">
                     <div class="form-group"><label>Nama Produk</label><input type="text" id="cpr-name" required></div>
-                    <div class="form-group"><label>Kategori</label><select id="cpr-category" class="form-control"><option>Template</option><option>Module</option><option>Asset</option></select></div>
+                    <div class="form-group"><label>Kategori</label><select id="cpr-category" style="width:100%; padding:12px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:8px;"><option>Template</option><option>Module</option><option>Asset</option></select></div>
                     <div class="form-group"><label>Harga (Rp)</label><input type="number" id="cpr-price" required></div>
                     <div class="form-group"><label>Deskripsi</label><textarea id="cpr-desc" rows="3" required></textarea></div>
                     <div class="form-group"><label>Gambar (Opsional)</label><input type="file" id="cpr-image" accept="image/*"></div>
@@ -1348,18 +1184,20 @@ function setupAdminModalTriggers() {
                     category: document.getElementById("cpr-category").value,
                     price: Number(document.getElementById("cpr-price").value),
                     desc: document.getElementById("cpr-desc").value,
-                    image: imageBase64,
-                    created_at: new Date().toISOString()
+                    image: imageBase64
                 };
                 
-                if (supabase) {
-                    await saveProductToDB(newProduct);
-                } else {
-                    products.push(newProduct);
-                    setStorage('leoly_products', products);
-                    renderAppProducts();
-                    renderAdminTables();
+                products.unshift(newProduct);
+                setStorage('leoly_products', products);
+                
+                if (!useLocalStorage && supabase) {
+                    supabase.from('products').insert([newProduct]).then(() => {
+                        console.log("Added to Supabase");
+                    });
                 }
+                
+                renderAppProducts();
+                renderAdminTables();
                 overlay.classList.remove("modal-active");
                 Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Produk berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
             });
@@ -1378,23 +1216,25 @@ function setupAdminModalTriggers() {
                 </form>
             `;
             overlay.classList.add("modal-active");
-            document.getElementById("form-crud-faq").addEventListener("submit", async (e) => {
+            document.getElementById("form-crud-faq").addEventListener("submit", (e) => {
                 e.preventDefault();
                 const newFaq = {
                     id: 'f_' + Date.now(),
                     question: document.getElementById("cf-q").value,
-                    answer: document.getElementById("cf-a").value,
-                    created_at: new Date().toISOString()
+                    answer: document.getElementById("cf-a").value
                 };
                 
-                if (supabase) {
-                    await saveFAQToDB(newFaq);
-                } else {
-                    faqs.push(newFaq);
-                    setStorage('leoly_faqs', faqs);
-                    renderAppFAQs();
-                    renderAdminTables();
+                faqs.push(newFaq);
+                setStorage('leoly_faqs', faqs);
+                
+                if (!useLocalStorage && supabase) {
+                    supabase.from('faqs').insert([newFaq]).then(() => {
+                        console.log("Added to Supabase");
+                    });
                 }
+                
+                renderAppFAQs();
+                renderAdminTables();
                 overlay.classList.remove("modal-active");
                 Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'FAQ berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
             });
@@ -1415,25 +1255,27 @@ function setupAdminModalTriggers() {
                 </form>
             `;
             overlay.classList.add("modal-active");
-            document.getElementById("form-crud-testi").addEventListener("submit", async (e) => {
+            document.getElementById("form-crud-testi").addEventListener("submit", (e) => {
                 e.preventDefault();
                 const newTestimonial = {
                     id: 't_' + Date.now(),
                     name: document.getElementById("ct-name").value,
                     company: document.getElementById("ct-comp").value,
                     stars: Number(document.getElementById("ct-star").value),
-                    text: document.getElementById("ct-text").value,
-                    created_at: new Date().toISOString()
+                    text: document.getElementById("ct-text").value
                 };
                 
-                if (supabase) {
-                    await saveTestimonialToDB(newTestimonial);
-                } else {
-                    testimonials.push(newTestimonial);
-                    setStorage('leoly_testimonials', testimonials);
-                    renderAppTestimonials();
-                    renderAdminTables();
+                testimonials.unshift(newTestimonial);
+                setStorage('leoly_testimonials', testimonials);
+                
+                if (!useLocalStorage && supabase) {
+                    supabase.from('testimonials').insert([newTestimonial]).then(() => {
+                        console.log("Added to Supabase");
+                    });
                 }
+                
+                renderAppTestimonials();
+                renderAdminTables();
                 overlay.classList.remove("modal-active");
                 Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Testimoni berhasil ditambahkan.', timer: 1500, showConfirmButton: false });
             });
