@@ -1,0 +1,14 @@
+[build]
+  publish = "."
+  functions = "functions"
+
+[build.environment]
+  MONGODB_URI = "mongodb+srv://Leoly:Leoly2025Mongo@leoly.9rhahjy.mongodb.net/"
+  MONGODB_DB = "leoly_portfolio"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Cache-Control = "no-cache"

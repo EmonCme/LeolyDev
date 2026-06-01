@@ -15,9 +15,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Supabase Script -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="dark-theme">
 
@@ -234,19 +231,47 @@
                             </div>
                             <div id="tab-project" class="admin-tab-pane">
                                 <button class="btn btn-primary" id="btn-add-project-modal">+ Tambah Project</button>
-                                <div class="table-responsive"><table><thead><tr><th>Judul</th><th>Kategori</th><th>Likes</th><th>Aksi</th></tr></thead><tbody id="admin-project-table-body"></tbody></table></div>
+                                <div class="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr><th>Judul</th><th>Kategori</th><th>Likes</th><th>Aksi</th></tr>
+                                        </thead>
+                                        <tbody id="admin-project-table-body"></tbody>
+                                    </table>
+                                </div>
                             </div>
                             <div id="tab-product" class="admin-tab-pane">
                                 <button class="btn btn-primary" id="btn-add-product-modal">+ Tambah Produk</button>
-                                <div class="table-responsive"><tr><thead><tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Aksi</th></td></thead><tbody id="admin-product-table-body"></tbody></table></div>
+                                <div class="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Aksi</th></tr>
+                                        </thead>
+                                        <tbody id="admin-product-table-body"></tbody>
+                                    </table>
+                                </div>
                             </div>
                             <div id="tab-faq" class="admin-tab-pane">
                                 <button class="btn btn-primary" id="btn-add-faq-modal">+ Tambah FAQ</button>
-                                <div class="table-responsive"><tr><thead><tr><th>Pertanyaan</th><th>Aksi</th></tr></thead><tbody id="admin-faq-table-body"></tbody></table></div>
+                                <div class="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr><th>Pertanyaan</th><th>Aksi</th></tr>
+                                        </thead>
+                                        <tbody id="admin-faq-table-body"></tbody>
+                                    </table>
+                                </div>
                             </div>
                             <div id="tab-testimonial" class="admin-tab-pane">
                                 <button class="btn btn-primary" id="btn-add-testimonial-modal">+ Tambah Testimoni</button>
-                                <div class="table-responsive"><tr><thead><tr><th>Nama</th><th>Perusahaan</th><th>Rating</th><th>Aksi</th></tr></thead><tbody id="admin-testimonial-table-body"></tbody></table></div>
+                                <div class="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr><th>Nama</th><th>Perusahaan</th><th>Rating</th><th>Aksi</th></tr>
+                                        </thead>
+                                        <tbody id="admin-testimonial-table-body"></tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -257,20 +282,34 @@
 
     <!-- SHOPPING CART PANEL -->
     <div id="shopping-cart-panel" class="glass-panel">
-        <div class="panel-header"><h3>Keranjang</h3><button id="cart-close-btn" class="icon-btn"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="panel-header">
+            <h3>Keranjang</h3>
+            <button id="cart-close-btn" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
         <div class="panel-body" id="cart-items-container"></div>
-        <div class="panel-footer"><div class="total-box"><span>Total:</span><span id="cart-total-price">Rp 0</span></div><button id="checkout-action-btn" class="btn btn-primary btn-block">Checkout</button></div>
+        <div class="panel-footer">
+            <div class="total-box">
+                <span>Total:</span>
+                <span id="cart-total-price">Rp 0</span>
+            </div>
+            <button id="checkout-action-btn" class="btn btn-primary btn-block">Checkout</button>
+        </div>
     </div>
 
     <!-- MODAL -->
     <div id="global-data-modal" class="modal-overlay">
         <div class="modal-window glass-card">
-            <div class="modal-header"><h3 id="modal-title-node">Form</h3><button id="modal-close-trigger" class="icon-btn"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="modal-header">
+                <h3 id="modal-title-node">Form</h3>
+                <button id="modal-close-trigger" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
             <div class="modal-body" id="modal-body-node"></div>
         </div>
     </div>
 
-    <footer class="glass-footer"><p>© 2026 <strong>Leoly</strong>. Built with <i class="fa-solid fa-heart"></i></p></footer>
+    <footer class="glass-footer">
+        <p>© 2026 <strong>Leoly</strong>. Built with <i class="fa-solid fa-heart"></i></p>
+    </footer>
     <button id="back-to-top" class="icon-btn"><i class="fa-solid fa-arrow-up"></i></button>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>

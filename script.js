@@ -1,34 +1,33 @@
-/* --- SUPABASE CONFIGURATION --- */
-const SUPABASE_URL = "https://qndqvujqfuplmwpzrbgl.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuZHF2dWpxZnVwbG13cHpyYmdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyODg1NTMsImV4cCI6MjA5NTg2NDU1M30.xjYhc6RdShq4uq-nRDKQ5uEvE02pzwixpfhfsCcLrrk";
+/* --- MONGODB API CONFIGURATION --- */
+// API endpoint (Netlify Functions)
+const API_URL = '/.netlify/functions/api';
 
-let supabase = null;
-let useSupabase = false;
+let useAPI = true;
 
-// Default data
+// Default data (fallback jika API gagal)
 const DEFAULT_PROJECTS = [
-    { id: "p1", title: "E-Commerce Platform Modern", category: "Web", description: "Platform belanja online dengan fitur keranjang, pembayaran, dan dashboard admin real-time.", likes: 45, image: null },
-    { id: "p2", title: "Portfolio Glassmorphism", category: "UI/UX", description: "Desain portfolio premium dengan efek glassmorphism dan animasi halus.", likes: 38, image: null },
-    { id: "p3", title: "RESTful API Service", category: "Server", description: "Backend service dengan autentikasi JWT dan dokumentasi API lengkap.", likes: 29, image: null },
-    { id: "p4", title: "Task Management App", category: "Web", description: "Aplikasi manajemen tugas kolaboratif dengan real-time update.", likes: 52, image: null }
+    { title: "E-Commerce Platform Modern", category: "Web", description: "Platform belanja online dengan fitur keranjang, pembayaran, dan dashboard admin real-time.", likes: 45, image: null },
+    { title: "Portfolio Glassmorphism", category: "UI/UX", description: "Desain portfolio premium dengan efek glassmorphism dan animasi halus.", likes: 38, image: null },
+    { title: "RESTful API Service", category: "Server", description: "Backend service dengan autentikasi JWT dan dokumentasi API lengkap.", likes: 29, image: null },
+    { title: "Task Management App", category: "Web", description: "Aplikasi manajemen tugas kolaboratif dengan real-time update.", likes: 52, image: null }
 ];
 
 const DEFAULT_PRODUCTS = [
-    { id: "pr1", name: "Premium Portfolio Template", category: "Template", price: 199000, description: "Template portfolio modern dengan desain glassmorphism dan animasi menarik.", image: null },
-    { id: "pr2", name: "React Component Library", category: "Module", price: 349000, description: "Koleksi komponen React siap pakai untuk mempercepat development.", image: null },
-    { id: "pr3", name: "Icon Pack - Minimalist", category: "Asset", price: 99000, description: "Paket 200+ ikon minimalist untuk berbagai kebutuhan desain.", image: null },
-    { id: "pr4", name: "Dashboard Admin Template", category: "Template", price: 299000, description: "Template dashboard admin dengan fitur lengkap dan responsif.", image: null }
+    { name: "Premium Portfolio Template", category: "Template", price: 199000, description: "Template portfolio modern dengan desain glassmorphism dan animasi menarik.", image: null },
+    { name: "React Component Library", category: "Module", price: 349000, description: "Koleksi komponen React siap pakai untuk mempercepat development.", image: null },
+    { name: "Icon Pack - Minimalist", category: "Asset", price: 99000, description: "Paket 200+ ikon minimalist untuk berbagai kebutuhan desain.", image: null },
+    { name: "Dashboard Admin Template", category: "Template", price: 299000, description: "Template dashboard admin dengan fitur lengkap dan responsif.", image: null }
 ];
 
 const DEFAULT_FAQS = [
-    { id: "f1", question: "Berapa lama waktu pengerjaan project?", answer: "Durasi pengerjaan tergantung kompleksitas project. Rata-rata 2-4 minggu untuk website company profile, dan 1-3 bulan untuk aplikasi kompleks." },
-    { id: "f2", question: "Apakah menerima kerjasama jangka panjang?", answer: "Ya, saya terbuka untuk kerjasama retainer atau kontrak jangka panjang untuk maintenance dan pengembangan berkelanjutan." },
-    { id: "f3", question: "Teknologi apa yang biasa digunakan?", answer: "Saya menggunakan React/Next.js untuk frontend, Node.js/Python untuk backend, dan berbagai database sesuai kebutuhan project." }
+    { question: "Berapa lama waktu pengerjaan project?", answer: "Durasi pengerjaan tergantung kompleksitas project. Rata-rata 2-4 minggu untuk website company profile, dan 1-3 bulan untuk aplikasi kompleks." },
+    { question: "Apakah menerima kerjasama jangka panjang?", answer: "Ya, saya terbuka untuk kerjasama retainer atau kontrak jangka panjang untuk maintenance dan pengembangan berkelanjutan." },
+    { question: "Teknologi apa yang biasa digunakan?", answer: "Saya menggunakan React/Next.js untuk frontend, Node.js/Python untuk backend, dan berbagai database sesuai kebutuhan project." }
 ];
 
 const DEFAULT_TESTIMONIALS = [
-    { id: "t1", name: "Budi Santoso", company: "TechCorp ID", text: "Leoly sangat profesional dan cepat dalam mengerjakan project. Hasilnya melebihi ekspektasi!", stars: 5 },
-    { id: "t2", name: "Sarah Wijaya", company: "Creative Studio", text: "Desain yang dihasilkan sangat modern dan user-friendly. Sangat merekomendasikan!", stars: 5 }
+    { name: "Budi Santoso", company: "TechCorp ID", text: "Leoly sangat profesional dan cepat dalam mengerjakan project. Hasilnya melebihi ekspektasi!", stars: 5 },
+    { name: "Sarah Wijaya", company: "Creative Studio", text: "Desain yang dihasilkan sangat modern dan user-friendly. Sangat merekomendasikan!", stars: 5 }
 ];
 
 const DEFAULT_HOME_CONTENT = {
@@ -41,10 +40,10 @@ const DEFAULT_HOME_CONTENT = {
 const WHATSAPP_NUMBER = "6285198224557";
 
 // Global State
-let projects = [...DEFAULT_PROJECTS];
-let products = [...DEFAULT_PRODUCTS];
-let faqs = [...DEFAULT_FAQS];
-let testimonials = [...DEFAULT_TESTIMONIALS];
+let projects = [];
+let products = [];
+let faqs = [];
+let testimonials = [];
 let cart = [];
 let homeContent = {...DEFAULT_HOME_CONTENT};
 let typingTimeout = null;
@@ -65,24 +64,162 @@ function updateLoadingStatus(message) {
     if (statusEl) statusEl.textContent = message;
 }
 
+/* --- API FUNCTIONS --- */
+async function apiFetch(collection, method = 'GET', data = null) {
+    try {
+        const options = {
+            method: method,
+            headers: { 'Content-Type': 'application/json' }
+        };
+        if (data) options.body = JSON.stringify(data);
+        
+        const response = await fetch(`${API_URL}/${collection}`, options);
+        if (!response.ok) throw new Error('API error');
+        return await response.json();
+    } catch (error) {
+        console.error(`API error (${collection}):`, error);
+        return null;
+    }
+}
+
+async function loadProjectsFromAPI() {
+    const data = await apiFetch('projects');
+    if (data && data.length > 0) {
+        projects = data;
+        setStorage('leoly_projects', projects);
+        return true;
+    }
+    return false;
+}
+
+async function loadProductsFromAPI() {
+    const data = await apiFetch('products');
+    if (data && data.length > 0) {
+        products = data;
+        setStorage('leoly_products', products);
+        return true;
+    }
+    return false;
+}
+
+async function loadFAQsFromAPI() {
+    const data = await apiFetch('faqs');
+    if (data && data.length > 0) {
+        faqs = data;
+        setStorage('leoly_faqs', faqs);
+        return true;
+    }
+    return false;
+}
+
+async function loadTestimonialsFromAPI() {
+    const data = await apiFetch('testimonials');
+    if (data && data.length > 0) {
+        testimonials = data;
+        setStorage('leoly_testimonials', testimonials);
+        return true;
+    }
+    return false;
+}
+
+async function loadHomeContentFromAPI() {
+    const data = await apiFetch('home_content');
+    if (data && data.length > 0) {
+        const content = data[0];
+        let typingWords = DEFAULT_HOME_CONTENT.typingWords;
+        if (content.typing_words) {
+            try {
+                typingWords = JSON.parse(content.typing_words);
+            } catch(e) {
+                typingWords = content.typing_words.split(',').map(w => w.trim());
+            }
+        }
+        homeContent = {
+            tagline: content.tagline || DEFAULT_HOME_CONTENT.tagline,
+            titlePrefix: content.title_prefix || DEFAULT_HOME_CONTENT.titlePrefix,
+            description: content.description || DEFAULT_HOME_CONTENT.description,
+            typingWords: typingWords
+        };
+        setStorage('leoly_home_content', homeContent);
+        return true;
+    }
+    return false;
+}
+
+async function saveProjectToAPI(project) {
+    return await apiFetch('projects', 'POST', project);
+}
+
+async function updateProjectToAPI(id, project) {
+    return await apiFetch('projects', 'PUT', { id, ...project });
+}
+
+async function deleteProjectFromAPI(id) {
+    return await apiFetch('projects', 'DELETE', { id });
+}
+
+async function saveProductToAPI(product) {
+    return await apiFetch('products', 'POST', product);
+}
+
+async function updateProductToAPI(id, product) {
+    return await apiFetch('products', 'PUT', { id, ...product });
+}
+
+async function deleteProductFromAPI(id) {
+    return await apiFetch('products', 'DELETE', { id });
+}
+
+async function saveFAQToAPI(faq) {
+    return await apiFetch('faqs', 'POST', faq);
+}
+
+async function deleteFAQFromAPI(id) {
+    return await apiFetch('faqs', 'DELETE', { id });
+}
+
+async function saveTestimonialToAPI(testimonial) {
+    return await apiFetch('testimonials', 'POST', testimonial);
+}
+
+async function deleteTestimonialFromAPI(id) {
+    return await apiFetch('testimonials', 'DELETE', { id });
+}
+
+async function saveHomeContentToAPI(content) {
+    return await apiFetch('home_content', 'POST', content);
+}
+
 /* --- INITIALIZER --- */
 document.addEventListener("DOMContentLoaded", async () => {
     console.log("DOM Loaded, initializing...");
-    updateLoadingStatus("Menghubungkan ke database...");
+    updateLoadingStatus("Menghubungkan ke database MongoDB...");
     
     AOS.init({ duration: 800, once: true });
     initParticles();
     
-    // Coba konek ke Supabase
-    await initSupabase();
-    
-    // Load data dari Supabase jika berhasil
-    if (useSupabase && supabase) {
-        updateLoadingStatus("Mengambil data dari server...");
-        await loadAllDataFromSupabase();
-    } else {
-        updateLoadingStatus("Menggunakan data lokal...");
+    // Coba load dari API (MongoDB)
+    try {
+        const [projectsLoaded, productsLoaded, faqsLoaded, testimonialsLoaded, homeLoaded] = await Promise.all([
+            loadProjectsFromAPI(),
+            loadProductsFromAPI(),
+            loadFAQsFromAPI(),
+            loadTestimonialsFromAPI(),
+            loadHomeContentFromAPI()
+        ]);
+        
+        if (projectsLoaded || productsLoaded || faqsLoaded || testimonialsLoaded || homeLoaded) {
+            useAPI = true;
+            updateLoadingStatus("Terhubung ke MongoDB Atlas!");
+            console.log("Data loaded from MongoDB API");
+        } else {
+            throw new Error("No data from API");
+        }
+    } catch (error) {
+        console.warn("API failed, using localStorage:", error);
+        useAPI = false;
         loadFromLocalStorage();
+        updateLoadingStatus("Menggunakan data lokal...");
     }
     
     // Render semua konten
@@ -99,7 +236,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     setupGlobalEventListeners();
     
-    // Sembunyikan loading screen setelah 1 detik
+    // Sembunyikan loading screen setelah 1.5 detik
     setTimeout(() => {
         const loader = document.getElementById("loading-screen");
         if(loader) {
@@ -108,7 +245,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }, 1500);
     
-    console.log("Initialization complete, useSupabase:", useSupabase);
+    console.log("Initialization complete, useAPI:", useAPI);
 });
 
 function loadFromLocalStorage() {
@@ -118,103 +255,6 @@ function loadFromLocalStorage() {
     testimonials = getStorage('leoly_testimonials', DEFAULT_TESTIMONIALS);
     homeContent = getStorage('leoly_home_content', DEFAULT_HOME_CONTENT);
     console.log("Loaded from localStorage");
-}
-
-async function initSupabase() {
-    try {
-        if (typeof supabaseJs === 'undefined') {
-            console.warn("Supabase library not loaded");
-            updateLoadingStatus("Library Supabase tidak ditemukan, menggunakan data lokal");
-            return;
-        }
-        
-        supabase = supabaseJs.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log("Supabase client created");
-        
-        // Test koneksi dengan timeout 3 detik
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Connection timeout")), 3000)
-        );
-        
-        const testPromise = supabase.from('projects').select('count', { count: 'exact', head: true });
-        
-        await Promise.race([testPromise, timeoutPromise]);
-        
-        console.log("Supabase connection successful");
-        useSupabase = true;
-        updateLoadingStatus("Terhubung ke server!");
-        
-    } catch (error) {
-        console.warn("Supabase connection failed:", error.message);
-        useSupabase = false;
-        supabase = null;
-        updateLoadingStatus("Gagal konek ke server, menggunakan data lokal");
-    }
-}
-
-async function loadAllDataFromSupabase() {
-    if (!supabase) return;
-    
-    try {
-        // Load Projects
-        const { data: projectsData } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
-        if (projectsData && projectsData.length > 0) {
-            projects = projectsData;
-            setStorage('leoly_projects', projects);
-        }
-        
-        // Load Products
-        const { data: productsData } = await supabase.from('products').select('*').order('created_at', { ascending: false });
-        if (productsData && productsData.length > 0) {
-            products = productsData;
-            setStorage('leoly_products', products);
-        }
-        
-        // Load FAQs
-        const { data: faqsData } = await supabase.from('faqs').select('*').order('created_at', { ascending: true });
-        if (faqsData && faqsData.length > 0) {
-            faqs = faqsData;
-            setStorage('leoly_faqs', faqs);
-        }
-        
-        // Load Testimonials
-        const { data: testimonialsData } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
-        if (testimonialsData && testimonialsData.length > 0) {
-            testimonials = testimonialsData;
-            setStorage('leoly_testimonials', testimonials);
-        }
-        
-        // Load Home Content
-        const { data: homeData } = await supabase.from('home_content').select('*').limit(1);
-        if (homeData && homeData.length > 0) {
-            const data = homeData[0];
-            let typingWords = DEFAULT_HOME_CONTENT.typingWords;
-            if (data.typing_words) {
-                try {
-                    typingWords = JSON.parse(data.typing_words);
-                } catch(e) {
-                    typingWords = data.typing_words.split(',').map(w => w.trim());
-                }
-            }
-            homeContent = {
-                tagline: data.tagline || DEFAULT_HOME_CONTENT.tagline,
-                titlePrefix: data.title_prefix || DEFAULT_HOME_CONTENT.titlePrefix,
-                description: data.description || DEFAULT_HOME_CONTENT.description,
-                typingWords: typingWords
-            };
-            setStorage('leoly_home_content', homeContent);
-        }
-        
-        // Refresh render
-        renderHomeContent();
-        renderAppProjects();
-        renderAppProducts();
-        renderAppFAQs();
-        renderAppTestimonials();
-        
-    } catch (error) {
-        console.error("Error loading from Supabase:", error);
-    }
 }
 
 function initParticles() {
@@ -293,8 +333,9 @@ function renderAppProjects(filter = "all", query = "") {
     container.innerHTML = "";
     
     const filtered = projects.filter(p => {
-        const matchCat = filter === "all" || p.category.toLowerCase() === filter.toLowerCase();
-        const matchSrc = p.title.toLowerCase().includes(query.toLowerCase()) || p.description.toLowerCase().includes(query.toLowerCase());
+        const matchCat = filter === "all" || (p.category && p.category.toLowerCase() === filter.toLowerCase());
+        const matchSrc = (p.title && p.title.toLowerCase().includes(query.toLowerCase())) || 
+                        (p.description && p.description.toLowerCase().includes(query.toLowerCase()));
         return matchCat && matchSrc;
     });
 
@@ -311,6 +352,8 @@ function renderAppProjects(filter = "all", query = "") {
             `<img src="${p.image}" alt="${escapeHtml(p.title)}" style="width:100%; height:100%; object-fit:cover;">` : 
             `<i class="fa-solid fa-laptop-code"></i>`;
         
+        const itemId = p._id || p.id;
+        
         card.innerHTML = `
             <div class="card-img-container" style="overflow:hidden;">
                 ${imageHtml}
@@ -320,7 +363,7 @@ function renderAppProjects(filter = "all", query = "") {
             <div class="card-meta-bottom">
                 <span class="tag">${escapeHtml(p.category)}</span>
                 <div class="card-actions-row">
-                    <button class="icon-btn" onclick="actionLikeProject('${p.id}')"><i class="fa-solid fa-heart"></i> ${p.likes || 0}</button>
+                    <button class="icon-btn" onclick="actionLikeProject('${itemId}')"><i class="fa-solid fa-heart"></i> ${p.likes || 0}</button>
                     <button class="icon-btn" onclick="actionShareProject('${p.title}')"><i class="fa-solid fa-share-nodes"></i></button>
                 </div>
             </div>
@@ -335,8 +378,9 @@ function renderAppProducts(filter = "all", query = "") {
     container.innerHTML = "";
 
     const filtered = products.filter(p => {
-        const matchCat = filter === "all" || p.category.toLowerCase() === filter.toLowerCase();
-        const matchSrc = p.name.toLowerCase().includes(query.toLowerCase()) || p.description.toLowerCase().includes(query.toLowerCase());
+        const matchCat = filter === "all" || (p.category && p.category.toLowerCase() === filter.toLowerCase());
+        const matchSrc = (p.name && p.name.toLowerCase().includes(query.toLowerCase())) || 
+                        (p.description && p.description.toLowerCase().includes(query.toLowerCase()));
         return matchCat && matchSrc;
     });
 
@@ -353,6 +397,8 @@ function renderAppProducts(filter = "all", query = "") {
             `<img src="${p.image}" alt="${escapeHtml(p.name)}" style="width:100%; height:100%; object-fit:cover;">` : 
             `<i class="fa-solid fa-cube"></i>`;
         
+        const itemId = p._id || p.id;
+        
         card.innerHTML = `
             <div class="card-img-container" style="overflow:hidden;">
                 ${imageHtml}
@@ -361,7 +407,7 @@ function renderAppProducts(filter = "all", query = "") {
             <p class="desc">${escapeHtml(p.description)}</p>
             <div class="card-meta-bottom">
                 <span class="card-price">Rp ${(p.price || 0).toLocaleString('id-ID')}</span>
-                <button class="btn btn-primary btn-sm" onclick="actionAddProductToCart('${p.id}')"><i class="fa-solid fa-cart-plus"></i> Beli</button>
+                <button class="btn btn-primary btn-sm" onclick="actionAddProductToCart('${itemId}')"><i class="fa-solid fa-cart-plus"></i> Beli</button>
             </div>
         `;
         container.appendChild(card);
@@ -417,12 +463,12 @@ function toggleAccordionNode(header) {
 }
 
 async function actionLikeProject(id) {
-    const project = projects.find(p => p.id === id);
+    const project = projects.find(p => (p._id === id || p.id === id));
     if(project) {
         project.likes = (project.likes || 0) + 1;
         setStorage('leoly_projects', projects);
-        if (useSupabase && supabase) {
-            await supabase.from('projects').update({ likes: project.likes }).eq('id', id);
+        if (useAPI) {
+            await updateProjectToAPI(id, { likes: project.likes });
         }
         renderAppProjects();
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Project disukai!', showConfirmButton: false, timer: 1500 });
@@ -435,7 +481,7 @@ function actionShareProject(title) {
 }
 
 function actionAddProductToCart(id) {
-    const prod = products.find(p => p.id === id);
+    const prod = products.find(p => (p._id === id || p.id === id));
     if(!prod) return;
     cart.push(prod);
     setStorage('leoly_cart', cart);
@@ -681,48 +727,56 @@ function setupAdminSubsystem() {
 }
 
 function renderAdminTables() {
+    // Projects table
     const tbodyProj = document.getElementById("admin-project-table-body");
     if(tbodyProj) {
         tbodyProj.innerHTML = "";
         projects.forEach(p => {
+            const itemId = p._id || p.id;
             const tr = document.createElement("tr");
             tr.innerHTML = `<td>${escapeHtml(p.title)}</td><td>${escapeHtml(p.category)}</td><td>${p.likes || 0}</td>
-                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="editProjectNode('${p.id}')"><i class="fa-solid fa-edit"></i></button>
-                <button class="btn btn-secondary btn-sm" onclick="deleteProjectNode('${p.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="editProjectNode('${itemId}')"><i class="fa-solid fa-edit"></i></button>
+                <button class="btn btn-secondary btn-sm" onclick="deleteProjectNode('${itemId}')"><i class="fa-solid fa-trash"></i></button></td>`;
             tbodyProj.appendChild(tr);
         });
     }
 
+    // Products table
     const tbodyProd = document.getElementById("admin-product-table-body");
     if(tbodyProd) {
         tbodyProd.innerHTML = "";
         products.forEach(p => {
+            const itemId = p._id || p.id;
             const tr = document.createElement("tr");
             tr.innerHTML = `<td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.category)}</td><td>Rp ${(p.price || 0).toLocaleString('id-ID')}</td>
-                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="editProductNode('${p.id}')"><i class="fa-solid fa-edit"></i></button>
-                <button class="btn btn-secondary btn-sm" onclick="deleteProductNode('${p.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="editProductNode('${itemId}')"><i class="fa-solid fa-edit"></i></button>
+                <button class="btn btn-secondary btn-sm" onclick="deleteProductNode('${itemId}')"><i class="fa-solid fa-trash"></i></button></td>`;
             tbodyProd.appendChild(tr);
         });
     }
 
+    // FAQs table
     const tbodyFaq = document.getElementById("admin-faq-table-body");
     if(tbodyFaq) {
         tbodyFaq.innerHTML = "";
         faqs.forEach(f => {
+            const itemId = f._id || f.id;
             const tr = document.createElement("tr");
             tr.innerHTML = `<td>${escapeHtml(f.question)}</td>
-                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="deleteFaqNode('${f.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="deleteFaqNode('${itemId}')"><i class="fa-solid fa-trash"></i></button></td>`;
             tbodyFaq.appendChild(tr);
         });
     }
 
+    // Testimonials table
     const tbodyTesti = document.getElementById("admin-testimonial-table-body");
     if(tbodyTesti) {
         tbodyTesti.innerHTML = "";
         testimonials.forEach(t => {
+            const itemId = t._id || t.id;
             const tr = document.createElement("tr");
             tr.innerHTML = `<td>${escapeHtml(t.name)}</td><td>${escapeHtml(t.company)}</td><td>${t.stars || 5} ★</td>
-                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="deleteTestimonialNode('${t.id}')"><i class="fa-solid fa-trash"></i></button></td>`;
+                <td class="table-actions"><button class="btn btn-secondary btn-sm" onclick="deleteTestimonialNode('${itemId}')"><i class="fa-solid fa-trash"></i></button></td>`;
             tbodyTesti.appendChild(tr);
         });
     }
@@ -759,19 +813,22 @@ async function editHomeContent() {
         e.preventDefault();
         const newContent = {
             tagline: document.getElementById("eh-tagline").value,
-            titlePrefix: document.getElementById("eh-title").value,
-            typingWords: document.getElementById("eh-words").value.split(',').map(w => w.trim()),
+            title_prefix: document.getElementById("eh-title").value,
+            typing_words: JSON.stringify(document.getElementById("eh-words").value.split(',').map(w => w.trim())),
             description: document.getElementById("eh-desc").value
         };
-        homeContent = newContent;
-        setStorage('leoly_home_content', homeContent);
-        if (useSupabase && supabase) {
-            await supabase.from('home_content').upsert([{
+        
+        if (useAPI) {
+            await saveHomeContentToAPI(newContent);
+            await loadHomeContentFromAPI();
+        } else {
+            homeContent = {
                 tagline: newContent.tagline,
-                title_prefix: newContent.titlePrefix,
-                description: newContent.description,
-                typing_words: JSON.stringify(newContent.typingWords)
-            }]);
+                titlePrefix: newContent.title_prefix,
+                typingWords: JSON.parse(newContent.typing_words),
+                description: newContent.description
+            };
+            setStorage('leoly_home_content', homeContent);
         }
         renderHomeContent();
         overlay.classList.remove("modal-active");
@@ -783,9 +840,13 @@ async function editHomeContent() {
 async function deleteProjectNode(id) {
     const result = await Swal.fire({ title: 'Yakin hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' });
     if(result.isConfirmed) {
-        projects = projects.filter(p => p.id !== id);
-        setStorage('leoly_projects', projects);
-        if (useSupabase && supabase) await supabase.from('projects').delete().eq('id', id);
+        if (useAPI) {
+            await deleteProjectFromAPI(id);
+            await loadProjectsFromAPI();
+        } else {
+            projects = projects.filter(p => (p._id !== id && p.id !== id));
+            setStorage('leoly_projects', projects);
+        }
         renderAppProjects();
         renderAdminTables();
         Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
@@ -795,9 +856,13 @@ async function deleteProjectNode(id) {
 async function deleteProductNode(id) {
     const result = await Swal.fire({ title: 'Yakin hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' });
     if(result.isConfirmed) {
-        products = products.filter(p => p.id !== id);
-        setStorage('leoly_products', products);
-        if (useSupabase && supabase) await supabase.from('products').delete().eq('id', id);
+        if (useAPI) {
+            await deleteProductFromAPI(id);
+            await loadProductsFromAPI();
+        } else {
+            products = products.filter(p => (p._id !== id && p.id !== id));
+            setStorage('leoly_products', products);
+        }
         renderAppProducts();
         renderAdminTables();
         Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
@@ -807,9 +872,13 @@ async function deleteProductNode(id) {
 async function deleteFaqNode(id) {
     const result = await Swal.fire({ title: 'Yakin hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' });
     if(result.isConfirmed) {
-        faqs = faqs.filter(f => f.id !== id);
-        setStorage('leoly_faqs', faqs);
-        if (useSupabase && supabase) await supabase.from('faqs').delete().eq('id', id);
+        if (useAPI) {
+            await deleteFAQFromAPI(id);
+            await loadFAQsFromAPI();
+        } else {
+            faqs = faqs.filter(f => (f._id !== id && f.id !== id));
+            setStorage('leoly_faqs', faqs);
+        }
         renderAppFAQs();
         renderAdminTables();
         Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
@@ -819,9 +888,13 @@ async function deleteFaqNode(id) {
 async function deleteTestimonialNode(id) {
     const result = await Swal.fire({ title: 'Yakin hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Hapus' });
     if(result.isConfirmed) {
-        testimonials = testimonials.filter(t => t.id !== id);
-        setStorage('leoly_testimonials', testimonials);
-        if (useSupabase && supabase) await supabase.from('testimonials').delete().eq('id', id);
+        if (useAPI) {
+            await deleteTestimonialFromAPI(id);
+            await loadTestimonialsFromAPI();
+        } else {
+            testimonials = testimonials.filter(t => (t._id !== id && t.id !== id));
+            setStorage('leoly_testimonials', testimonials);
+        }
         renderAppTestimonials();
         renderAdminTables();
         Swal.fire({ icon: 'success', title: 'Terhapus!', showConfirmButton: false, timer: 1500 });
@@ -830,7 +903,7 @@ async function deleteTestimonialNode(id) {
 
 // Edit functions
 async function editProjectNode(id) {
-    const project = projects.find(p => p.id === id);
+    const project = projects.find(p => (p._id === id || p.id === id));
     if(!project) return;
     
     const overlay = document.getElementById("global-data-modal");
@@ -844,6 +917,7 @@ async function editProjectNode(id) {
             <div class="form-group"><label>Kategori</label><select id="ep-cat"><option ${project.category === 'Web' ? 'selected' : ''}>Web</option><option ${project.category === 'Server' ? 'selected' : ''}>Server</option><option ${project.category === 'UI/UX' ? 'selected' : ''}>UI/UX</option></select></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="ep-desc" rows="3">${escapeHtml(project.description)}</textarea></div>
             <div class="form-group"><label>Gambar</label><input type="file" id="ep-image" accept="image/*"></div>
+            ${project.image ? `<img src="${project.image}" style="max-width:100px; margin-top:10px;">` : ''}
             <button type="submit" class="btn btn-primary btn-block">Simpan</button>
         </form>
     `;
@@ -855,11 +929,22 @@ async function editProjectNode(id) {
         const file = document.getElementById("ep-image").files[0];
         if(file) image = await imageToBase64(file);
         
-        const updated = { ...project, title: document.getElementById("ep-title").value, category: document.getElementById("ep-cat").value, description: document.getElementById("ep-desc").value, image: image };
-        const index = projects.findIndex(p => p.id === id);
-        projects[index] = updated;
-        setStorage('leoly_projects', projects);
-        if (useSupabase && supabase) await supabase.from('projects').update(updated).eq('id', id);
+        const updatedProject = {
+            title: document.getElementById("ep-title").value,
+            category: document.getElementById("ep-cat").value,
+            description: document.getElementById("ep-desc").value,
+            image: image,
+            likes: project.likes
+        };
+        
+        if (useAPI) {
+            await updateProjectToAPI(id, updatedProject);
+            await loadProjectsFromAPI();
+        } else {
+            const index = projects.findIndex(p => (p._id === id || p.id === id));
+            projects[index] = { ...projects[index], ...updatedProject };
+            setStorage('leoly_projects', projects);
+        }
         renderAppProjects();
         renderAdminTables();
         overlay.classList.remove("modal-active");
@@ -868,7 +953,7 @@ async function editProjectNode(id) {
 }
 
 async function editProductNode(id) {
-    const product = products.find(p => p.id === id);
+    const product = products.find(p => (p._id === id || p.id === id));
     if(!product) return;
     
     const overlay = document.getElementById("global-data-modal");
@@ -883,6 +968,7 @@ async function editProductNode(id) {
             <div class="form-group"><label>Harga</label><input type="number" id="ep-price" value="${product.price}"></div>
             <div class="form-group"><label>Deskripsi</label><textarea id="ep-desc" rows="3">${escapeHtml(product.description)}</textarea></div>
             <div class="form-group"><label>Gambar</label><input type="file" id="ep-image" accept="image/*"></div>
+            ${product.image ? `<img src="${product.image}" style="max-width:100px; margin-top:10px;">` : ''}
             <button type="submit" class="btn btn-primary btn-block">Simpan</button>
         </form>
     `;
@@ -894,11 +980,22 @@ async function editProductNode(id) {
         const file = document.getElementById("ep-image").files[0];
         if(file) image = await imageToBase64(file);
         
-        const updated = { ...product, name: document.getElementById("ep-name").value, category: document.getElementById("ep-cat").value, price: Number(document.getElementById("ep-price").value), description: document.getElementById("ep-desc").value, image: image };
-        const index = products.findIndex(p => p.id === id);
-        products[index] = updated;
-        setStorage('leoly_products', products);
-        if (useSupabase && supabase) await supabase.from('products').update(updated).eq('id', id);
+        const updatedProduct = {
+            name: document.getElementById("ep-name").value,
+            category: document.getElementById("ep-cat").value,
+            price: Number(document.getElementById("ep-price").value),
+            description: document.getElementById("ep-desc").value,
+            image: image
+        };
+        
+        if (useAPI) {
+            await updateProductToAPI(id, updatedProduct);
+            await loadProductsFromAPI();
+        } else {
+            const index = products.findIndex(p => (p._id === id || p.id === id));
+            products[index] = { ...products[index], ...updatedProduct };
+            setStorage('leoly_products', products);
+        }
         renderAppProducts();
         renderAdminTables();
         overlay.classList.remove("modal-active");
@@ -936,16 +1033,20 @@ function setupAdminModalTriggers() {
             if(file) image = await imageToBase64(file);
             
             const newProject = {
-                id: 'p_' + Date.now(),
                 title: document.getElementById("p-title").value,
                 category: document.getElementById("p-cat").value,
                 description: document.getElementById("p-desc").value,
                 likes: 0,
                 image: image
             };
-            projects.unshift(newProject);
-            setStorage('leoly_projects', projects);
-            if (useSupabase && supabase) await supabase.from('projects').insert([newProject]);
+            
+            if (useAPI) {
+                await saveProjectToAPI(newProject);
+                await loadProjectsFromAPI();
+            } else {
+                projects.unshift({ ...newProject, id: 'p_' + Date.now() });
+                setStorage('leoly_projects', projects);
+            }
             renderAppProjects();
             renderAdminTables();
             overlay.classList.remove("modal-active");
@@ -975,16 +1076,20 @@ function setupAdminModalTriggers() {
             if(file) image = await imageToBase64(file);
             
             const newProduct = {
-                id: 'pr_' + Date.now(),
                 name: document.getElementById("pr-name").value,
                 category: document.getElementById("pr-cat").value,
                 price: Number(document.getElementById("pr-price").value),
                 description: document.getElementById("pr-desc").value,
                 image: image
             };
-            products.unshift(newProduct);
-            setStorage('leoly_products', products);
-            if (useSupabase && supabase) await supabase.from('products').insert([newProduct]);
+            
+            if (useAPI) {
+                await saveProductToAPI(newProduct);
+                await loadProductsFromAPI();
+            } else {
+                products.unshift({ ...newProduct, id: 'pr_' + Date.now() });
+                setStorage('leoly_products', products);
+            }
             renderAppProducts();
             renderAdminTables();
             overlay.classList.remove("modal-active");
@@ -1006,10 +1111,18 @@ function setupAdminModalTriggers() {
         
         document.getElementById("add-faq-form").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const newFaq = { id: 'f_' + Date.now(), question: document.getElementById("f-q").value, answer: document.getElementById("f-a").value };
-            faqs.push(newFaq);
-            setStorage('leoly_faqs', faqs);
-            if (useSupabase && supabase) await supabase.from('faqs').insert([newFaq]);
+            const newFaq = {
+                question: document.getElementById("f-q").value,
+                answer: document.getElementById("f-a").value
+            };
+            
+            if (useAPI) {
+                await saveFAQToAPI(newFaq);
+                await loadFAQsFromAPI();
+            } else {
+                faqs.push({ ...newFaq, id: 'f_' + Date.now() });
+                setStorage('leoly_faqs', faqs);
+            }
             renderAppFAQs();
             renderAdminTables();
             overlay.classList.remove("modal-active");
@@ -1033,10 +1146,20 @@ function setupAdminModalTriggers() {
         
         document.getElementById("add-testi-form").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const newTesti = { id: 't_' + Date.now(), name: document.getElementById("t-name").value, company: document.getElementById("t-company").value, stars: Number(document.getElementById("t-stars").value), text: document.getElementById("t-text").value };
-            testimonials.unshift(newTesti);
-            setStorage('leoly_testimonials', testimonials);
-            if (useSupabase && supabase) await supabase.from('testimonials').insert([newTesti]);
+            const newTesti = {
+                name: document.getElementById("t-name").value,
+                company: document.getElementById("t-company").value,
+                stars: Number(document.getElementById("t-stars").value),
+                text: document.getElementById("t-text").value
+            };
+            
+            if (useAPI) {
+                await saveTestimonialToAPI(newTesti);
+                await loadTestimonialsFromAPI();
+            } else {
+                testimonials.unshift({ ...newTesti, id: 't_' + Date.now() });
+                setStorage('leoly_testimonials', testimonials);
+            }
             renderAppTestimonials();
             renderAdminTables();
             overlay.classList.remove("modal-active");
