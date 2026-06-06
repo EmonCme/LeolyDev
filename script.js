@@ -1,6 +1,6 @@
 /**
  * LEOLY DEV CORE PLATFORM ENGINE
- * Architecture: Serverless Engine / Local Storage Sync Manifest
+ * Architecture: Static JSON Driven (No LocalStorage Cache)
  */
 
 // STATE MANAGEMENT GLOBALS
@@ -10,7 +10,7 @@ let analyticsChartInstance = null;
 let projectEditingId = null;
 let shopEditingId = null;
 
-// ADMINISTRATIVE SESSION KEYS
+// ADMINISTRATIVE SESSION KEYS (Tetap menggunakan sessionStorage agar admin tidak perlu login ulang saat refresh)
 const SESSION_AUTH_KEY = 'leoly_auth_session';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -23,47 +23,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 /**
  * INITIALIZE DATABASE ENGINE
- * Fetches default seed definition from database.json or binds state cache
+ * Selalu mengambil data segar langsung dari database.json
  */
 async function initializeDatabase() {
-  const cachedData = localStorage.getItem('leoly_db_manifest');
-  if (cachedData) {
-    db = JSON.parse(cachedData);
-  } else {
-    try {
-      const response = await fetch('database.json');
-      if (!response.ok) throw new Error("Fallback fetch failed descriptor.");
-      db = await response.json();
-      saveDatabaseToCache();
-    } catch (err) {
-      showToast("Gagal memuat arsitektur database.json. Menginisialisasi skema kosong.", "error");
-      db = { website: { title: "Leoly Dev" }, home: {}, about: { skills: [] }, projects: [], shop: [], donate: {}, contact: {}, statistics: {}, settings: {} };
-    }
+  try {
+    // Membaca langsung dari file database.json tanpa mengecek localStorage
+    const response = await fetch('database.json?v=' + Date.now()); // Antispam cache browser
+    if (!response.ok) throw new Error("Fetch database.json failed.");
+    db = await response.json();
+  } catch (err) {
+    showToast("Gagal memuat database.json formal structural.", "error");
+    db = { website: { title: "Leoly Dev" }, home: {}, about: { skills: [] }, projects: [], shop: [], donate: {}, contact: {}, statistics: { visitors: 0 }, settings: {} };
   }
   
-  // Track synthetic structural visitor stats
-  if (!sessionStorage.getItem('leoly_visitor_counted')) {
-    db.statistics.visitors = (db.statistics.visitors || 0) + 1;
-    sessionStorage.setItem('leoly_visitor_counted', 'true');
-    saveDatabaseToCache();
-  }
-
   applyDatabaseToDOM();
-}
-
-function saveDatabaseToCache() {
-  localStorage.setItem('leoly_db_manifest', JSON.stringify(db));
 }
 
 /**
  * DOM SYNC ENGINE
- * Binds JSON nodes variables to structural tags template interface
+ * Mengikat data JSON ke elemen UI HTML
  */
 function applyDatabaseToDOM() {
   if (!db) return;
 
   // MAINTENANCE WALL CHECK
-  if (db.settings?.maintenance === true && !localStorage.getItem(SESSION_AUTH_KEY)) {
+  if (db.settings?.maintenance === true && !sessionStorage.getItem(SESSION_AUTH_KEY)) {
     document.getElementById('maintenance-screen').classList.remove('hidden-panel');
     document.getElementById('app-container').classList.add('hidden-panel');
     return;
@@ -116,19 +100,14 @@ function applyDatabaseToDOM() {
   document.getElementById('ctx-ig').href = db.contact.instagram || "#";
   document.getElementById('ctx-git').href = db.contact.github || "#";
 
-  // POPULATE CASE STUDIES AND PRODUCTS CATALOGS
   renderProjectsGrid();
   renderShopGrid();
   populateFilterDropdowns();
 }
 
-/**
- * PROJECT RE-RENDER ENGINE (WITH FILTERS AND SEARCH CAPABILITIES)
- */
 function renderProjectsGrid() {
   const container = document.getElementById('project-grid-node');
   container.innerHTML = "";
-  
   const searchVal = document.getElementById('project-search').value.toLowerCase();
   const filterVal = document.getElementById('project-filter').value;
 
@@ -139,7 +118,7 @@ function renderProjectsGrid() {
   });
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="glass-card text-center text-secondary" style="grid-column: 1/-1; padding: 3rem;">No project data found architecture configuration.</div>`;
+    container.innerHTML = `<div class="glass-card text-center text-secondary" style="grid-column: 1/-1; padding: 3rem;">No project data found.</div>`;
     return;
   }
 
@@ -155,8 +134,8 @@ function renderProjectsGrid() {
         <h4 class="card-title">${p.title}</h4>
         <p class="card-description text-secondary">${p.description}</p>
         <div class="card-footer-actions">
-          <a href="${p.demoUrl}" target="_blank" class="btn btn-primary"><i class="fa-solid fa-arrow-up-right-from-square"></i> Demo</a>
-          <a href="${p.sourceUrl}" target="_blank" class="btn btn-secondary"><i class="fa-brands fa-github"></i> Code</a>
+          <a href="${p.demoUrl}" target="_blank" class="btn btn-primary">Demo</a>
+          <a href="${p.sourceUrl}" target="_blank" class="btn btn-secondary">Code</a>
         </div>
       </div>
     `;
@@ -165,9 +144,6 @@ function renderProjectsGrid() {
   });
 }
 
-/**
- * ECOMMERCE SHOP CATALOG RENDER
- */
 function renderShopGrid() {
   const container = document.getElementById('shop-grid-node');
   container.innerHTML = "";
@@ -176,7 +152,7 @@ function renderShopGrid() {
   const filtered = db.shop.filter(s => s.title.toLowerCase().includes(searchVal) || s.description.toLowerCase().includes(searchVal));
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="glass-card text-center text-secondary" style="grid-column: 1/-1; padding: 3rem;">No products available matching criteria.</div>`;
+    container.innerHTML = `<div class="glass-card text-center text-secondary" style="grid-column: 1/-1; padding: 3rem;">No products available.</div>`;
     return;
   }
 
@@ -192,7 +168,7 @@ function renderShopGrid() {
         <h4 class="card-title">${s.title}</h4>
         <p class="card-description text-secondary">${s.description}</p>
         <div class="card-footer-actions">
-          <a href="${s.buyUrl}" target="_blank" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-cart-shopping"></i> Aquisition Link</a>
+          <a href="${s.buyUrl}" target="_blank" class="btn btn-primary" style="width:100%;">Buy</a>
         </div>
       </div>
     `;
@@ -218,10 +194,6 @@ function populateFilterDropdowns() {
   filterSelect.value = currentVal;
 }
 
-/**
- * CLIENT NAVIGATION ENGINE ROUTER
- * High Performance SPA Router mapping window scroll positions to active highlights
- */
 function setupNavigationRouter() {
   const sections = document.querySelectorAll('.content-section');
   const navItems = document.querySelectorAll('.sidebar-nav .nav-item:not(.admin-trigger-btn)');
@@ -240,7 +212,6 @@ function setupNavigationRouter() {
     if (targetNav) targetNav.classList.add('active');
   }
 
-  // Intercept navigation item link hooks
   navItems.forEach(item => {
     item.addEventListener('click', (e) => {
       e.preventDefault();
@@ -248,19 +219,15 @@ function setupNavigationRouter() {
       window.location.hash = targetSectionId;
       setActiveViewTab(targetSectionId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      
-      // Close mobile drawer structural configuration automatically
       document.getElementById('right-sidebar').classList.remove('mobile-open');
     });
   });
 
-  // Read URL active hashes on load sequence triggers
   if (window.location.hash) {
     const rawHash = window.location.hash.substring(1);
     if (document.getElementById(rawHash)) setActiveViewTab(rawHash);
   }
 
-  // BACK TO TOP UTILITY TRIGGERS
   const btt = document.getElementById('back-to-top');
   window.addEventListener('scroll', () => {
     if (window.scrollY > 400) btt.classList.add('show-btn');
@@ -269,10 +236,6 @@ function setupNavigationRouter() {
   btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 
-/**
- * COMPONENT INTERACTION UI LOGIC BUILDERS
- * Handles Gemini sidebars collapse transformations, image previews & upload behaviors
- */
 function setupUIInteractions() {
   const sidebar = document.getElementById('right-sidebar');
   const collapseBtn = document.getElementById('sidebar-collapse-btn');
@@ -283,7 +246,6 @@ function setupUIInteractions() {
   toggleBtn.addEventListener('click', () => sidebar.classList.add('mobile-open'));
   closeSidebarBtn.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
 
-  // Live input image fields upload resource links preview builders
   document.querySelectorAll('.img-preview-input').forEach(input => {
     input.addEventListener('input', (e) => {
       const previewImg = input.nextElementSibling;
@@ -293,7 +255,6 @@ function setupUIInteractions() {
     });
   });
 
-  // Bind live grid searching configurations UI event loops
   document.getElementById('project-search').addEventListener('input', renderProjectsGrid);
   document.getElementById('project-filter').addEventListener('change', renderProjectsGrid);
   document.getElementById('shop-search').addEventListener('input', renderShopGrid);
@@ -301,7 +262,6 @@ function setupUIInteractions() {
 
 /**
  * ADMINISTRATIVE ENGINE HUB
- * Full CRUD controllers, serialization schemes and state sync parameters
  */
 function setupAdminEngine() {
   const adminNavLink = document.getElementById('admin-nav-link');
@@ -314,7 +274,7 @@ function setupAdminEngine() {
   adminNavLink.addEventListener('click', (e) => {
     e.preventDefault();
     modalOverlay.classList.remove('hidden-panel');
-    if (localStorage.getItem(SESSION_AUTH_KEY) === 'authorized') {
+    if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'authorized') {
       showAdminDashboard();
     } else {
       authCard.classList.remove('hidden-panel');
@@ -322,31 +282,25 @@ function setupAdminEngine() {
     }
   });
 
-  // Modal Closures Handler Interceptions
   document.querySelectorAll('.close-modal-trigger').forEach(btn => {
     btn.addEventListener('click', () => modalOverlay.classList.add('hidden-panel'));
   });
 
-  // AUTH LOGICS CONTROL
   loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const u = document.getElementById('auth-user').value;
     const p = document.getElementById('auth-pass').value;
-    const remember = document.getElementById('auth-remember').checked;
 
     if (u === 'admin' && p === 'admin123') {
-      if (remember) localStorage.setItem(SESSION_AUTH_KEY, 'authorized');
-      else sessionStorage.setItem(SESSION_AUTH_KEY, 'authorized');
-      
-      showToast("Token Otorisasi Berhasil Disinkronkan.", "success");
+      sessionStorage.setItem(SESSION_AUTH_KEY, 'authorized');
+      showToast("Akses Administrasi Disetujui.", "success");
       showAdminDashboard();
     } else {
-      showToast("Token Kredensial Tidak Valid.", "error");
+      showToast("Kredensial salah.", "error");
     }
   });
 
   logoutBtn.addEventListener('click', () => {
-    localStorage.removeItem(SESSION_AUTH_KEY);
     sessionStorage.removeItem(SESSION_AUTH_KEY);
     showToast("Sesi Administrasi Berakhir.", "info");
     authCard.classList.remove('hidden-panel');
@@ -383,17 +337,12 @@ function setupAdminTabs() {
   });
 }
 
-/**
- * ADMIN FORM BINDINGS LOAD OPERATION
- */
 function loadDataToAdminForms() {
-  // Update quantitative matrix stats labels counters
   document.getElementById('m-visitors').innerText = db.statistics.visitors || 0;
   document.getElementById('m-projects').innerText = db.projects.length;
   document.getElementById('m-products').innerText = db.shop.length;
   document.getElementById('m-donations').innerText = `Rp ${(db.statistics.donations || 0).toLocaleString('id-ID')}`;
 
-  // Tab 2: Core configuration settings bindings
   document.getElementById('adm-web-title').value = db.website.title || "";
   document.getElementById('adm-web-desc').value = db.website.description || "";
   document.getElementById('adm-web-logo').value = db.website.logo || "";
@@ -402,21 +351,18 @@ function loadDataToAdminForms() {
   bannerInp.nextElementSibling.src = db.website.banner || "";
   document.getElementById('adm-sys-maintenance').checked = db.settings?.maintenance || false;
 
-  // Tab 3: Hero values parameters bindings
   document.getElementById('adm-home-title').value = db.home.title || "";
   document.getElementById('adm-home-subtitle').value = db.home.subtitle || "";
   document.getElementById('adm-home-desc').value = db.home.description || "";
   document.getElementById('adm-home-btn1').value = db.home.button1 || "";
   document.getElementById('adm-home-btn2').value = db.home.button2 || "";
 
-  // Tab 4: About system configurations arrays fields
   const aboutPhotoInp = document.getElementById('adm-about-photo');
   aboutPhotoInp.value = db.about.photo || "";
   aboutPhotoInp.nextElementSibling.src = db.about.photo || "";
   document.getElementById('adm-about-desc').value = db.about.description || "";
   document.getElementById('adm-about-skills').value = db.about.skills ? db.about.skills.join(', ') : "";
 
-  // Tab 7: Channels parameters configurations inputs fields mapping hooks bindings
   const donQris = document.getElementById('adm-don-qris');
   donQris.value = db.donate.qris || "";
   donQris.nextElementSibling.src = db.donate.qris || "";
@@ -433,7 +379,6 @@ function loadDataToAdminForms() {
 }
 
 function setupAdminFormSubmits() {
-  // Global metadata config submission
   document.getElementById('form-core-web').addEventListener('submit', (e) => {
     e.preventDefault();
     db.website.title = document.getElementById('adm-web-title').value;
@@ -441,10 +386,9 @@ function setupAdminFormSubmits() {
     db.website.logo = document.getElementById('adm-web-logo').value;
     db.website.banner = document.getElementById('adm-web-banner').value;
     db.settings.maintenance = document.getElementById('adm-sys-maintenance').checked;
-    commitSystemCoreSave("Metadata Inti Website Diperbarui.");
+    commitSystemCoreSave();
   });
 
-  // Hero form setup submission
   document.getElementById('form-hero-editor').addEventListener('submit', (e) => {
     e.preventDefault();
     db.home.title = document.getElementById('adm-home-title').value;
@@ -452,19 +396,17 @@ function setupAdminFormSubmits() {
     db.home.description = document.getElementById('adm-home-desc').value;
     db.home.button1 = document.getElementById('adm-home-btn1').value;
     db.home.button2 = document.getElementById('adm-home-btn2').value;
-    commitSystemCoreSave("Hero Matrix Configurations Saved.");
+    commitSystemCoreSave();
   });
 
-  // About panel context updates submissions
   document.getElementById('form-about-editor').addEventListener('submit', (e) => {
     e.preventDefault();
     db.about.photo = document.getElementById('adm-about-photo').value;
     db.about.description = document.getElementById('adm-about-desc').value;
     db.about.skills = document.getElementById('adm-about-skills').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
-    commitSystemCoreSave("Profile Array Manifest Synced.");
+    commitSystemCoreSave();
   });
 
-  // Financial system endpoints updates submissions
   document.getElementById('form-gateways').addEventListener('submit', (e) => {
     e.preventDefault();
     db.donate.qris = document.getElementById('adm-don-qris').value;
@@ -478,22 +420,35 @@ function setupAdminFormSubmits() {
     db.contact.email = document.getElementById('adm-ctx-mail').value;
     db.contact.instagram = document.getElementById('adm-ctx-ig').value;
     db.contact.github = document.getElementById('adm-ctx-git').value;
-    commitSystemCoreSave("Routing Network Channels Matrix Re-aligned.");
+    commitSystemCoreSave();
   });
 }
 
-function commitSystemCoreSave(msg) {
-  saveDatabaseToCache();
+/**
+ * PROTOKOL NOTIFIKASI AUTO-SAVE & DOWNLOAD
+ * Memberitahu admin bahwa data runtime berubah, dan mengarahkan ke tab JSON Manager.
+ */
+function commitSystemCoreSave() {
   applyDatabaseToDOM();
   loadDataToAdminForms();
-  showToast(msg || "State Synchronized Successfully.", "success");
+  
+  // Mengarahkan instruksi ke admin untuk mengekspor data ke file database.json fisik
+  showSystemConfirm(
+    "Perubahan Runtime Berhasil!", 
+    "Perubahan diterapkan di browser. Agar permanen, Anda WAJIB mendownload berkas database.json baru dan menimpa file lama Anda di folder proyek sebelum deploy.",
+    () => {
+      // Otomatis pindah ke tab JSON manager
+      document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
+      
+      const jsonTabBtn = document.querySelector('.admin-tab-btn[data-tab="tab-json-manager"]');
+      if(jsonTabBtn) jsonTabBtn.classList.add('active');
+      document.getElementById('tab-json-manager').classList.add('active');
+    }
+  );
 }
 
-/**
- * INDUSTRIAL INLINE CRUD OPERATIONS ARRAYS MANAGEMENT
- */
 function setupCRUDControls() {
-  // PROJECTS ARRAY MANAGEMENTS
   const pForm = document.getElementById('form-project-crud');
   document.getElementById('open-add-project-btn').addEventListener('click', () => {
     projectEditingId = null;
@@ -523,11 +478,10 @@ function setupCRUDControls() {
       db.projects.push(payload);
     }
     pForm.classList.add('hidden-panel');
-    commitSystemCoreSave("Project item configuration matrix storage updated.");
+    commitSystemCoreSave();
     renderAdminCRUDTables();
   });
 
-  // PRODUCTS CATALOG ARR MANAGEMENT
   const sForm = document.getElementById('form-shop-crud');
   document.getElementById('open-add-shop-btn').addEventListener('click', () => {
     shopEditingId = null;
@@ -556,13 +510,12 @@ function setupCRUDControls() {
       db.shop.push(payload);
     }
     sForm.classList.add('hidden-panel');
-    commitSystemCoreSave("Commercial asset structural deployment completed.");
+    commitSystemCoreSave();
     renderAdminCRUDTables();
   });
 }
 
 function renderAdminCRUDTables() {
-  // Render Projects Grid management rows
   const pTbody = document.getElementById('admin-projects-tbody');
   pTbody.innerHTML = "";
   db.projects.forEach(p => {
@@ -578,7 +531,6 @@ function renderAdminCRUDTables() {
     pTbody.appendChild(tr);
   });
 
-  // Render Shop Grid rows
   const sTbody = document.getElementById('admin-shop-tbody');
   sTbody.innerHTML = "";
   db.shop.forEach(s => {
@@ -595,7 +547,6 @@ function renderAdminCRUDTables() {
   });
 }
 
-// BIND CRITICAL CRUD WINDOW WINDOW SCOPES OPERATIONS
 window.initiateProjectEdit = function(id) {
   const p = db.projects.find(item => item.id === id);
   if (!p) return;
@@ -619,9 +570,9 @@ window.initiateProjectEdit = function(id) {
 };
 
 window.initiateProjectDelete = function(id) {
-  showSystemConfirm("Hapus Node Project?", "Apakah Anda yakin ingin menghapus entri arsitektur project ini secara permanen dari basis data?", () => {
+  showSystemConfirm("Hapus Node Project?", "Apakah Anda yakin ingin menghapus entri arsitektur project ini?", () => {
     db.projects = db.projects.filter(p => p.id !== id);
-    commitSystemCoreSave("Project data instance dropped configuration matrix.");
+    commitSystemCoreSave();
     renderAdminCRUDTables();
   });
 };
@@ -648,22 +599,19 @@ window.initiateShopEdit = function(id) {
 };
 
 window.initiateShopDelete = function(id) {
-  showSystemConfirm("Hapus Item Katalog?", "Tindakan ini akan memusnahkan produk komersial premium yang dipilih dari manifest digital runtime storage.", () => {
+  showSystemConfirm("Hapus Item Katalog?", "Tindakan ini akan memusnahkan produk komersial premium yang dipilih.", () => {
     db.shop = db.shop.filter(s => s.id !== id);
-    commitSystemCoreSave("Digital asset removed from catalog systems indices.");
+    commitSystemCoreSave();
     renderAdminCRUDTables();
   });
 };
 
-/**
- * SUB-SYSTEM: FILE MANAGER STRUCTS (EXPORT, DOWNLOAD, RESTORE MANIFESTS)
- */
 function setupJSONManagerActions() {
   document.getElementById('btn-json-export').addEventListener('click', () => {
     const out = JSON.stringify(db, null, 2);
     const win = window.open();
-    win.document.write('<pre style="background:#0a0a0a;color:#fff;padding:2rem;font-family:monospace;">' + out + '</pre>');
-    showToast("Live system JSON matrix compiled inside alternative thread layout context.", "info");
+    win.document.write('<pre style="background:#0a0a0a;color:#fff;padding:2rem;font-family:monospace;white-space:pre-wrap;word-wrap:break-word;">' + out + '</pre>');
+    showToast("Live system JSON matrix compiled.", "info");
   });
 
   document.getElementById('btn-json-download').addEventListener('click', () => {
@@ -683,42 +631,28 @@ function setupJSONManagerActions() {
     reader.onload = function(evt) {
       try {
         const parseObj = JSON.parse(evt.target.result);
-        if (typeof parseObj !== 'object') throw new Error("Format objek masukan data korup.");
+        if (typeof parseObj !== 'object') throw new Error("Format objek masukan tidak valid.");
         db = parseObj;
-        commitSystemCoreSave("External schema matrix data forced layout compiled successfully.");
+        commitSystemCoreSave();
         renderAdminCRUDTables();
       } catch (err) {
-        showToast("Kesalahan parsing objek unggahan arsitektur JSON.", "error");
+        showToast("Kesalahan parsing objek JSON.", "error");
       }
     };
     reader.readAsText(file);
   });
 
-  document.getElementById('btn-json-backup').addEventListener('click', () => {
-    localStorage.setItem('leoly_db_backup_state', JSON.stringify(db));
-    showToast("System configurations current state cached snapshot committed.", "success");
-  });
-
-  document.getElementById('btn-json-restore').addEventListener('click', () => {
-    const data = localStorage.getItem('leoly_db_backup_state');
-    if (!data) return showToast("No active physical recovery block structural parameters cache located.", "error");
-    db = JSON.parse(data);
-    commitSystemCoreSave("System states successfully recovered to previous checkpoint timestamps.");
-    renderAdminCRUDTables();
-  });
-
+  // Menonaktifkan tombol yang bergantung pada localStorage agar tidak membingungkan pengguna
+  document.getElementById('btn-json-backup').style.display = 'none';
+  document.getElementById('btn-json-restore').style.display = 'none';
+  
   document.getElementById('btn-json-reset').addEventListener('click', () => {
-    showSystemConfirm("Wipe Database Manifest Core?", "Semua perubahan data lokal akan dihapus. Aplikasi akan memuat ulang setelan bawaan pabrik dari berkas database.json asli.", () => {
-      localStorage.removeItem('leoly_db_manifest');
-      localStorage.removeItem('leoly_db_backup_state');
+    showSystemConfirm("Reset Ulang?", "Aplikasi akan memuat ulang data asli yang tersimpan di server.", () => {
       window.location.reload();
     });
   });
 }
 
-/**
- * HIGH-END TOAST NOTIFICATION CONTAINER SYSTEM FUSES
- */
 function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
   const el = document.createElement('div');
@@ -737,9 +671,6 @@ function showToast(message, type = 'info') {
   }, 4000);
 }
 
-/**
- * CUSTOM INTERCEPT DIALOG MODAL CONFIRMATOR INTERACTOR
- */
 function showSystemConfirm(title, message, callbackOnYes) {
   const overlay = document.getElementById('confirm-modal');
   document.getElementById('confirm-title').innerText = title;
@@ -764,9 +695,6 @@ function showSystemConfirm(title, message, callbackOnYes) {
   });
 }
 
-/**
- * HIGH PERFORMANCE LAZY LOAD IMAGES DETECTOR API INFRASTRUCTURE
- */
 function lazyLoadImageElement(imgEl) {
   if (!imgEl) return;
   if ('IntersectionObserver' in window) {
@@ -791,9 +719,6 @@ function hideLoadingScreen() {
   setTimeout(() => s.style.display = 'none', 500);
 }
 
-/**
- * VISUAL METRIC INSIGHT CHARTS ENGINE (CHART.JS IMPLEMENTATION)
- */
 function initAnalyticsChart() {
   const ctx = document.getElementById('analyticsChart').getContext('2d');
   if (analyticsChartInstance) analyticsChartInstance.destroy();
@@ -804,7 +729,7 @@ function initAnalyticsChart() {
       labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
       datasets: [{
         label: 'Traffic Analytical Vectors Rate',
-        data: [db.statistics.visitors * 0.4 || 120, db.statistics.visitors * 0.5 || 190, db.statistics.visitors * 0.7 || 340, db.statistics.visitors * 0.6 || 220, db.statistics.visitors * 0.8 || 450, db.statistics.visitors * 0.95 || 680, db.statistics.visitors || 1420],
+        data: [120, 190, 340, 220, 450, 680, db.statistics.visitors || 1420],
         borderColor: '#3B82F6',
         backgroundColor: 'rgba(59, 130, 246, 0.03)',
         borderWidth: 2,
