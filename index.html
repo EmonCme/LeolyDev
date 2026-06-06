@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
   <title>Leoly Dev — Premium Portfolio</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="script.js"></script>
 </head>
@@ -231,11 +231,11 @@
       </div>
       <form id="admin-login-form" class="modern-form">
         <div class="form-group">
-          <label for="auth-user">Identity Token (Username)</label>
+          <label for="auth-user">Username</label>
           <input type="text" id="auth-user" required placeholder="admin">
         </div>
         <div class="form-group">
-          <label for="auth-pass">Passphrase</label>
+          <label for="auth-pass">Password</label>
           <input type="password" id="auth-pass" required placeholder="••••••••">
         </div>
         <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Authenticate</button>
@@ -269,7 +269,7 @@
               <div class="metric-card glass-card"><span class="metric-label">Visitors</span><h3 id="m-visitors">0</h3></div>
               <div class="metric-card glass-card"><span class="metric-label">Projects</span><h3 id="m-projects">0</h3></div>
               <div class="metric-card glass-card"><span class="metric-label">Products</span><h3 id="m-products">0</h3></div>
-              <div class="metric-card glass-card"><span class="metric-label">Donations</span><h3 id="m-donations">0</h3></div>
+              <div class="metric-card glass-card"><span class="metric-label">Donations</span><h3 id="m-donations">Rp 0</h3></div>
             </div>
             <div class="chart-container glass-card" style="margin-top: 1.5rem; height:280px"><canvas id="analyticsChart"></canvas></div>
           </div>
@@ -313,22 +313,28 @@
           </div>
 
           <div id="tab-project-manager" class="admin-tab-panel">
-            <div class="flex-row" style="justify-content: space-between; margin-bottom: 1rem;">
+            <div class="flex-between" style="margin-bottom: 1rem;">
               <h4>Projects</h4>
-              <button type="button" class="btn btn-primary" id="open-add-project-btn">+ Add</button>
+              <button type="button" class="btn btn-primary" id="open-add-project-btn">+ Add Project</button>
             </div>
             <div class="admin-table-scroll-wrapper">
-              <table class="admin-data-table"><thead><tr><th>Title</th><th>Category</th><th>Actions</th></tr></thead><tbody id="admin-projects-tbody"></tbody></table>
+              <table class="admin-data-table">
+                <thead><tr><th>Title</th><th>Category</th><th>Actions</th></tr></thead>
+                <tbody id="admin-projects-tbody"></tbody>
+              </table>
             </div>
           </div>
 
           <div id="tab-shop-manager" class="admin-tab-panel">
-            <div class="flex-row" style="justify-content: space-between; margin-bottom: 1rem;">
+            <div class="flex-between" style="margin-bottom: 1rem;">
               <h4>Products</h4>
-              <button type="button" class="btn btn-primary" id="open-add-shop-btn">+ Add</button>
+              <button type="button" class="btn btn-primary" id="open-add-shop-btn">+ Add Product</button>
             </div>
             <div class="admin-table-scroll-wrapper">
-              <table class="admin-data-table"><thead><tr><th>Product</th><th>Price</th><th>Actions</th></tr></thead><tbody id="admin-shop-tbody"></tbody></table>
+              <table class="admin-data-table">
+                <thead><tr><th>Product</th><th>Price</th><th>Actions</th></tr></thead>
+                <tbody id="admin-shop-tbody"></tbody>
+              </table>
             </div>
           </div>
 

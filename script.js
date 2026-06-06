@@ -1,5 +1,5 @@
 // ============================================================
-// LEOLY DEV - ADMIN PANEL FIX (TOMOL TIDAK RESPONSIF)
+// LEOLY DEV - FULLY FUNCTIONAL WITH SUPABASE
 // ============================================================
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadAllData();
   setupNavigation();
   setupUI();
-  setupAdminPanel(); // FIXED: Nama fungsi lebih jelas
+  setupAdminPanel();
   setupRealtime();
   setupFormHandlers();
   hideLoading();
@@ -130,40 +130,13 @@ async function loadAllData() {
     ]);
     
     db = {
-      website: { 
-        title: website.title || "Leoly Dev", 
-        description: website.description || "Premium High-End Developer Portfolio", 
-        logo: website.logo || "⚡", 
-        banner: website.banner || "" 
-      },
-      home: { 
-        title: home.title || "Leoly Dev", 
-        subtitle: home.subtitle || "Systems & UI/UX Engineer", 
-        description: home.description || "Membangun sistem modular dan antarmuka premium dengan presisi piksel.", 
-        button1: home.button1 || "Explore", 
-        button2: home.button2 || "Contact" 
-      },
-      about: { 
-        photo: about.photo || "", 
-        description: about.description || "", 
-        skills: about.skills || [] 
-      },
+      website: { title: website.title || "Leoly Dev", description: website.description || "", logo: website.logo || "⚡", banner: website.banner || "" },
+      home: { title: home.title || "Leoly Dev", subtitle: home.subtitle || "Systems & UI/UX Engineer", description: home.description || "", button1: home.button1 || "Explore", button2: home.button2 || "Contact" },
+      about: { photo: about.photo || "", description: about.description || "", skills: about.skills || [] },
       projects: projects,
       shop: shop,
-      donate: { 
-        qris: donate.qris || "", 
-        dana: donate.dana || "081234567890", 
-        ovo: donate.ovo || "081234567890", 
-        gopay: donate.gopay || "081234567890", 
-        saweria: donate.saweria || "#" 
-      },
-      contact: { 
-        whatsapp: contact.whatsapp || "#", 
-        telegram: contact.telegram || "#", 
-        email: contact.email || "#", 
-        instagram: contact.instagram || "#", 
-        github: contact.github || "#" 
-      },
+      donate: { qris: donate.qris || "", dana: donate.dana || "081234567890", ovo: donate.ovo || "081234567890", gopay: donate.gopay || "081234567890", saweria: donate.saweria || "#" },
+      contact: { whatsapp: contact.whatsapp || "#", telegram: contact.telegram || "#", email: contact.email || "#", instagram: contact.instagram || "#", github: contact.github || "#" },
       statistics: { visitors: stats.visitors || 0 },
       settings: { maintenance: website.maintenance || false, theme: website.theme || "dark" }
     };
@@ -197,13 +170,10 @@ async function trackVisitor() {
 
 function setupRealtime() {
   supabase.channel('projects-channel')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, 
-      async () => { await refreshProjects(); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, async () => { await refreshProjects(); })
     .subscribe();
-  
   supabase.channel('shop-channel')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'shop_products' }, 
-      async () => { await refreshShop(); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'shop_products' }, async () => { await refreshShop(); })
     .subscribe();
 }
 
@@ -225,13 +195,11 @@ function updateStatsDisplay() {
   const visitorsEl = document.getElementById('m-visitors');
   const projectsEl = document.getElementById('m-projects');
   const productsEl = document.getElementById('m-products');
-  
   if (visitorsEl) visitorsEl.innerText = db.statistics.visitors || 0;
   if (projectsEl) projectsEl.innerText = db.projects.length;
   if (productsEl) productsEl.innerText = db.shop.length;
 }
 
-// ============ RENDER FUNCTIONS ============
 function renderAll() {
   if (db.settings?.maintenance && !sessionStorage.getItem(SESSION_AUTH_KEY)) {
     document.getElementById('maintenance-screen')?.classList.remove('hidden-panel');
@@ -303,10 +271,8 @@ function renderAll() {
 function renderProjects() {
   const container = document.getElementById('project-grid-node');
   if (!container) return;
-  
   const search = document.getElementById('project-search')?.value.toLowerCase() || '';
   const filter = document.getElementById('project-filter')?.value || 'all';
-  
   const filtered = (db.projects || []).filter(p => {
     const matchSearch = p.title.toLowerCase().includes(search) || p.description.toLowerCase().includes(search);
     const matchFilter = filter === 'all' || p.category === filter;
@@ -343,11 +309,8 @@ function renderProjects() {
 function renderShop() {
   const container = document.getElementById('shop-grid-node');
   if (!container) return;
-  
   const search = document.getElementById('shop-search')?.value.toLowerCase() || '';
-  const filtered = (db.shop || []).filter(s => 
-    s.title.toLowerCase().includes(search) || s.description.toLowerCase().includes(search)
-  );
+  const filtered = (db.shop || []).filter(s => s.title.toLowerCase().includes(search) || s.description.toLowerCase().includes(search));
   
   if (filtered.length === 0) {
     container.innerHTML = '<div class="glass-card text-center" style="padding: 3rem; grid-column: 1/-1;"><p class="text-secondary">No products available</p></div>';
@@ -378,7 +341,6 @@ function renderShop() {
 function populateFilters() {
   const select = document.getElementById('project-filter');
   if (!select) return;
-  
   const categories = [...new Set((db.projects || []).map(p => p.category).filter(Boolean))];
   select.innerHTML = '<option value="all">All Architecture</option>';
   categories.forEach(cat => {
@@ -386,7 +348,6 @@ function populateFilters() {
   });
 }
 
-// ============ NAVIGATION ============
 function setupNavigation() {
   const sections = document.querySelectorAll('.content-section');
   const navItems = document.querySelectorAll('.sidebar-nav .nav-item:not(.admin-trigger-btn)');
@@ -394,10 +355,8 @@ function setupNavigation() {
   function setActiveSection(id) {
     sections.forEach(s => s.classList.remove('active-view'));
     navItems.forEach(n => n.classList.remove('active'));
-    
     const targetSection = document.getElementById(id);
     if (targetSection) targetSection.classList.add('active-view');
-    
     const targetNav = document.querySelector(`.sidebar-nav .nav-item[data-section="${id}"]`);
     if (targetNav) targetNav.classList.add('active');
   }
@@ -424,9 +383,7 @@ function setupNavigation() {
   
   const btt = document.getElementById('back-to-top');
   if (btt) {
-    window.addEventListener('scroll', () => {
-      btt.classList.toggle('show-btn', window.scrollY > 400);
-    });
+    window.addEventListener('scroll', () => { btt.classList.toggle('show-btn', window.scrollY > 400); });
     btt.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 }
@@ -437,114 +394,82 @@ function setupUI() {
   const toggleBtn = document.getElementById('sidebar-toggle-btn');
   const closeBtn = document.getElementById('close-sidebar-btn');
   
-  if (collapseBtn) {
-    collapseBtn.addEventListener('click', () => sidebar?.classList.toggle('collapsed'));
-  }
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => sidebar?.classList.add('mobile-open'));
-  }
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => sidebar?.classList.remove('mobile-open'));
-  }
+  if (collapseBtn) collapseBtn.addEventListener('click', () => sidebar?.classList.toggle('collapsed'));
+  if (toggleBtn) toggleBtn.addEventListener('click', () => sidebar?.classList.add('mobile-open'));
+  if (closeBtn) closeBtn.addEventListener('click', () => sidebar?.classList.remove('mobile-open'));
   
   const projectSearch = document.getElementById('project-search');
   if (projectSearch) projectSearch.addEventListener('input', () => renderProjects());
-  
   const projectFilter = document.getElementById('project-filter');
   if (projectFilter) projectFilter.addEventListener('change', () => renderProjects());
-  
   const shopSearch = document.getElementById('shop-search');
   if (shopSearch) shopSearch.addEventListener('input', () => renderShop());
 }
 
-// ============ ADMIN PANEL - FIXED WITH DIRECT CLICK HANDLER ============
+// ============ ADMIN PANEL - FIXED ============
 function setupAdminPanel() {
   console.log("🔧 Setting up Admin Panel...");
   
-  // Cari tombol admin dengan berbagai kemungkinan selector
   let adminLink = document.getElementById('admin-nav-link');
-  
-  // Jika tidak ditemukan, coba dengan selector lain
-  if (!adminLink) {
-    adminLink = document.querySelector('.admin-trigger-btn');
-    console.log("Trying .admin-trigger-btn selector:", !!adminLink);
-  }
-  if (!adminLink) {
-    adminLink = document.querySelector('.sidebar-nav a[href="#admin"]');
-    console.log("Trying href selector:", !!adminLink);
-  }
+  if (!adminLink) adminLink = document.querySelector('.admin-trigger-btn');
+  if (!adminLink) adminLink = document.querySelector('.sidebar-nav a[href="#admin"]');
   
   const modal = document.getElementById('admin-modal');
   const authCard = document.getElementById('admin-auth-card');
   const dashboard = document.getElementById('admin-dashboard-card');
   
-  // Debug output
-  console.log("📊 Element status:");
-  console.log("  admin-link found:", !!adminLink);
-  console.log("  modal found:", !!modal);
-  console.log("  authCard found:", !!authCard);
-  console.log("  dashboard found:", !!dashboard);
+  console.log("Admin link found:", !!adminLink);
+  console.log("Modal found:", !!modal);
   
   if (!adminLink) {
-    console.error("❌ Admin link not found! Creating fallback...");
-    // Fallback: coba cari setelah 1 detik
-    setTimeout(() => {
-      const fallbackLink = document.getElementById('admin-nav-link');
-      if (fallbackLink) {
-        console.log("✅ Admin link found after delay!");
-        attachAdminClickHandler(fallbackLink, modal, authCard, dashboard);
-      } else {
-        console.error("❌ Still not found. Check HTML for element with id='admin-nav-link'");
-      }
-    }, 1000);
+    console.error("Admin link not found!");
     return;
   }
   
-  attachAdminClickHandler(adminLink, modal, authCard, dashboard);
+  // Replace with clone to remove old listeners
+  const newLink = adminLink.cloneNode(true);
+  adminLink.parentNode.replaceChild(newLink, adminLink);
+  adminLink = newLink;
+  
+  adminLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Admin link clicked!");
+    if (modal) modal.classList.remove('hidden-panel');
+    if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'authorized') {
+      showDashboard(modal, authCard, dashboard);
+    } else {
+      if (authCard) authCard.classList.remove('hidden-panel');
+      if (dashboard) dashboard.classList.add('hidden-panel');
+    }
+  });
   
   // Close modal buttons
-  const closeButtons = document.querySelectorAll('.close-modal-trigger');
-  console.log("🔘 Close buttons found:", closeButtons.length);
-  
-  closeButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      console.log("Close modal clicked");
-      if (modal) modal.classList.add('hidden-panel');
-    });
+  document.querySelectorAll('.close-modal-trigger').forEach(btn => {
+    btn.addEventListener('click', () => { if (modal) modal.classList.add('hidden-panel'); });
   });
   
   // Login form
   const loginForm = document.getElementById('admin-login-form');
   if (loginForm) {
-    console.log("✅ Login form found");
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      console.log("Login form submitted");
-      
       const username = document.getElementById('auth-user')?.value || '';
       const password = document.getElementById('auth-pass')?.value || '';
-      
-      console.log("Username entered:", username);
-      
       if (username === 'admin' && password === 'admin123') {
         sessionStorage.setItem(SESSION_AUTH_KEY, 'authorized');
         showToast("Login Berhasil!", "success");
-        console.log("✅ Login successful, showing dashboard");
         showDashboard(modal, authCard, dashboard);
       } else {
         showToast("Username atau password salah! (admin / admin123)", "error");
-        console.log("❌ Login failed");
       }
     });
-  } else {
-    console.error("❌ Login form not found!");
   }
   
   // Logout button
   const logoutBtn = document.getElementById('admin-logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-      console.log("Logout clicked");
       sessionStorage.removeItem(SESSION_AUTH_KEY);
       if (modal) modal.classList.add('hidden-panel');
       showToast("Logout berhasil", "info");
@@ -552,13 +477,9 @@ function setupAdminPanel() {
   }
   
   // Tab switching
-  const tabBtns = document.querySelectorAll('.admin-tab-btn');
-  console.log("📑 Tab buttons found:", tabBtns.length);
-  
-  tabBtns.forEach(btn => {
+  document.querySelectorAll('.admin-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      console.log("Tab clicked:", btn.getAttribute('data-tab'));
-      tabBtns.forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       const tabId = btn.getAttribute('data-tab');
@@ -568,53 +489,17 @@ function setupAdminPanel() {
   });
 }
 
-function attachAdminClickHandler(adminLink, modal, authCard, dashboard) {
-  // Remove existing listeners to avoid duplicates
-  const newLink = adminLink.cloneNode(true);
-  adminLink.parentNode.replaceChild(newLink, adminLink);
-  
-  newLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("🖱️ Admin link clicked!");
-    
-    if (modal) {
-      modal.classList.remove('hidden-panel');
-      console.log("Modal opened");
-    }
-    
-    if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'authorized') {
-      console.log("Already authorized, showing dashboard");
-      showDashboard(modal, authCard, dashboard);
-    } else {
-      console.log("Not authorized, showing login form");
-      if (authCard) authCard.classList.remove('hidden-panel');
-      if (dashboard) dashboard.classList.add('hidden-panel');
-    }
-  });
-  
-  console.log("✅ Click handler attached to admin link");
-}
-
 function showDashboard(modal, authCard, dashboard) {
-  console.log("📊 showDashboard called");
-  
   if (authCard) authCard.classList.add('hidden-panel');
   if (dashboard) dashboard.classList.remove('hidden-panel');
-  
-  console.log("Dashboard visible:", dashboard ? !dashboard.classList.contains('hidden-panel') : false);
-  
+  if (modal) modal.classList.remove('hidden-panel');
   loadAdminForms();
   renderAdminTables();
   initChart();
-  
-  // Pastikan modal tetap terbuka
-  if (modal) modal.classList.remove('hidden-panel');
 }
 
 function loadAdminForms() {
   updateStatsDisplay();
-  
   setValue('adm-web-title', db.website.title);
   setValue('adm-web-desc', db.website.description);
   setValue('adm-web-logo', db.website.logo);
@@ -655,7 +540,6 @@ function getValue(id) {
 }
 
 function setupFormHandlers() {
-  // Website settings form
   const coreForm = document.getElementById('form-core-web');
   if (coreForm) {
     coreForm.addEventListener('submit', async (e) => {
@@ -665,22 +549,12 @@ function setupFormHandlers() {
       db.website.logo = getValue('adm-web-logo');
       db.website.banner = getValue('adm-web-banner');
       db.settings.maintenance = document.getElementById('adm-sys-maintenance')?.checked || false;
-      
-      await dbOps.updateWebsite({
-        title: db.website.title,
-        description: db.website.description,
-        logo: db.website.logo,
-        banner: db.website.banner,
-        maintenance: db.settings.maintenance,
-        theme: db.settings.theme
-      });
-      
+      await dbOps.updateWebsite({ title: db.website.title, description: db.website.description, logo: db.website.logo, banner: db.website.banner, maintenance: db.settings.maintenance, theme: db.settings.theme });
       renderAll();
       showToast("Website settings saved!", "success");
     });
   }
   
-  // Home editor form
   const heroForm = document.getElementById('form-hero-editor');
   if (heroForm) {
     heroForm.addEventListener('submit', async (e) => {
@@ -690,14 +564,12 @@ function setupFormHandlers() {
       db.home.description = getValue('adm-home-desc');
       db.home.button1 = getValue('adm-home-btn1');
       db.home.button2 = getValue('adm-home-btn2');
-      
       await dbOps.updateHome(db.home);
       renderAll();
       showToast("Hero section saved!", "success");
     });
   }
   
-  // About editor form
   const aboutForm = document.getElementById('form-about-editor');
   if (aboutForm) {
     aboutForm.addEventListener('submit', async (e) => {
@@ -706,14 +578,12 @@ function setupFormHandlers() {
       db.about.description = getValue('adm-about-desc');
       const skillsStr = getValue('adm-about-skills');
       db.about.skills = skillsStr.split(',').map(s => s.trim()).filter(s => s);
-      
       await dbOps.updateAbout(db.about);
       renderAll();
       showToast("About section saved!", "success");
     });
   }
   
-  // Gateways form
   const gatewaysForm = document.getElementById('form-gateways');
   if (gatewaysForm) {
     gatewaysForm.addEventListener('submit', async (e) => {
@@ -728,24 +598,17 @@ function setupFormHandlers() {
       db.contact.email = getValue('adm-ctx-mail');
       db.contact.instagram = getValue('adm-ctx-ig');
       db.contact.github = getValue('adm-ctx-git');
-      
-      await Promise.all([
-        dbOps.updateDonate(db.donate),
-        dbOps.updateContact(db.contact)
-      ]);
-      
+      await Promise.all([dbOps.updateDonate(db.donate), dbOps.updateContact(db.contact)]);
       renderAll();
       showToast("Gateways saved!", "success");
     });
   }
   
-  // Add project button
   const addProjectBtn = document.getElementById('open-add-project-btn');
   if (addProjectBtn) {
     addProjectBtn.addEventListener('click', () => openProjectModal());
   }
   
-  // Add shop button
   const addShopBtn = document.getElementById('open-add-shop-btn');
   if (addShopBtn) {
     addShopBtn.addEventListener('click', () => openShopModal());
@@ -755,55 +618,26 @@ function setupFormHandlers() {
 function openProjectModal() {
   const title = prompt("Project Title:");
   if (!title) return;
-  
   const category = prompt("Category:", "Web App");
   const description = prompt("Description:");
   const thumbnail = prompt("Thumbnail URL:", "https://placehold.co/600x400/1a1a1a/3B82F6?text=Project");
   const demoUrl = prompt("Demo URL:", "#");
   const sourceUrl = prompt("Source URL:", "#");
   
-  const newProject = {
-    id: Date.now().toString(),
-    title,
-    category,
-    description,
-    thumbnail,
-    demo_url: demoUrl,
-    source_url: sourceUrl,
-    created_at: new Date()
-  };
-  
-  dbOps.addProject(newProject).then(async () => {
-    await refreshProjects();
-    renderAdminTables();
-    showToast("Project added!", "success");
-  }).catch(err => showToast("Error: " + err.message, "error"));
+  const newProject = { id: Date.now().toString(), title, category, description, thumbnail, demo_url: demoUrl, source_url: sourceUrl, created_at: new Date() };
+  dbOps.addProject(newProject).then(async () => { await refreshProjects(); renderAdminTables(); showToast("Project added!", "success"); }).catch(err => showToast("Error: " + err.message, "error"));
 }
 
 function openShopModal() {
   const title = prompt("Product Title:");
   if (!title) return;
-  
   const price = prompt("Price:", "Rp 99.000");
   const description = prompt("Description:");
   const thumbnail = prompt("Thumbnail URL:", "https://placehold.co/600x400/1a1a1a/10B981?text=Product");
   const buyUrl = prompt("Buy URL:", "#");
   
-  const newProduct = {
-    id: Date.now().toString(),
-    title,
-    price,
-    description,
-    thumbnail,
-    buy_url: buyUrl,
-    created_at: new Date()
-  };
-  
-  dbOps.addShop(newProduct).then(async () => {
-    await refreshShop();
-    renderAdminTables();
-    showToast("Product added!", "success");
-  }).catch(err => showToast("Error: " + err.message, "error"));
+  const newProduct = { id: Date.now().toString(), title, price, description, thumbnail, buy_url: buyUrl, created_at: new Date() };
+  dbOps.addShop(newProduct).then(async () => { await refreshShop(); renderAdminTables(); showToast("Product added!", "success"); }).catch(err => showToast("Error: " + err.message, "error"));
 }
 
 function renderAdminTables() {
@@ -811,42 +645,21 @@ function renderAdminTables() {
   if (pBody) {
     pBody.innerHTML = '';
     (db.projects || []).forEach(p => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td><strong>${escapeHtml(p.title)}</strong></td>
-        <td><span class="skill-tag" style="font-size: 0.7rem;">${escapeHtml(p.category)}</span></td>
-        <td>
-          <button class="action-link-btn action-edit" onclick="window.editProject('${p.id}')"><i class="fa fa-edit"></i></button>
-          <button class="action-link-btn action-delete" onclick="window.deleteProject('${p.id}')"><i class="fa fa-trash"></i></button>
-        </td>
-      `;
-      pBody.appendChild(row);
+      pBody.innerHTML += `<tr><td><strong>${escapeHtml(p.title)}</strong></td><td><span class="skill-tag" style="font-size:0.7rem;">${escapeHtml(p.category)}</span></td><td><button class="action-link-btn action-edit" onclick="window.editProject('${p.id}')"><i class="fa fa-edit"></i></button> <button class="action-link-btn action-delete" onclick="window.deleteProject('${p.id}')"><i class="fa fa-trash"></i></button></td></tr>`;
     });
   }
-  
   const sBody = document.getElementById('admin-shop-tbody');
   if (sBody) {
     sBody.innerHTML = '';
     (db.shop || []).forEach(s => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td><strong>${escapeHtml(s.title)}</strong></td>
-        <td style="color: #10B981; font-weight: 600;">${escapeHtml(s.price)}</td>
-        <td>
-          <button class="action-link-btn action-edit" onclick="window.editShop('${s.id}')"><i class="fa fa-edit"></i></button>
-          <button class="action-link-btn action-delete" onclick="window.deleteShop('${s.id}')"><i class="fa fa-trash"></i></button>
-        </td>
-      `;
-      sBody.appendChild(row);
+      sBody.innerHTML += `<tr><td><strong>${escapeHtml(s.title)}</strong></td><td style="color:#10B981; font-weight:600;">${escapeHtml(s.price)}</td><td><button class="action-link-btn action-edit" onclick="window.editShop('${s.id}')"><i class="fa fa-edit"></i></button> <button class="action-link-btn action-delete" onclick="window.deleteShop('${s.id}')"><i class="fa fa-trash"></i></button></td></tr>`;
     });
   }
 }
 
-// Global functions for admin actions
 window.editProject = async (id) => {
   const project = db.projects.find(p => p.id === id);
   if (!project) return;
-  
   const newTitle = prompt("Edit title:", project.title);
   if (newTitle) {
     project.title = newTitle;
@@ -854,7 +667,6 @@ window.editProject = async (id) => {
     if (newCategory) project.category = newCategory;
     const newDesc = prompt("Edit description:", project.description);
     if (newDesc) project.description = newDesc;
-    
     await dbOps.updateProject(id, project);
     await refreshProjects();
     renderAdminTables();
@@ -874,13 +686,11 @@ window.deleteProject = async (id) => {
 window.editShop = async (id) => {
   const product = db.shop.find(s => s.id === id);
   if (!product) return;
-  
   const newTitle = prompt("Edit title:", product.title);
   if (newTitle) {
     product.title = newTitle;
     const newPrice = prompt("Edit price:", product.price);
     if (newPrice) product.price = newPrice;
-    
     await dbOps.updateShop(id, product);
     await refreshShop();
     renderAdminTables();
@@ -900,95 +710,40 @@ window.deleteShop = async (id) => {
 function initChart() {
   const canvas = document.getElementById('analyticsChart');
   if (!canvas) return;
-  
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  
   if (analyticsChartInstance) analyticsChartInstance.destroy();
-  
   const visitors = db.statistics.visitors || 0;
-  const baseData = [Math.floor(visitors * 0.3), Math.floor(visitors * 0.5), Math.floor(visitors * 0.7), 
-                    Math.floor(visitors * 0.8), Math.floor(visitors * 0.9), Math.floor(visitors * 0.95), visitors];
-  
+  const baseData = [Math.floor(visitors * 0.3), Math.floor(visitors * 0.5), Math.floor(visitors * 0.7), Math.floor(visitors * 0.8), Math.floor(visitors * 0.9), Math.floor(visitors * 0.95), visitors];
   analyticsChartInstance = new Chart(ctx, {
     type: 'line',
-    data: {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      datasets: [{
-        label: 'Visitors',
-        data: baseData,
-        borderColor: '#3B82F6',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
-        pointRadius: 4,
-        pointBackgroundColor: '#3B82F6',
-        pointBorderColor: '#fff',
-        pointBorderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          mode: 'index',
-          intersect: false,
-          backgroundColor: 'rgba(0,0,0,0.8)',
-          titleColor: '#fff',
-          bodyColor: '#a1a1aa'
-        }
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { color: '#a1a1aa', font: { size: 10 } }
-        },
-        y: {
-          grid: { color: 'rgba(255,255,255,0.05)' },
-          ticks: { color: '#a1a1aa', font: { size: 10 } }
-        }
-      }
-    }
+    data: { labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], datasets: [{ label: 'Visitors', data: baseData, borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 2, fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#3B82F6', pointBorderColor: '#fff', pointBorderWidth: 2 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#fff', bodyColor: '#a1a1aa' } }, scales: { x: { grid: { display: false }, ticks: { color: '#a1a1aa', font: { size: 10 } } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#a1a1aa', font: { size: 10 } } } } }
   });
 }
 
-// ============ UTILITIES ============
 function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
   if (!container) return;
-  
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   const icon = type === 'success' ? 'fa-circle-check' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-circle-info');
   toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${escapeHtml(message)}</span>`;
   container.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(100%)';
-    setTimeout(() => toast.remove(), 300);
-  }, 3000);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
 function hideLoading() {
   const loader = document.getElementById('loading-screen');
-  if (loader) {
-    loader.style.opacity = '0';
-    setTimeout(() => {
-      loader.style.display = 'none';
-    }, 500);
-  }
+  if (loader) { loader.style.opacity = '0'; setTimeout(() => { loader.style.display = 'none'; }, 500); }
 }
 
 function escapeHtml(str) {
   if (!str) return '';
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return str.replace(/[&<>]/g, function(m) {
+    if (m === '&') return '&amp;';
+    if (m === '<') return '&lt;';
+    if (m === '>') return '&gt;';
+    return m;
+  });
 }
