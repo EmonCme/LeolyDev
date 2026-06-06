@@ -1,381 +1,174 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>Leoly Dev — Premium Portfolio</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="script.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leoly Dev | Premium Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-  <div id="loading-screen" class="loading-screen">
-    <div class="spinner"></div>
-  </div>
-
-  <div id="toast-container" class="toast-container"></div>
-
-  <div id="maintenance-screen" class="hidden-panel flex-center">
-    <div class="glass-card text-center" style="max-width: 450px; padding: 3rem;">
-      <i class="fa-solid fa-screwdriver-wrench text-accent" style="font-size: 3rem; margin-bottom: 1.5rem;"></i>
-      <h2>Under Maintenance</h2>
-      <p class="text-secondary">Kami sedang memperbarui sistem untuk memberikan pengalaman premium terbaik. Kembali dalam beberapa saat.</p>
+    <div id="skeleton-screen" class="skeleton-overlay">
+        <div class="skeleton-card animate-pulse"></div>
     </div>
-  </div>
 
-  <div id="app-container">
-    
-    <header class="top-bar">
-      <div class="logo-brand" id="web-logo-txt">⚡ Leoly Dev</div>
-      <button class="menu-toggle-btn" id="sidebar-toggle-btn" aria-label="Toggle Menu">
-        <i class="fa-solid fa-bars-staggered"></i>
-      </button>
-    </header>
+    <div id="toast-container" class="toast-container"></div>
 
-    <aside class="right-sidebar" id="right-sidebar">
-      <div class="sidebar-header">
-        <span class="brand-title" id="sidebar-brand">Leoly Dev</span>
-        <button class="close-sidebar-btn" id="close-sidebar-btn"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <nav class="sidebar-nav">
-        <a href="#home" class="nav-item active" data-section="home">
-          <i class="fa-solid fa-house"></i> <span class="nav-text">Home</span>
-          <span class="tooltip">Home</span>
-        </a>
-        <a href="#about" class="nav-item" data-section="about">
-          <i class="fa-solid fa-user"></i> <span class="nav-text">About</span>
-          <span class="tooltip">About</span>
-        </a>
-        <a href="#projects" class="nav-item" data-section="projects">
-          <i class="fa-solid fa-folder-open"></i> <span class="nav-text">Projects</span>
-          <span class="tooltip">Projects</span>
-        </a>
-        <a href="#shop" class="nav-item" data-section="shop">
-          <i class="fa-solid fa-store"></i> <span class="nav-text">Shop</span>
-          <span class="tooltip">Shop</span>
-        </a>
-        <a href="#donate" class="nav-item" data-section="donate">
-          <i class="fa-solid fa-heart"></i> <span class="nav-text">Donate</span>
-          <span class="tooltip">Donate</span>
-        </a>
-        <a href="#contact" class="nav-item" data-section="contact">
-          <i class="fa-solid fa-envelope"></i> <span class="nav-text">Contact</span>
-          <span class="tooltip">Contact</span>
-        </a>
-        <hr class="sidebar-divider">
-        <a href="#admin" class="nav-item admin-trigger-btn" id="admin-nav-link">
-          <i class="fa-solid fa-gear"></i> <span class="nav-text">Admin Panel</span>
-          <span class="tooltip">Admin Panel</span>
-        </a>
-      </nav>
-      <button class="collapse-btn" id="sidebar-collapse-btn">
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
-    </aside>
-
-    <main class="main-content">
-
-      <section id="home" class="content-section active-view">
-        <div class="hero-wrapper">
-          <div class="hero-badge" id="hero-badge-node">Premium Service Hub</div>
-          <h1 class="hero-title" id="hero-title-node">Leoly Dev</h1>
-          <p class="hero-subtitle" id="hero-subtitle-node">Full Stack Developer</p>
-          <p class="hero-desc text-secondary" id="hero-desc-node">Loading server definitions...</p>
-          <div class="hero-actions">
-            <a href="#projects" class="btn btn-primary" id="hero-btn1">Explore</a>
-            <a href="#contact" class="btn btn-secondary" id="hero-btn2">Contact</a>
-          </div>
-        </div>
-      </section>
-
-      <section id="about" class="content-section">
-        <div class="section-header">
-          <h2 class="section-title">About Developer</h2>
-          <p class="text-secondary">Paradigma arsitektur digital dan spesifikasi keahlian.</p>
-        </div>
-        <div class="about-grid">
-          <div class="about-img-container glass-card">
-            <img id="about-img-node" src="" alt="Profile Photo" class="lazy-image">
-          </div>
-          <div class="about-details glass-card">
-            <h3>Profil & Filosofi</h3>
-            <p id="about-desc-node" class="text-secondary" style="line-height: 1.7;"></p>
-            <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem;">Tech Stack & Core Expertise</h4>
-            <div class="skills-wrap" id="about-skills-node"></div>
-          </div>
-        </div>
-      </section>
-
-      <section id="projects" class="content-section">
-        <div class="section-header-flex">
-          <div>
-            <h2 class="section-title">Case Studies & Projects</h2>
-            <p class="text-secondary">Eksplorasi kode modular dan arsitektur web fungsional.</p>
-          </div>
-          <div class="filter-wrapper">
-            <input type="text" id="project-search" placeholder="Search project..." class="search-input">
-            <select id="project-filter" class="filter-select">
-              <option value="all">All Architecture</option>
-            </select>
-          </div>
-        </div>
-        <div class="dynamic-grid" id="project-grid-node">
-          <div class="skeleton-card"></div>
-          <div class="skeleton-card"></div>
-        </div>
-      </section>
-
-      <section id="shop" class="content-section">
-        <div class="section-header-flex">
-          <div>
-            <h2 class="section-title">Premium Products</h2>
-            <p class="text-secondary">Arsitektur premium siap pakai untuk meningkatkan performa bisnis Anda.</p>
-          </div>
-          <div>
-            <input type="text" id="shop-search" placeholder="Search product..." class="search-input">
-          </div>
-        </div>
-        <div class="dynamic-grid" id="shop-grid-node">
-          <div class="skeleton-card"></div>
-        </div>
-      </section>
-
-      <section id="donate" class="content-section">
-        <div class="section-header">
-          <h2 class="section-title">Support & Donation</h2>
-          <p class="text-secondary">Dukung pengembangan berkelanjutan ekosistem open-source dan server info hub.</p>
-        </div>
-        <div class="donate-grid">
-          <div class="glass-card text-center flex-center flex-dir-col" style="padding: 2.5rem;">
-            <h4>Gateway QRIS Premium</h4>
-            <div class="qris-box glass-card">
-              <img id="donate-qris-node" src="" alt="QRIS Gateway" class="lazy-image">
+    <div class="app-container">
+        
+        <nav class="sidebar-right" id="sidebar">
+            <button class="toggle-btn" id="toggle-sidebar" aria-label="Toggle Navigation">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="sidebar-brand">
+                <span class="brand-text">L🗲</span>
             </div>
-            <p class="text-secondary" style="font-size: 0.85rem; margin-top: 1rem;">Scan via Aplikasi Finansial Utama Anda</p>
-          </div>
-          <div class="glass-card" style="padding: 2.5rem;">
-            <h4>Metode Transfer Instan</h4>
-            <ul class="donation-list">
-              <li><span>DANA</span> <strong id="donate-dana-node" class="text-primary">-</strong></li>
-              <li><span>OVO</span> <strong id="donate-ovo-node" class="text-primary">-</strong></li>
-              <li><span>GOPAY</span> <strong id="donate-gopay-node" class="text-primary">-</strong></li>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-target="home-section" data-tooltip="Home"><i class="fas fa-home"></i><span class="menu-label">Home</span></li>
+                <li class="nav-item" data-target="about-section" data-tooltip="About"><i class="fas fa-user"></i><span class="menu-label">About</span></li>
+                <li class="nav-item" data-target="projects-section" data-tooltip="Projects"><i class="fas fa-folder-open"></i><span class="menu-label">Projects</span></li>
+                <li class="nav-item" data-target="shop-section" data-tooltip="Shop"><i class="fas fa-shopping-cart"></i><span class="menu-label">Shop</span></li>
+                <li class="nav-item" data-target="donate-section" data-tooltip="Donate"><i class="fas fa-heart"></i><span class="menu-label">Donate</span></li>
+                <li class="nav-item" data-target="contact-section" data-tooltip="Contact"><i class="fas fa-phone"></i><span class="menu-label">Contact</span></li>
+                <li class="nav-item admin-only" data-target="admin-section" id="nav-admin" data-tooltip="Admin Panel"><i class="fas fa-cog"></i><span class="menu-label">Admin</span></li>
             </ul>
-            <a href="#" id="donate-saweria-node" target="_blank" class="btn btn-primary text-center" style="display: block; margin-top: 2rem;">
-              <i class="fa-solid fa-heart" style="margin-right: 0.5rem;"></i> Dukung via Saweria
-            </a>
-          </div>
-        </div>
-      </section>
+        </nav>
 
-      <section id="contact" class="content-section">
-        <div class="section-header">
-          <h2 class="section-title">Contact Center</h2>
-          <p class="text-secondary">Mari bicarakan tentang arsitektur sistem, optimasi web, atau kolaborasi premium.</p>
-        </div>
-        <div class="contact-links-grid">
-          <a href="#" id="ctx-wa" target="_blank" class="glass-card contact-link-card">
-            <i class="fa-brands fa-whatsapp ctx-icon-wa"></i>
-            <div>
-              <span class="ctx-label">WhatsApp Secure Line</span>
-              <p class="text-secondary text-sm">Direct Messaging</p>
-            </div>
-          </a>
-          <a href="#" id="ctx-tg" target="_blank" class="glass-card contact-link-card">
-            <i class="fa-brands fa-telegram ctx-icon-tg"></i>
-            <div>
-              <span class="ctx-label">Telegram Workspace</span>
-              <p class="text-secondary text-sm">Secure Chat</p>
-            </div>
-          </a>
-          <a href="#" id="ctx-mail" target="_blank" class="glass-card contact-link-card">
-            <i class="fa-solid fa-envelope ctx-icon-mail"></i>
-            <div>
-              <span class="ctx-label">Corporate Email</span>
-              <p class="text-secondary text-sm">Official Inquiries</p>
-            </div>
-          </a>
-          <a href="#" id="ctx-ig" target="_blank" class="glass-card contact-link-card">
-            <i class="fa-brands fa-instagram ctx-icon-ig"></i>
-            <div>
-              <span class="ctx-label">Instagram Portfolio</span>
-              <p class="text-secondary text-sm">Social Presence</p>
-            </div>
-          </a>
-          <a href="#" id="ctx-git" target="_blank" class="glass-card contact-link-card">
-            <i class="fa-brands fa-github ctx-icon-git"></i>
-            <div>
-              <span class="ctx-label">GitHub Environment</span>
-              <p class="text-secondary text-sm">Open Source Repositories</p>
-            </div>
-          </a>
-        </div>
-      </section>
-    </main>
+        <main class="content-wrapper">
+            
+            <section id="home-section" class="app-section active">
+                <div class="hero-block glass-card">
+                    <h1 id="hero-title">Leoly Dev</h1>
+                    <h3 id="hero-subtitle">Loading...</h3>
+                    <p id="hero-desc">Connecting to data node...</p>
+                    <div class="hero-actions">
+                        <button class="btn btn-primary" id="hero-btn-p">Projects</button>
+                        <button class="btn btn-secondary" id="hero-btn-s">Contact</button>
+                    </div>
+                </div>
+            </section>
 
-    <button id="back-to-top" class="back-to-top" aria-label="Back To Top">
-      <i class="fa-solid fa-arrow-up"></i>
-    </button>
-  </div>
+            <section id="about-section" class="app-section">
+                <div class="glass-card grid-2">
+                    <div class="about-img-container">
+                        <img id="about-photo" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23111'/></svg>" alt="Profile Bio" loading="lazy">
+                    </div>
+                    <div class="about-details">
+                        <h2>About Identity</h2>
+                        <p id="about-bio">Fetching bio...</p>
+                        <h3>Skills Matrix</h3>
+                        <div id="skills-list" class="skills-grid"></div>
+                    </div>
+                </div>
+            </section>
 
-  <!-- ADMIN MODAL -->
-  <div id="admin-modal" class="modal-overlay hidden-panel">
-    <div id="admin-auth-card" class="glass-card modal-window" style="max-width: 420px;">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-lock text-accent" style="margin-right: 0.5rem;"></i> Gate Authorization</h3>
-        <button class="close-modal-btn close-modal-trigger"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form id="admin-login-form" class="modern-form">
-        <div class="form-group">
-          <label for="auth-user">Username</label>
-          <input type="text" id="auth-user" required placeholder="admin">
-        </div>
-        <div class="form-group">
-          <label for="auth-pass">Password</label>
-          <input type="password" id="auth-pass" required placeholder="••••••••">
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Authenticate</button>
-      </form>
+            <section id="projects-section" class="app-section">
+                <div class="section-header glass-card">
+                    <h2>Selected Projects</h2>
+                    <div class="filter-bar">
+                        <input type="text" id="project-search" placeholder="Search project title...">
+                        <select id="project-filter">
+                            <option value="all">All Architecture</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="projects-grid" class="cards-grid"></div>
+            </section>
+
+            <section id="shop-section" class="app-section">
+                <div class="section-header glass-card">
+                    <h2>Digital Assets Store</h2>
+                    <input type="text" id="shop-search" placeholder="Search digital items...">
+                </div>
+                <div id="shop-grid" class="cards-grid"></div>
+            </section>
+
+            <section id="donate-section" class="app-section">
+                <div class="glass-card text-center max-w-md">
+                    <h2>Financial Support Desk</h2>
+                    <div class="qris-box">
+                        <img id="donate-qris" src="" alt="QRIS Access Gate" loading="lazy" class="qris-img">
+                    </div>
+                    <div class="gateways-list" id="donate-methods"></div>
+                </div>
+            </section>
+
+            <section id="contact-section" class="app-section">
+                <div class="glass-card text-center max-w-md">
+                    <h2>Secure Communication Channels</h2>
+                    <p>Select your preferred transport vector:</p>
+                    <div id="contact-links" class="contact-buttons-stack"></div>
+                </div>
+            </section>
+
+            <section id="admin-section" class="app-section">
+                <div id="admin-auth-gate" class="glass-card max-w-sm text-center">
+                    <h2>Security Gateway</h2>
+                    <form id="login-form">
+                        <div class="form-group">
+                            <input type="email" id="auth-email" placeholder="System Email" required autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="auth-password" placeholder="System Security Key" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-full">Authenticate</button>
+                    </form>
+                </div>
+
+                <div id="admin-dashboard" class="admin-dashboard-layout hidden">
+                    <header class="admin-header glass-card">
+                        <h2>Admin Command Center</h2>
+                        <button id="auth-logout-btn" class="btn btn-secondary">Terminate Session</button>
+                    </header>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card glass-card"><h4>System Visitors</h4><p id="stat-visitors">0</p></div>
+                        <div class="metric-card glass-card"><h4>Stored Repositories</h4><p id="stat-projects">0</p></div>
+                        <div class="metric-card glass-card"><h4>Active Inventory</h4><p id="stat-products">0</p></div>
+                    </div>
+
+                    <div class="chart-container glass-card">
+                        <canvas id="visitorChart"></canvas>
+                    </div>
+
+                    <div class="admin-tabs-wrapper glass-card">
+                        <div class="config-panel">
+                            <h3>Update Home Layout</h3>
+                            <form id="admin-home-form" class="admin-form">
+                                <input type="text" id="adm-h-title" placeholder="Main Title">
+                                <input type="text" id="adm-h-subtitle" placeholder="Subtitle Subtitle">
+                                <textarea id="adm-h-desc" placeholder="Core Description Text"></textarea>
+                                <button type="submit" class="btn btn-primary">Commit Changes</button>
+                            </form>
+                        </div>
+                        <hr class="separator">
+                        <div class="config-panel">
+                            <h3>Repository Asset Manager (Projects CRUD)</h3>
+                            <form id="admin-project-form" class="admin-form">
+                                <input type="hidden" id="adm-p-id">
+                                <input type="text" id="adm-p-title" placeholder="Project Title" required>
+                                <input type="text" id="adm-p-cat" placeholder="Category">
+                                <textarea id="adm-p-desc" placeholder="System Documentation Abstract"></textarea>
+                                <input type="url" id="adm-p-demo" placeholder="Live System URL (Demo)">
+                                <input type="url" id="adm-p-source" placeholder="Source Directory URL">
+                                <div class="file-upload-zone">
+                                    <label>Upload Thumbnail: </label>
+                                    <input type="file" id="adm-p-file" accept="image/*">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Deploy Data</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
 
-    <div id="admin-dashboard-card" class="glass-card modal-window hidden-panel" style="max-width: 1100px; width: 95%;">
-      <div class="modal-header">
-        <h3><i class="fa-solid fa-shield-halved text-accent" style="margin-right: 0.5rem;"></i> Leoly Core Engine Controls</h3>
-        <div class="flex-row" style="gap: 1rem;">
-          <button id="admin-logout-btn" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Logout</button>
-          <button class="close-modal-btn close-modal-trigger"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-      </div>
-      
-      <div class="admin-layout">
-        <div class="admin-tabs">
-          <button class="admin-tab-btn active" data-tab="tab-overview"><i class="fa-solid fa-chart-pie"></i> Metrics</button>
-          <button class="admin-tab-btn" data-tab="tab-website"><i class="fa-solid fa-globe"></i> Website</button>
-          <button class="admin-tab-btn" data-tab="tab-home-editor"><i class="fa-solid fa-house"></i> Hero</button>
-          <button class="admin-tab-btn" data-tab="tab-about-editor"><i class="fa-solid fa-user"></i> About</button>
-          <button class="admin-tab-btn" data-tab="tab-project-manager"><i class="fa-solid fa-folder-open"></i> Projects</button>
-          <button class="admin-tab-btn" data-tab="tab-shop-manager"><i class="fa-solid fa-store"></i> Shop</button>
-          <button class="admin-tab-btn" data-tab="tab-gateways"><i class="fa-solid fa-wallet"></i> Gateways</button>
-        </div>
-
-        <div class="admin-tab-content-wrapper">
-          <div id="tab-overview" class="admin-tab-panel active">
-            <h4>System Analytics</h4>
-            <div class="metrics-grid">
-              <div class="metric-card glass-card"><span class="metric-label">Visitors</span><h3 id="m-visitors">0</h3></div>
-              <div class="metric-card glass-card"><span class="metric-label">Projects</span><h3 id="m-projects">0</h3></div>
-              <div class="metric-card glass-card"><span class="metric-label">Products</span><h3 id="m-products">0</h3></div>
-              <div class="metric-card glass-card"><span class="metric-label">Donations</span><h3 id="m-donations">Rp 0</h3></div>
-            </div>
-            <div class="chart-container glass-card" style="margin-top: 1.5rem; height:280px"><canvas id="analyticsChart"></canvas></div>
-          </div>
-
-          <div id="tab-website" class="admin-tab-panel">
-            <h4>Website Settings</h4>
-            <form id="form-core-web" class="modern-form">
-              <div class="form-group"><label>Title</label><input type="text" id="adm-web-title" required></div>
-              <div class="form-group"><label>Description</label><textarea id="adm-web-desc" rows="2"></textarea></div>
-              <div class="grid-2col">
-                <div class="form-group"><label>Logo</label><input type="text" id="adm-web-logo"></div>
-                <div class="form-group"><label>Banner URL</label><input type="text" id="adm-web-banner"></div>
-              </div>
-              <div class="form-group"><label><input type="checkbox" id="adm-sys-maintenance"> Maintenance Mode</label></div>
-              <button type="submit" class="btn btn-primary">Save</button>
-            </form>
-          </div>
-
-          <div id="tab-home-editor" class="admin-tab-panel">
-            <h4>Hero Section</h4>
-            <form id="form-hero-editor" class="modern-form">
-              <div class="form-group"><label>Title</label><input type="text" id="adm-home-title"></div>
-              <div class="form-group"><label>Subtitle</label><input type="text" id="adm-home-subtitle"></div>
-              <div class="form-group"><label>Description</label><textarea id="adm-home-desc" rows="3"></textarea></div>
-              <div class="grid-2col">
-                <div class="form-group"><label>Button 1</label><input type="text" id="adm-home-btn1"></div>
-                <div class="form-group"><label>Button 2</label><input type="text" id="adm-home-btn2"></div>
-              </div>
-              <button type="submit" class="btn btn-primary">Save</button>
-            </form>
-          </div>
-
-          <div id="tab-about-editor" class="admin-tab-panel">
-            <h4>About Section</h4>
-            <form id="form-about-editor" class="modern-form">
-              <div class="form-group"><label>Photo URL</label><input type="text" id="adm-about-photo"></div>
-              <div class="form-group"><label>Bio</label><textarea id="adm-about-desc" rows="4"></textarea></div>
-              <div class="form-group"><label>Skills (comma separated)</label><input type="text" id="adm-about-skills"></div>
-              <button type="submit" class="btn btn-primary">Save</button>
-            </form>
-          </div>
-
-          <div id="tab-project-manager" class="admin-tab-panel">
-            <div class="flex-between" style="margin-bottom: 1rem;">
-              <h4>Projects</h4>
-              <button type="button" class="btn btn-primary" id="open-add-project-btn">+ Add Project</button>
-            </div>
-            <div class="admin-table-scroll-wrapper">
-              <table class="admin-data-table">
-                <thead><tr><th>Title</th><th>Category</th><th>Actions</th></tr></thead>
-                <tbody id="admin-projects-tbody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div id="tab-shop-manager" class="admin-tab-panel">
-            <div class="flex-between" style="margin-bottom: 1rem;">
-              <h4>Products</h4>
-              <button type="button" class="btn btn-primary" id="open-add-shop-btn">+ Add Product</button>
-            </div>
-            <div class="admin-table-scroll-wrapper">
-              <table class="admin-data-table">
-                <thead><tr><th>Product</th><th>Price</th><th>Actions</th></tr></thead>
-                <tbody id="admin-shop-tbody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div id="tab-gateways" class="admin-tab-panel">
-            <h4>Payment & Contact</h4>
-            <form id="form-gateways" class="modern-form">
-              <div class="grid-2col">
-                <div class="form-group"><label>QRIS URL</label><input type="text" id="adm-don-qris"></div>
-                <div class="form-group"><label>Saweria URL</label><input type="text" id="adm-don-saweria"></div>
-              </div>
-              <div class="grid-3col">
-                <div class="form-group"><label>DANA</label><input type="text" id="adm-don-dana"></div>
-                <div class="form-group"><label>OVO</label><input type="text" id="adm-don-ovo"></div>
-                <div class="form-group"><label>GoPay</label><input type="text" id="adm-don-gopay"></div>
-              </div>
-              <div class="grid-2col">
-                <div class="form-group"><label>WhatsApp</label><input type="text" id="adm-ctx-wa"></div>
-                <div class="form-group"><label>Telegram</label><input type="text" id="adm-ctx-tg"></div>
-                <div class="form-group"><label>Email</label><input type="text" id="adm-ctx-mail"></div>
-                <div class="form-group"><label>Instagram</label><input type="text" id="adm-ctx-ig"></div>
-                <div class="form-group"><label>GitHub</label><input type="text" id="adm-ctx-git"></div>
-              </div>
-              <button type="submit" class="btn btn-primary">Save</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="confirm-modal" class="modal-overlay hidden-panel" style="z-index: 1100;">
-    <div class="glass-card modal-window text-center" style="max-width: 380px; padding: 2rem;">
-      <i class="fa-solid fa-circle-exclamation text-accent" style="font-size: 2.5rem;"></i>
-      <h4 id="confirm-title">Confirm</h4>
-      <p id="confirm-msg" class="text-secondary"></p>
-      <div class="flex-row" style="gap: 1rem; justify-content: center; margin-top: 1.5rem;">
-        <button id="confirm-yes-btn" class="btn btn-primary">Yes</button>
-        <button id="confirm-no-btn" class="btn btn-secondary">No</button>
-      </div>
-    </div>
-  </div>
-
+    <script src="supabase.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
