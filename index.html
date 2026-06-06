@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module" src="script.js"></script>
 </head>
 <body>
 
@@ -84,7 +85,7 @@
           <div class="hero-badge" id="hero-badge-node">Premium Service Hub</div>
           <h1 class="hero-title" id="hero-title-node">Leoly Dev</h1>
           <p class="hero-subtitle" id="hero-subtitle-node">Full Stack Developer</p>
-          <p class="hero-desc text-secondary" id="hero-desc-node">Loading server definitions and layout architectures...</p>
+          <p class="hero-desc text-secondary" id="hero-desc-node">Loading server definitions...</p>
           <div class="hero-actions">
             <a href="#projects" class="btn btn-primary" id="hero-btn1">Explore</a>
             <a href="#contact" class="btn btn-secondary" id="hero-btn2">Contact</a>
@@ -221,11 +222,8 @@
     </button>
   </div>
 
-  ==================================================
-  ADMIN CENTRAL MODAL MODULAR SYSTEM
-  ==================================================
+  <!-- ADMIN MODAL -->
   <div id="admin-modal" class="modal-overlay hidden-panel">
-    
     <div id="admin-auth-card" class="glass-card modal-window" style="max-width: 420px;">
       <div class="modal-header">
         <h3><i class="fa-solid fa-lock text-accent" style="margin-right: 0.5rem;"></i> Gate Authorization</h3>
@@ -239,10 +237,6 @@
         <div class="form-group">
           <label for="auth-pass">Passphrase</label>
           <input type="password" id="auth-pass" required placeholder="••••••••">
-        </div>
-        <div class="form-group flex-row" style="gap: 0.5rem; justify-content: flex-start;">
-          <input type="checkbox" id="auth-remember" style="width: auto;">
-          <label for="auth-remember" style="margin-bottom: 0; cursor: pointer;">Remember Session</label>
         </div>
         <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Authenticate</button>
       </form>
@@ -259,321 +253,120 @@
       
       <div class="admin-layout">
         <div class="admin-tabs">
-          <button class="admin-tab-btn active" data-tab="tab-overview"><i class="fa-solid fa-chart-pie"></i> Metrics Overview</button>
-          <button class="admin-tab-btn" data-tab="tab-website"><i class="fa-solid fa-globe"></i> SEO & Core Global</button>
-          <button class="admin-tab-btn" data-tab="tab-home-editor"><i class="fa-solid fa-house"></i> Hero Node</button>
-          <button class="admin-tab-btn" data-tab="tab-about-editor"><i class="fa-solid fa-user"></i> Profile Engine</button>
-          <button class="admin-tab-btn" data-tab="tab-project-manager"><i class="fa-solid fa-folder-open"></i> Project Manager</button>
-          <button class="admin-tab-btn" data-tab="tab-shop-manager"><i class="fa-solid fa-store"></i> Product Catalog</button>
-          <button class="admin-tab-btn" data-tab="tab-gateways"><i class="fa-solid fa-wallet"></i> Gateway Systems</button>
-          <button class="admin-tab-btn" data-tab="tab-json-manager"><i class="fa-solid fa-database"></i> JSON IO Manager</button>
+          <button class="admin-tab-btn active" data-tab="tab-overview"><i class="fa-solid fa-chart-pie"></i> Metrics</button>
+          <button class="admin-tab-btn" data-tab="tab-website"><i class="fa-solid fa-globe"></i> Website</button>
+          <button class="admin-tab-btn" data-tab="tab-home-editor"><i class="fa-solid fa-house"></i> Hero</button>
+          <button class="admin-tab-btn" data-tab="tab-about-editor"><i class="fa-solid fa-user"></i> About</button>
+          <button class="admin-tab-btn" data-tab="tab-project-manager"><i class="fa-solid fa-folder-open"></i> Projects</button>
+          <button class="admin-tab-btn" data-tab="tab-shop-manager"><i class="fa-solid fa-store"></i> Shop</button>
+          <button class="admin-tab-btn" data-tab="tab-gateways"><i class="fa-solid fa-wallet"></i> Gateways</button>
         </div>
 
         <div class="admin-tab-content-wrapper">
-          
           <div id="tab-overview" class="admin-tab-panel active">
-            <h4>System Analytical Performance</h4>
+            <h4>System Analytics</h4>
             <div class="metrics-grid">
-              <div class="metric-card glass-card">
-                <span class="metric-label">Visitor Sessions</span>
-                <h3 id="m-visitors">0</h3>
-              </div>
-              <div class="metric-card glass-card">
-                <span class="metric-label">Total Core Projects</span>
-                <h3 id="m-projects">0</h3>
-              </div>
-              <div class="metric-card glass-card">
-                <span class="metric-label">Premium Catalog Items</span>
-                <h3 id="m-products">0</h3>
-              </div>
-              <div class="metric-card glass-card">
-                <span class="metric-label">Financial Endorsements</span>
-                <h3 id="m-donations">0</h3>
-              </div>
+              <div class="metric-card glass-card"><span class="metric-label">Visitors</span><h3 id="m-visitors">0</h3></div>
+              <div class="metric-card glass-card"><span class="metric-label">Projects</span><h3 id="m-projects">0</h3></div>
+              <div class="metric-card glass-card"><span class="metric-label">Products</span><h3 id="m-products">0</h3></div>
+              <div class="metric-card glass-card"><span class="metric-label">Donations</span><h3 id="m-donations">0</h3></div>
             </div>
-            <div class="chart-container glass-card" style="margin-top: 1.5rem; position: relative; height:280px; width:100%">
-              <canvas id="analyticsChart"></canvas>
-            </div>
+            <div class="chart-container glass-card" style="margin-top: 1.5rem; height:280px"><canvas id="analyticsChart"></canvas></div>
           </div>
 
           <div id="tab-website" class="admin-tab-panel">
-            <h4>Core Metadata Engine</h4>
+            <h4>Website Settings</h4>
             <form id="form-core-web" class="modern-form">
-              <div class="form-group">
-                <label>Website Title Struct</label>
-                <input type="text" id="adm-web-title" required>
-              </div>
-              <div class="form-group">
-                <label>Global SEO Description Meta</label>
-                <textarea id="adm-web-desc" rows="3" required></textarea>
-              </div>
+              <div class="form-group"><label>Title</label><input type="text" id="adm-web-title" required></div>
+              <div class="form-group"><label>Description</label><textarea id="adm-web-desc" rows="2"></textarea></div>
               <div class="grid-2col">
-                <div class="form-group">
-                  <label>Logo Token / Glyph</label>
-                  <input type="text" id="adm-web-logo">
-                </div>
-                <div class="form-group">
-                  <label>Background System Banner Link</label>
-                  <div class="img-upload-preview-group">
-                    <input type="text" id="adm-web-banner" class="img-preview-input">
-                    <img src="" class="input-preview-box">
-                  </div>
-                </div>
+                <div class="form-group"><label>Logo</label><input type="text" id="adm-web-logo"></div>
+                <div class="form-group"><label>Banner URL</label><input type="text" id="adm-web-banner"></div>
               </div>
-              <div class="form-group flex-row" style="justify-content: flex-start; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
-                <input type="checkbox" id="adm-sys-maintenance" style="width: auto;">
-                <label style="margin-bottom: 0;">Activate Global Maintenance Protocol Screen</label>
-              </div>
-              <button type="submit" class="btn btn-primary margin-t-1">Commit System Changes</button>
+              <div class="form-group"><label><input type="checkbox" id="adm-sys-maintenance"> Maintenance Mode</label></div>
+              <button type="submit" class="btn btn-primary">Save</button>
             </form>
           </div>
 
           <div id="tab-home-editor" class="admin-tab-panel">
-            <h4>Hero Section Definition Editor</h4>
+            <h4>Hero Section</h4>
             <form id="form-hero-editor" class="modern-form">
-              <div class="form-group">
-                <label>Primary Title</label>
-                <input type="text" id="adm-home-title" required>
-              </div>
-              <div class="form-group">
-                <label>Subtitle Descriptor</label>
-                <input type="text" id="adm-home-subtitle" required>
-              </div>
-              <div class="form-group">
-                <label>Hero Focus Block Text</label>
-                <textarea id="adm-home-desc" rows="3" required></textarea>
-              </div>
+              <div class="form-group"><label>Title</label><input type="text" id="adm-home-title"></div>
+              <div class="form-group"><label>Subtitle</label><input type="text" id="adm-home-subtitle"></div>
+              <div class="form-group"><label>Description</label><textarea id="adm-home-desc" rows="3"></textarea></div>
               <div class="grid-2col">
-                <div class="form-group">
-                  <label>Button Action Primary Text</label>
-                  <input type="text" id="adm-home-btn1" required>
-                </div>
-                <div class="form-group">
-                  <label>Button Action Secondary Text</label>
-                  <input type="text" id="adm-home-btn2" required>
-                </div>
+                <div class="form-group"><label>Button 1</label><input type="text" id="adm-home-btn1"></div>
+                <div class="form-group"><label>Button 2</label><input type="text" id="adm-home-btn2"></div>
               </div>
-              <button type="submit" class="btn btn-primary margin-t-1">Update Core Matrix</button>
+              <button type="submit" class="btn btn-primary">Save</button>
             </form>
           </div>
 
           <div id="tab-about-editor" class="admin-tab-panel">
-            <h4>Profile Structural Properties</h4>
+            <h4>About Section</h4>
             <form id="form-about-editor" class="modern-form">
-              <div class="form-group">
-                <label>Avatar Photo Link URL</label>
-                <div class="img-upload-preview-group">
-                  <input type="text" id="adm-about-photo" class="img-preview-input" required>
-                  <img src="" class="input-preview-box">
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Developer Bio Manifest</label>
-                <textarea id="adm-about-desc" rows="4" required></textarea>
-              </div>
-              <div class="form-group">
-                <label>Skill Tags Matrix (Comma Separated)</label>
-                <input type="text" id="adm-about-skills" placeholder="HTML, CSS, JS" required>
-              </div>
-              <button type="submit" class="btn btn-primary margin-t-1">Sync Profile Array</button>
+              <div class="form-group"><label>Photo URL</label><input type="text" id="adm-about-photo"></div>
+              <div class="form-group"><label>Bio</label><textarea id="adm-about-desc" rows="4"></textarea></div>
+              <div class="form-group"><label>Skills (comma separated)</label><input type="text" id="adm-about-skills"></div>
+              <button type="submit" class="btn btn-primary">Save</button>
             </form>
           </div>
 
           <div id="tab-project-manager" class="admin-tab-panel">
-            <div class="flex-row" style="justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <h4>Architectural Case Studies Array</h4>
-              <button type="button" class="btn btn-primary" id="open-add-project-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">+ Add Project Node</button>
+            <div class="flex-row" style="justify-content: space-between; margin-bottom: 1rem;">
+              <h4>Projects</h4>
+              <button type="button" class="btn btn-primary" id="open-add-project-btn">+ Add</button>
             </div>
-            
-            <form id="form-project-crud" class="modern-form glass-card hidden-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-color: var(--accent-color);">
-              <input type="hidden" id="crud-project-id">
-              <h5 id="crud-project-title-label" style="margin-top: 0; margin-bottom: 1rem; font-size: 1rem;">New Project Struct</h5>
-              <div class="grid-2col">
-                <div class="form-group">
-                  <label>Project Name</label>
-                  <input type="text" id="crud-p-title" required>
-                </div>
-                <div class="form-group">
-                  <label>Category Label</label>
-                  <input type="text" id="crud-p-cat" required placeholder="Web Design / Fullstack">
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Project Context Summary</label>
-                <textarea id="crud-p-desc" rows="2" required></textarea>
-              </div>
-              <div class="form-group">
-                <label>Thumbnail Resource URL</label>
-                <div class="img-upload-preview-group">
-                  <input type="text" id="crud-p-thumb" class="img-preview-input" required>
-                  <img src="" class="input-preview-box">
-                </div>
-              </div>
-              <div class="grid-2col">
-                <div class="form-group">
-                  <label>Live Demo Target URL</label>
-                  <input type="text" id="crud-p-demo" required>
-                </div>
-                <div class="form-group">
-                  <label>Source Control Blueprint Link</label>
-                  <input type="text" id="crud-p-source" required>
-                </div>
-              </div>
-              <div class="flex-row margin-t-1" style="gap: 1rem;">
-                <button type="submit" class="btn btn-primary">Save Node</button>
-                <button type="button" class="btn btn-secondary" id="cancel-project-btn">Cancel</button>
-              </div>
-            </form>
-
             <div class="admin-table-scroll-wrapper">
-              <table class="admin-data-table">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Category</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-projects-tbody"></tbody>
-              </table>
+              <table class="admin-data-table"><thead><tr><th>Title</th><th>Category</th><th>Actions</th></tr></thead><tbody id="admin-projects-tbody"></tbody></table>
             </div>
           </div>
 
           <div id="tab-shop-manager" class="admin-tab-panel">
-            <div class="flex-row" style="justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <h4>Premium Digital Asset Ecosystem</h4>
-              <button type="button" class="btn btn-primary" id="open-add-shop-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">+ Add Asset Node</button>
+            <div class="flex-row" style="justify-content: space-between; margin-bottom: 1rem;">
+              <h4>Products</h4>
+              <button type="button" class="btn btn-primary" id="open-add-shop-btn">+ Add</button>
             </div>
-            
-            <form id="form-shop-crud" class="modern-form glass-card hidden-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-color: var(--accent-color);">
-              <input type="hidden" id="crud-shop-id">
-              <h5 id="crud-shop-title-label" style="margin-top: 0; margin-bottom: 1rem; font-size: 1rem;">New Premium Asset Block</h5>
-              <div class="grid-2col">
-                <div class="form-group">
-                  <label>Product Asset Title</label>
-                  <input type="text" id="crud-s-title" required>
-                </div>
-                <div class="form-group">
-                  <label>Valuation Tag Price</label>
-                  <input type="text" id="crud-s-price" placeholder="Rp 50.000" required>
-                </div>
-              </div>
-              <div class="form-group">
-                <label>Asset Architectural Description</label>
-                <textarea id="crud-s-desc" rows="2" required></textarea>
-              </div>
-              <div class="grid-2col">
-                <div class="form-group">
-                  <label>Product Thumbnail URL</label>
-                  <div class="img-upload-preview-group">
-                    <input type="text" id="crud-s-thumb" class="img-preview-input" required>
-                    <img src="" class="input-preview-box">
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>Aquisition Commercial Gateway Link</label>
-                  <input type="text" id="crud-s-buyurl" required>
-                </div>
-              </div>
-              <div class="flex-row margin-t-1" style="gap: 1rem;">
-                <button type="submit" class="btn btn-primary">Save Asset</button>
-                <button type="button" class="btn btn-secondary" id="cancel-shop-btn">Cancel</button>
-              </div>
-            </form>
-
             <div class="admin-table-scroll-wrapper">
-              <table class="admin-data-table">
-                <thead>
-                  <tr>
-                    <th>Asset Name</th>
-                    <th>Price</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="admin-shop-tbody"></tbody>
-              </table>
+              <table class="admin-data-table"><thead><tr><th>Product</th><th>Price</th><th>Actions</th></tr></thead><tbody id="admin-shop-tbody"></tbody></table>
             </div>
           </div>
 
           <div id="tab-gateways" class="admin-tab-panel">
-            <h4>Fintech Interfaces & Network Endpoints</h4>
+            <h4>Payment & Contact</h4>
             <form id="form-gateways" class="modern-form">
-              <h5 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:0.3rem;">Financial Inbound Endpoints</h5>
               <div class="grid-2col">
-                <div class="form-group">
-                  <label>QRIS String Matrix / Image URL</label>
-                  <div class="img-upload-preview-group">
-                    <input type="text" id="adm-don-qris" class="img-preview-input">
-                    <img src="" class="input-preview-box">
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>Saweria Gateway Endorsement Link</label>
-                  <input type="text" id="adm-don-saweria">
-                </div>
+                <div class="form-group"><label>QRIS URL</label><input type="text" id="adm-don-qris"></div>
+                <div class="form-group"><label>Saweria URL</label><input type="text" id="adm-don-saweria"></div>
               </div>
               <div class="grid-3col">
-                <div class="form-group"><label>DANA Register ID</label><input type="text" id="adm-don-dana"></div>
-                <div class="form-group"><label>OVO Register ID</label><input type="text" id="adm-don-ovo"></div>
-                <div class="form-group"><label>GoPay Register ID</label><input type="text" id="adm-don-gopay"></div>
+                <div class="form-group"><label>DANA</label><input type="text" id="adm-don-dana"></div>
+                <div class="form-group"><label>OVO</label><input type="text" id="adm-don-ovo"></div>
+                <div class="form-group"><label>GoPay</label><input type="text" id="adm-don-gopay"></div>
               </div>
-
-              <h5 style="margin-top:1.5rem; border-bottom:1px solid var(--border-color); padding-bottom:0.3rem;">Communication Node Routing</h5>
               <div class="grid-2col">
-                <div class="form-group"><label>WhatsApp Routing Target</label><input type="text" id="adm-ctx-wa"></div>
-                <div class="form-group"><label>Telegram Direct Identifier</label><input type="text" id="adm-ctx-tg"></div>
+                <div class="form-group"><label>WhatsApp</label><input type="text" id="adm-ctx-wa"></div>
+                <div class="form-group"><label>Telegram</label><input type="text" id="adm-ctx-tg"></div>
+                <div class="form-group"><label>Email</label><input type="text" id="adm-ctx-mail"></div>
+                <div class="form-group"><label>Instagram</label><input type="text" id="adm-ctx-ig"></div>
+                <div class="form-group"><label>GitHub</label><input type="text" id="adm-ctx-git"></div>
               </div>
-              <div class="grid-3col">
-                <div class="form-group"><label>Inbound Mail Routing</label><input type="text" id="adm-ctx-mail"></div>
-                <div class="form-group"><label>Instagram Account handle</label><input type="text" id="adm-ctx-ig"></div>
-                <div class="form-group"><label>GitHub Production Workspace</label><input type="text" id="adm-ctx-git"></div>
-              </div>
-
-              <button type="submit" class="btn btn-primary margin-t-1">Sync Channels</button>
+              <button type="submit" class="btn btn-primary">Save</button>
             </form>
           </div>
-
-          <div id="tab-json-manager" class="admin-tab-panel">
-            <h4>JSON Data Infrastructure Engine</h4>
-            <p class="text-secondary" style="font-size: 0.85rem; margin-bottom: 1.5rem;">
-              Manajemen penyimpanan data lokal. Anda dapat mengekspor data yang diubah di sini langsung ke dalam berkas <code class="text-primary">database.json</code> untuk kebutuhan repositori static Anda atau melakukan backup data instan.
-            </p>
-            <div class="json-actions-grid">
-              <button id="btn-json-export" class="btn btn-secondary"><i class="fa-solid fa-file-export"></i> Export Live JSON Data</button>
-              <button id="btn-json-download" class="btn btn-primary"><i class="fa-solid fa-download"></i> Download database.json</button>
-              
-              <div class="glass-card" style="padding:1.5rem; grid-column: span 2; margin-top: 1rem;">
-                <h5>Import Database Manifest</h5>
-                <p class="text-secondary text-sm" style="margin-bottom:1rem;">Unggah atau timpa data manifest sistem secara menyeluruh dari file .json cadangan Anda.</p>
-                <input type="file" id="json-file-input" accept=".json" style="display:none;">
-                <button type="button" onclick="document.getElementById('json-file-input').click()" class="btn btn-secondary"><i class="fa-solid fa-file-import"></i> Upload / Import Object JSON</button>
-              </div>
-            </div>
-
-            <div class="flex-row" style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; justify-content: flex-end; gap:1rem;">
-              <button id="btn-json-backup" class="btn btn-secondary" style="background: rgba(16,185,129,0.1); color:#10b981; border-color:rgba(16,185,129,0.2);">Backup System State</button>
-              <button id="btn-json-restore" class="btn btn-secondary" style="background: rgba(245,158,11,0.1); color:#f59e0b; border-color:rgba(245,158,11,0.2);">Restore Cache</button>
-              <button id="btn-json-reset" class="btn btn-secondary" style="background: rgba(239,68,68,0.1); color:#ef4444; border-color:rgba(239,68,68,0.2);">Wipe & Reset Factory Defaults</button>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
-
   </div>
 
-  ==================================================
-  CUSTOM MODULAR CONFIRM SYSTEM DIALOG DIALOG
-  ==================================================
   <div id="confirm-modal" class="modal-overlay hidden-panel" style="z-index: 1100;">
     <div class="glass-card modal-window text-center" style="max-width: 380px; padding: 2rem;">
-      <i class="fa-solid fa-circle-exclamation text-accent" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
-      <h4 id="confirm-title" style="margin: 0 0 0.5rem 0;">System Interception</h4>
-      <p id="confirm-msg" class="text-secondary" style="font-size:0.9rem; margin-bottom:1.5rem;"></p>
-      <div class="flex-row" style="gap: 1rem; justify-content: center;">
-        <button id="confirm-yes-btn" class="btn btn-primary" style="padding:0.4rem 1.5rem;">Execute</button>
-        <button id="confirm-no-btn" class="btn btn-secondary" style="padding:0.4rem 1.5rem;">Abort</button>
+      <i class="fa-solid fa-circle-exclamation text-accent" style="font-size: 2.5rem;"></i>
+      <h4 id="confirm-title">Confirm</h4>
+      <p id="confirm-msg" class="text-secondary"></p>
+      <div class="flex-row" style="gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+        <button id="confirm-yes-btn" class="btn btn-primary">Yes</button>
+        <button id="confirm-no-btn" class="btn btn-secondary">No</button>
       </div>
     </div>
   </div>
