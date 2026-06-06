@@ -1,5 +1,5 @@
 // ============================================================
-// LEOLY DEV - FULLY FUNCTIONAL SUPABASE INTEGRATION
+// LEOLY DEV - FULLY FUNCTIONAL (ADMIN PANEL FIXED)
 // ============================================================
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -19,7 +19,6 @@ const SESSION_AUTH_KEY = 'leoly_auth_session';
 
 // ============ DATABASE OPERATIONS ============
 const dbOps = {
-  // Website Settings
   async getWebsite() {
     const { data, error } = await supabase.from('website_settings').select('*').eq('id', 1).single();
     if (error && error.code !== 'PGRST116') console.error(error);
@@ -29,8 +28,6 @@ const dbOps = {
     const { error } = await supabase.from('website_settings').upsert({ id: 1, ...data, updated_at: new Date() });
     if (error) throw error;
   },
-
-  // Home Content
   async getHome() {
     const { data, error } = await supabase.from('home_content').select('*').eq('id', 1).single();
     return data || {};
@@ -39,8 +36,6 @@ const dbOps = {
     const { error } = await supabase.from('home_content').upsert({ id: 1, ...data, updated_at: new Date() });
     if (error) throw error;
   },
-
-  // About Content
   async getAbout() {
     const { data, error } = await supabase.from('about_content').select('*').eq('id', 1).single();
     return data || {};
@@ -49,8 +44,6 @@ const dbOps = {
     const { error } = await supabase.from('about_content').upsert({ id: 1, ...data, updated_at: new Date() });
     if (error) throw error;
   },
-
-  // Projects CRUD
   async getProjects() {
     const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
     return data || [];
@@ -68,8 +61,6 @@ const dbOps = {
     const { error } = await supabase.from('projects').delete().eq('id', id);
     if (error) throw error;
   },
-
-  // Shop Products CRUD
   async getShop() {
     const { data, error } = await supabase.from('shop_products').select('*').order('created_at', { ascending: false });
     return data || [];
@@ -87,8 +78,6 @@ const dbOps = {
     const { error } = await supabase.from('shop_products').delete().eq('id', id);
     if (error) throw error;
   },
-
-  // Donation Gateways
   async getDonate() {
     const { data, error } = await supabase.from('donation_gateways').select('*').eq('id', 1).single();
     return data || {};
@@ -97,8 +86,6 @@ const dbOps = {
     const { error } = await supabase.from('donation_gateways').upsert({ id: 1, ...data, updated_at: new Date() });
     if (error) throw error;
   },
-
-  // Contact Info
   async getContact() {
     const { data, error } = await supabase.from('contact_info').select('*').eq('id', 1).single();
     return data || {};
@@ -107,8 +94,6 @@ const dbOps = {
     const { error } = await supabase.from('contact_info').upsert({ id: 1, ...data, updated_at: new Date() });
     if (error) throw error;
   },
-
-  // Statistics
   async getStats() {
     const { data, error } = await supabase.from('statistics').select('*').eq('id', 1).single();
     return data || { visitors: 0 };
@@ -127,10 +112,11 @@ const dbOps = {
 
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log("DOM Ready - Initializing...");
   await loadAllData();
   setupNavigation();
   setupUI();
-  setupAdmin();
+  setupAdmin(); // Admin panel setup - PASTI TERPANGGIL
   setupRealtime();
   setupFormHandlers();
   hideLoading();
@@ -212,13 +198,11 @@ async function trackVisitor() {
 }
 
 function setupRealtime() {
-  // Subscribe to projects changes
   supabase.channel('projects-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, 
       async () => { await refreshProjects(); })
     .subscribe();
   
-  // Subscribe to shop changes
   supabase.channel('shop-channel')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'shop_products' }, 
       async () => { await refreshShop(); })
@@ -251,7 +235,6 @@ function updateStatsDisplay() {
 
 // ============ RENDER FUNCTIONS ============
 function renderAll() {
-  // Maintenance check
   if (db.settings?.maintenance && !sessionStorage.getItem(SESSION_AUTH_KEY)) {
     document.getElementById('maintenance-screen')?.classList.remove('hidden-panel');
     document.getElementById('app-container')?.classList.add('hidden-panel');
@@ -260,14 +243,12 @@ function renderAll() {
   document.getElementById('maintenance-screen')?.classList.add('hidden-panel');
   document.getElementById('app-container')?.classList.remove('hidden-panel');
   
-  // Website metadata
   document.title = db.website.title;
   const logoElem = document.getElementById('web-logo-txt');
   if (logoElem) logoElem.innerText = `${db.website.logo} ${db.website.title}`;
   const sidebarBrand = document.getElementById('sidebar-brand');
   if (sidebarBrand) sidebarBrand.innerText = db.website.title;
   
-  // Hero section
   const heroTitle = document.getElementById('hero-title-node');
   if (heroTitle) heroTitle.innerText = db.home.title;
   const heroSubtitle = document.getElementById('hero-subtitle-node');
@@ -279,7 +260,6 @@ function renderAll() {
   const heroBtn2 = document.getElementById('hero-btn2');
   if (heroBtn2) heroBtn2.innerText = db.home.button2;
   
-  // About section
   const aboutImg = document.getElementById('about-img-node');
   if (aboutImg && db.about.photo) aboutImg.src = db.about.photo;
   const aboutDesc = document.getElementById('about-desc-node');
@@ -295,7 +275,6 @@ function renderAll() {
     }
   }
   
-  // Donation section
   const qrisImg = document.getElementById('donate-qris-node');
   if (qrisImg) qrisImg.src = db.donate.qris || '';
   const danaEl = document.getElementById('donate-dana-node');
@@ -307,7 +286,6 @@ function renderAll() {
   const saweriaLink = document.getElementById('donate-saweria-node');
   if (saweriaLink) saweriaLink.href = db.donate.saweria || '#';
   
-  // Contact section
   const waLink = document.getElementById('ctx-wa');
   if (waLink) waLink.href = db.contact.whatsapp || '#';
   const tgLink = document.getElementById('ctx-tg');
@@ -439,7 +417,6 @@ function setupNavigation() {
     });
   });
   
-  // Handle initial hash
   const hash = window.location.hash.slice(1);
   if (hash && document.getElementById(hash)) {
     setActiveSection(hash);
@@ -447,7 +424,6 @@ function setupNavigation() {
     setActiveSection('home');
   }
   
-  // Back to top button
   const btt = document.getElementById('back-to-top');
   if (btt) {
     window.addEventListener('scroll', () => {
@@ -473,7 +449,6 @@ function setupUI() {
     closeBtn.addEventListener('click', () => sidebar?.classList.remove('mobile-open'));
   }
   
-  // Search and filter listeners
   const projectSearch = document.getElementById('project-search');
   if (projectSearch) projectSearch.addEventListener('input', () => renderProjects());
   
@@ -484,29 +459,54 @@ function setupUI() {
   if (shopSearch) shopSearch.addEventListener('input', () => renderShop());
 }
 
-// ============ ADMIN PANEL ============
+// ============ ADMIN PANEL - FIXED ============
 function setupAdmin() {
+  console.log("Setting up Admin Panel...");
+  
+  const adminLink = document.getElementById('admin-nav-link');
   const modal = document.getElementById('admin-modal');
   const authCard = document.getElementById('admin-auth-card');
   const dashboard = document.getElementById('admin-dashboard-card');
-  const adminLink = document.getElementById('admin-nav-link');
   
-  if (adminLink) {
-    adminLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (modal) modal.classList.remove('hidden-panel');
-      if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'authorized') {
-        showDashboard();
-      } else {
-        if (authCard) authCard.classList.remove('hidden-panel');
-        if (dashboard) dashboard.classList.add('hidden-panel');
-      }
-    });
+  // Debug: Cek apakah elemen ditemukan
+  console.log("admin-link found:", !!adminLink);
+  console.log("modal found:", !!modal);
+  console.log("authCard found:", !!authCard);
+  console.log("dashboard found:", !!dashboard);
+  
+  if (!adminLink) {
+    console.error("Admin link not found! Check if element with id='admin-nav-link' exists.");
+    return;
   }
   
+  // Admin link click handler
+  adminLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    console.log("Admin link clicked");
+    
+    if (modal) {
+      modal.classList.remove('hidden-panel');
+      console.log("Modal opened");
+    }
+    
+    // Check if already logged in
+    if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'authorized') {
+      console.log("Already authorized, showing dashboard");
+      showDashboard();
+    } else {
+      console.log("Not authorized, showing login form");
+      if (authCard) authCard.classList.remove('hidden-panel');
+      if (dashboard) dashboard.classList.add('hidden-panel');
+    }
+  });
+  
   // Close modal buttons
-  document.querySelectorAll('.close-modal-trigger').forEach(btn => {
+  const closeButtons = document.querySelectorAll('.close-modal-trigger');
+  console.log("Close buttons found:", closeButtons.length);
+  
+  closeButtons.forEach(btn => {
     btn.addEventListener('click', () => {
+      console.log("Close modal clicked");
       if (modal) modal.classList.add('hidden-panel');
     });
   });
@@ -514,25 +514,35 @@ function setupAdmin() {
   // Login form
   const loginForm = document.getElementById('admin-login-form');
   if (loginForm) {
+    console.log("Login form found");
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      console.log("Login form submitted");
+      
       const username = document.getElementById('auth-user')?.value || '';
       const password = document.getElementById('auth-pass')?.value || '';
+      
+      console.log("Username entered:", username);
       
       if (username === 'admin' && password === 'admin123') {
         sessionStorage.setItem(SESSION_AUTH_KEY, 'authorized');
         showToast("Login Berhasil!", "success");
+        console.log("Login successful, showing dashboard");
         showDashboard();
       } else {
-        showToast("Username atau password salah!", "error");
+        showToast("Username atau password salah! (admin / admin123)", "error");
+        console.log("Login failed");
       }
     });
+  } else {
+    console.error("Login form not found!");
   }
   
   // Logout button
   const logoutBtn = document.getElementById('admin-logout-btn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
+      console.log("Logout clicked");
       sessionStorage.removeItem(SESSION_AUTH_KEY);
       if (modal) modal.classList.add('hidden-panel');
       showToast("Logout berhasil", "info");
@@ -540,9 +550,13 @@ function setupAdmin() {
   }
   
   // Tab switching
-  document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+  const tabBtns = document.querySelectorAll('.admin-tab-btn');
+  console.log("Tab buttons found:", tabBtns.length);
+  
+  tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+      console.log("Tab clicked:", btn.getAttribute('data-tab'));
+      tabBtns.forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       const tabId = btn.getAttribute('data-tab');
@@ -553,22 +567,28 @@ function setupAdmin() {
 }
 
 function showDashboard() {
+  console.log("showDashboard called");
+  
   const authCard = document.getElementById('admin-auth-card');
   const dashboard = document.getElementById('admin-dashboard-card');
+  const modal = document.getElementById('admin-modal');
   
   if (authCard) authCard.classList.add('hidden-panel');
   if (dashboard) dashboard.classList.remove('hidden-panel');
   
+  console.log("Dashboard visible:", dashboard ? !dashboard.classList.contains('hidden-panel') : false);
+  
   loadAdminForms();
   renderAdminTables();
   initChart();
+  
+  // Pastikan modal tetap terbuka
+  if (modal) modal.classList.remove('hidden-panel');
 }
 
 function loadAdminForms() {
-  // Update stats display
   updateStatsDisplay();
   
-  // Website settings form
   setValue('adm-web-title', db.website.title);
   setValue('adm-web-desc', db.website.description);
   setValue('adm-web-logo', db.website.logo);
@@ -576,19 +596,16 @@ function loadAdminForms() {
   const maintenanceCheck = document.getElementById('adm-sys-maintenance');
   if (maintenanceCheck) maintenanceCheck.checked = db.settings.maintenance;
   
-  // Home editor form
   setValue('adm-home-title', db.home.title);
   setValue('adm-home-subtitle', db.home.subtitle);
   setValue('adm-home-desc', db.home.description);
   setValue('adm-home-btn1', db.home.button1);
   setValue('adm-home-btn2', db.home.button2);
   
-  // About editor form
   setValue('adm-about-photo', db.about.photo);
   setValue('adm-about-desc', db.about.description);
   setValue('adm-about-skills', db.about.skills?.join(', ') || '');
   
-  // Gateways form
   setValue('adm-don-qris', db.donate.qris || '');
   setValue('adm-don-saweria', db.donate.saweria || '');
   setValue('adm-don-dana', db.donate.dana || '');
@@ -604,6 +621,11 @@ function loadAdminForms() {
 function setValue(id, value) {
   const el = document.getElementById(id);
   if (el) el.value = value || '';
+}
+
+function getValue(id) {
+  const el = document.getElementById(id);
+  return el ? el.value : '';
 }
 
 function setupFormHandlers() {
@@ -704,11 +726,6 @@ function setupFormHandlers() {
   }
 }
 
-function getValue(id) {
-  const el = document.getElementById(id);
-  return el ? el.value : '';
-}
-
 function openProjectModal() {
   const title = prompt("Project Title:");
   if (!title) return;
@@ -764,7 +781,6 @@ function openShopModal() {
 }
 
 function renderAdminTables() {
-  // Projects table
   const pBody = document.getElementById('admin-projects-tbody');
   if (pBody) {
     pBody.innerHTML = '';
@@ -782,7 +798,6 @@ function renderAdminTables() {
     });
   }
   
-  // Shop table
   const sBody = document.getElementById('admin-shop-tbody');
   if (sBody) {
     sBody.innerHTML = '';
@@ -865,7 +880,6 @@ function initChart() {
   
   if (analyticsChartInstance) analyticsChartInstance.destroy();
   
-  // Generate sample data based on visitors count
   const visitors = db.statistics.visitors || 0;
   const baseData = [Math.floor(visitors * 0.3), Math.floor(visitors * 0.5), Math.floor(visitors * 0.7), 
                     Math.floor(visitors * 0.8), Math.floor(visitors * 0.9), Math.floor(visitors * 0.95), visitors];
