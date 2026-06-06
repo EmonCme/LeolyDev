@@ -1,5 +1,5 @@
 // ============================================================
-// LEOLY DEV - FULLY FUNCTIONAL (ADMIN PANEL FIXED)
+// LEOLY DEV - ADMIN PANEL FIX (TOMOL TIDAK RESPONSIF)
 // ============================================================
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -13,8 +13,6 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ============ STATE MANAGEMENT ============
 let db = null;
 let analyticsChartInstance = null;
-let projectEditingId = null;
-let shopEditingId = null;
 const SESSION_AUTH_KEY = 'leoly_auth_session';
 
 // ============ DATABASE OPERATIONS ============
@@ -112,11 +110,11 @@ const dbOps = {
 
 // ============ INITIALIZATION ============
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log("DOM Ready - Initializing...");
+  console.log("🚀 DOM Ready - Initializing...");
   await loadAllData();
   setupNavigation();
   setupUI();
-  setupAdmin(); // Admin panel setup - PASTI TERPANGGIL
+  setupAdminPanel(); // FIXED: Nama fungsi lebih jelas
   setupRealtime();
   setupFormHandlers();
   hideLoading();
@@ -459,50 +457,54 @@ function setupUI() {
   if (shopSearch) shopSearch.addEventListener('input', () => renderShop());
 }
 
-// ============ ADMIN PANEL - FIXED ============
-function setupAdmin() {
-  console.log("Setting up Admin Panel...");
+// ============ ADMIN PANEL - FIXED WITH DIRECT CLICK HANDLER ============
+function setupAdminPanel() {
+  console.log("🔧 Setting up Admin Panel...");
   
-  const adminLink = document.getElementById('admin-nav-link');
+  // Cari tombol admin dengan berbagai kemungkinan selector
+  let adminLink = document.getElementById('admin-nav-link');
+  
+  // Jika tidak ditemukan, coba dengan selector lain
+  if (!adminLink) {
+    adminLink = document.querySelector('.admin-trigger-btn');
+    console.log("Trying .admin-trigger-btn selector:", !!adminLink);
+  }
+  if (!adminLink) {
+    adminLink = document.querySelector('.sidebar-nav a[href="#admin"]');
+    console.log("Trying href selector:", !!adminLink);
+  }
+  
   const modal = document.getElementById('admin-modal');
   const authCard = document.getElementById('admin-auth-card');
   const dashboard = document.getElementById('admin-dashboard-card');
   
-  // Debug: Cek apakah elemen ditemukan
-  console.log("admin-link found:", !!adminLink);
-  console.log("modal found:", !!modal);
-  console.log("authCard found:", !!authCard);
-  console.log("dashboard found:", !!dashboard);
+  // Debug output
+  console.log("📊 Element status:");
+  console.log("  admin-link found:", !!adminLink);
+  console.log("  modal found:", !!modal);
+  console.log("  authCard found:", !!authCard);
+  console.log("  dashboard found:", !!dashboard);
   
   if (!adminLink) {
-    console.error("Admin link not found! Check if element with id='admin-nav-link' exists.");
+    console.error("❌ Admin link not found! Creating fallback...");
+    // Fallback: coba cari setelah 1 detik
+    setTimeout(() => {
+      const fallbackLink = document.getElementById('admin-nav-link');
+      if (fallbackLink) {
+        console.log("✅ Admin link found after delay!");
+        attachAdminClickHandler(fallbackLink, modal, authCard, dashboard);
+      } else {
+        console.error("❌ Still not found. Check HTML for element with id='admin-nav-link'");
+      }
+    }, 1000);
     return;
   }
   
-  // Admin link click handler
-  adminLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    console.log("Admin link clicked");
-    
-    if (modal) {
-      modal.classList.remove('hidden-panel');
-      console.log("Modal opened");
-    }
-    
-    // Check if already logged in
-    if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'authorized') {
-      console.log("Already authorized, showing dashboard");
-      showDashboard();
-    } else {
-      console.log("Not authorized, showing login form");
-      if (authCard) authCard.classList.remove('hidden-panel');
-      if (dashboard) dashboard.classList.add('hidden-panel');
-    }
-  });
+  attachAdminClickHandler(adminLink, modal, authCard, dashboard);
   
   // Close modal buttons
   const closeButtons = document.querySelectorAll('.close-modal-trigger');
-  console.log("Close buttons found:", closeButtons.length);
+  console.log("🔘 Close buttons found:", closeButtons.length);
   
   closeButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -514,7 +516,7 @@ function setupAdmin() {
   // Login form
   const loginForm = document.getElementById('admin-login-form');
   if (loginForm) {
-    console.log("Login form found");
+    console.log("✅ Login form found");
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
       console.log("Login form submitted");
@@ -527,15 +529,15 @@ function setupAdmin() {
       if (username === 'admin' && password === 'admin123') {
         sessionStorage.setItem(SESSION_AUTH_KEY, 'authorized');
         showToast("Login Berhasil!", "success");
-        console.log("Login successful, showing dashboard");
-        showDashboard();
+        console.log("✅ Login successful, showing dashboard");
+        showDashboard(modal, authCard, dashboard);
       } else {
         showToast("Username atau password salah! (admin / admin123)", "error");
-        console.log("Login failed");
+        console.log("❌ Login failed");
       }
     });
   } else {
-    console.error("Login form not found!");
+    console.error("❌ Login form not found!");
   }
   
   // Logout button
@@ -551,7 +553,7 @@ function setupAdmin() {
   
   // Tab switching
   const tabBtns = document.querySelectorAll('.admin-tab-btn');
-  console.log("Tab buttons found:", tabBtns.length);
+  console.log("📑 Tab buttons found:", tabBtns.length);
   
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -566,12 +568,36 @@ function setupAdmin() {
   });
 }
 
-function showDashboard() {
-  console.log("showDashboard called");
+function attachAdminClickHandler(adminLink, modal, authCard, dashboard) {
+  // Remove existing listeners to avoid duplicates
+  const newLink = adminLink.cloneNode(true);
+  adminLink.parentNode.replaceChild(newLink, adminLink);
   
-  const authCard = document.getElementById('admin-auth-card');
-  const dashboard = document.getElementById('admin-dashboard-card');
-  const modal = document.getElementById('admin-modal');
+  newLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("🖱️ Admin link clicked!");
+    
+    if (modal) {
+      modal.classList.remove('hidden-panel');
+      console.log("Modal opened");
+    }
+    
+    if (sessionStorage.getItem(SESSION_AUTH_KEY) === 'authorized') {
+      console.log("Already authorized, showing dashboard");
+      showDashboard(modal, authCard, dashboard);
+    } else {
+      console.log("Not authorized, showing login form");
+      if (authCard) authCard.classList.remove('hidden-panel');
+      if (dashboard) dashboard.classList.add('hidden-panel');
+    }
+  });
+  
+  console.log("✅ Click handler attached to admin link");
+}
+
+function showDashboard(modal, authCard, dashboard) {
+  console.log("📊 showDashboard called");
   
   if (authCard) authCard.classList.add('hidden-panel');
   if (dashboard) dashboard.classList.remove('hidden-panel');
