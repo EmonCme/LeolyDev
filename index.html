@@ -1,320 +1,582 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leoly - Fullstack Developer & Creative Technologist</title>
-    
-    <meta name="description" content="Portofolio personal Leoly - Fullstack Developer & Creative Technologist">
-    <meta name="keywords" content="Leoly, Fullstack Developer, Web Developer, Portofolio">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leoly Dev — Premium Portfolio</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="dark-theme">
+<body>
 
-    <div id="loading-screen">
-        <div class="loader-content">
-            <div class="spinner"></div>
-            <h2>LEOLY</h2>
-            <p id="loading-status">Memuat...</p>
-        </div>
+  <div id="loading-screen" class="loading-screen">
+    <div class="spinner"></div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <div id="maintenance-screen" class="hidden-panel flex-center">
+    <div class="glass-card text-center" style="max-width: 450px; padding: 3rem;">
+      <i class="fa-solid fa-screwdriver-wrench text-accent" style="font-size: 3rem; margin-bottom: 1.5rem;"></i>
+      <h2>Under Maintenance</h2>
+      <p class="text-secondary">Kami sedang memperbarui sistem untuk memberikan pengalaman premium terbaik. Kembali dalam beberapa saat.</p>
     </div>
+  </div>
 
-    <div id="particles-js"></div>
-    <div class="blur-bg-layer">
-        <div class="shape shape-1"></div>
-        <div class="shape shape-2"></div>
-    </div>
-
-    <header class="glass-nav">
-        <div class="nav-container">
-            <a href="#" class="brand">LEOLY</a>
-            <nav class="nav-menu">
-                <a href="#home" class="nav-link active"><i class="fa-solid fa-house"></i> Home</a>
-                <a href="#about" class="nav-link"><i class="fa-solid fa-user"></i> About</a>
-                <a href="#project" class="nav-link"><i class="fa-solid fa-code"></i> Projects</a>
-                <a href="#shop" class="nav-link"><i class="fa-solid fa-store"></i> Store</a>
-                <a href="#donate" class="nav-link"><i class="fa-solid fa-heart"></i> Donate</a>
-                <a href="#contact" class="nav-link"><i class="fa-solid fa-envelope"></i> Contact</a>
-                <a href="#admin" class="nav-link"><i class="fa-solid fa-lock"></i> Admin</a>
-            </nav>
-            <div class="nav-actions">
-                <button id="theme-toggle" class="icon-btn"><i class="fa-solid fa-moon"></i></button>
-                <button id="cart-toggle-btn" class="icon-btn position-relative">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                    <span id="cart-count" class="badge">0</span>
-                </button>
-                <button id="menu-toggle" class="icon-btn mobile-only"><i class="fa-solid fa-bars"></i></button>
-            </div>
-        </div>
+  <div id="app-container">
+    
+    <header class="top-bar">
+      <div class="logo-brand" id="web-logo-txt">⚡ Leoly Dev</div>
+      <button class="menu-toggle-btn" id="sidebar-toggle-btn" aria-label="Toggle Menu">
+        <i class="fa-solid fa-bars-staggered"></i>
+      </button>
     </header>
 
-    <main class="main-app">
-        <!-- HOME SECTION -->
-        <section id="home" class="app-section active-section">
-            <div class="hero-container">
-                <div class="hero-text" data-aos="fade-up">
-                    <span class="tagline">Hi, I'm Leoly 👋</span>
-                    <h1>Fullstack Developer & <br><span class="typing-text"></span></h1>
-                    <p>Saya seorang Fullstack Developer yang berdedikasi menciptakan pengalaman digital yang bermakna.</p>
-                </div>
-            </div>
-        </section>
+    <aside class="right-sidebar" id="right-sidebar">
+      <div class="sidebar-header">
+        <span class="brand-title" id="sidebar-brand">Leoly Dev</span>
+        <button class="close-sidebar-btn" id="close-sidebar-btn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#home" class="nav-item active" data-section="home">
+          <i class="fa-solid fa-house"></i> <span class="nav-text">Home</span>
+          <span class="tooltip">Home</span>
+        </a>
+        <a href="#about" class="nav-item" data-section="about">
+          <i class="fa-solid fa-user"></i> <span class="nav-text">About</span>
+          <span class="tooltip">About</span>
+        </a>
+        <a href="#projects" class="nav-item" data-section="projects">
+          <i class="fa-solid fa-folder-open"></i> <span class="nav-text">Projects</span>
+          <span class="tooltip">Projects</span>
+        </a>
+        <a href="#shop" class="nav-item" data-section="shop">
+          <i class="fa-solid fa-store"></i> <span class="nav-text">Shop</span>
+          <span class="tooltip">Shop</span>
+        </a>
+        <a href="#donate" class="nav-item" data-section="donate">
+          <i class="fa-solid fa-heart"></i> <span class="nav-text">Donate</span>
+          <span class="tooltip">Donate</span>
+        </a>
+        <a href="#contact" class="nav-item" data-section="contact">
+          <i class="fa-solid fa-envelope"></i> <span class="nav-text">Contact</span>
+          <span class="tooltip">Contact</span>
+        </a>
+        <hr class="sidebar-divider">
+        <a href="#admin" class="nav-item admin-trigger-btn" id="admin-nav-link">
+          <i class="fa-solid fa-gear"></i> <span class="nav-text">Admin Panel</span>
+          <span class="tooltip">Admin Panel</span>
+        </a>
+      </nav>
+      <button class="collapse-btn" id="sidebar-collapse-btn">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </aside>
 
-        <!-- ABOUT SECTION -->
-        <section id="about" class="app-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <h2>Tentang Saya</h2>
-                    <p>Kenali lebih dekat perjalanan saya di dunia teknologi</p>
-                </div>
-                <div class="about-grid" style="grid-template-columns: 1fr;">
-                    <div class="about-profile glass-card">
-                        <div class="avatar-container">
-                            <i class="fa-solid fa-user-astronaut professional-avatar-icon"></i>
-                        </div>
-                        <h3>Leoly</h3>
-                        <p class="role">Fullstack Developer & Creative Technologist</p>
-                        <p class="bio">Saya adalah pengembang web dengan passion dalam menciptakan solusi digital yang inovatif dan estetis. Berdomisili di Indonesia dan bekerja secara remote untuk klien dari berbagai negara.</p>
-                    </div>
-                </div>
-                <div class="services-grid">
-                    <div class="service-card glass-card"><i class="fa-brands fa-react"></i><h3>React & Next.js</h3><p>Aplikasi modern performa tinggi.</p></div>
-                    <div class="service-card glass-card"><i class="fa-brands fa-node-js"></i><h3>Node.js & Express</h3><p>Backend API scalable.</p></div>
-                    <div class="service-card glass-card"><i class="fa-solid fa-database"></i><h3>Database Expert</h3><p>Desain database optimal.</p></div>
-                </div>
-            </div>
-        </section>
+    <main class="main-content">
 
-        <!-- PROJECTS SECTION -->
-        <section id="project" class="app-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <h2>Project Terbaru</h2>
-                    <p>Karya yang telah saya kerjakan</p>
-                </div>
-                <div class="filter-bar glass-card">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="project-search" placeholder="Cari project...">
-                    </div>
-                    <div class="filter-tags" id="project-filters">
-                        <button class="tag active" data-filter="all">Semua</button>
-                        <button class="tag" data-filter="Web">Web App</button>
-                        <button class="tag" data-filter="Server">Backend</button>
-                        <button class="tag" data-filter="UI/UX">UI/UX</button>
-                    </div>
-                </div>
-                <div class="items-grid" id="project-display-grid"></div>
-            </div>
-        </section>
+      <section id="home" class="content-section active-view">
+        <div class="hero-wrapper">
+          <div class="hero-badge" id="hero-badge-node">Premium Service Hub</div>
+          <h1 class="hero-title" id="hero-title-node">Leoly Dev</h1>
+          <p class="hero-subtitle" id="hero-subtitle-node">Full Stack Developer</p>
+          <p class="hero-desc text-secondary" id="hero-desc-node">Loading server definitions and layout architectures...</p>
+          <div class="hero-actions">
+            <a href="#projects" class="btn btn-primary" id="hero-btn1">Explore</a>
+            <a href="#contact" class="btn btn-secondary" id="hero-btn2">Contact</a>
+          </div>
+        </div>
+      </section>
 
-        <!-- SHOP SECTION -->
-        <section id="shop" class="app-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <h2>Digital Store</h2>
-                    <p>Karya digital yang bisa Anda dapatkan</p>
-                </div>
-                <div class="filter-bar glass-card">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="shop-search" placeholder="Cari produk...">
-                    </div>
-                    <div class="filter-tags" id="shop-filters">
-                        <button class="tag active" data-filter="all">Semua</button>
-                        <button class="tag" data-filter="Template">Template</button>
-                        <button class="tag" data-filter="Module">Module</button>
-                        <button class="tag" data-filter="Asset">Asset</button>
-                    </div>
-                </div>
-                <div class="items-grid" id="shop-display-grid"></div>
-            </div>
-        </section>
+      <section id="about" class="content-section">
+        <div class="section-header">
+          <h2 class="section-title">About Developer</h2>
+          <p class="text-secondary">Paradigma arsitektur digital dan spesifikasi keahlian.</p>
+        </div>
+        <div class="about-grid">
+          <div class="about-img-container glass-card">
+            <img id="about-img-node" src="" alt="Profile Photo" class="lazy-image">
+          </div>
+          <div class="about-details glass-card">
+            <h3>Profil & Filosofi</h3>
+            <p id="about-desc-node" class="text-secondary" style="line-height: 1.7;"></p>
+            <h4 style="margin-top: 1.5rem; margin-bottom: 0.75rem;">Tech Stack & Core Expertise</h4>
+            <div class="skills-wrap" id="about-skills-node"></div>
+          </div>
+        </div>
+      </section>
 
-        <!-- FAQ & TESTIMONIALS -->
-        <section id="faq-testimonials" class="app-section">
-            <div class="twin-grid">
-                <div class="faq-column glass-card">
-                    <h3>Pertanyaan Umum (FAQ)</h3>
-                    <div id="faq-accordion-container"></div>
-                </div>
-                <div class="testimonial-column glass-card">
-                    <h3>Testimoni Klien</h3>
-                    <div id="testimonial-render-box"></div>
-                </div>
-            </div>
-        </section>
+      <section id="projects" class="content-section">
+        <div class="section-header-flex">
+          <div>
+            <h2 class="section-title">Case Studies & Projects</h2>
+            <p class="text-secondary">Eksplorasi kode modular dan arsitektur web fungsional.</p>
+          </div>
+          <div class="filter-wrapper">
+            <input type="text" id="project-search" placeholder="Search project..." class="search-input">
+            <select id="project-filter" class="filter-select">
+              <option value="all">All Architecture</option>
+            </select>
+          </div>
+        </div>
+        <div class="dynamic-grid" id="project-grid-node">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </section>
 
-        <!-- DONATE SECTION -->
-        <section id="donate" class="app-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <h2>Dukung Karya Saya</h2>
-                    <p>Setiap dukungan sangat berarti!</p>
-                </div>
-                <div style="max-width: 400px; margin: 0 auto;">
-                    <div class="glass-card" style="text-align: center; padding: 40px;">
-                        <i class="fa-solid fa-mug-hot" style="font-size: 64px; margin-bottom: 20px;"></i>
-                        <h3>Dukung Saya</h3>
-                        <p style="margin-bottom: 25px;">Jika Anda menikmati karya saya, berikan dukungan melalui platform di bawah ini.</p>
-                        <a href="https://trakteer.id/emon_leoly/tip" target="_blank" class="btn btn-primary" style="background: #ff6b6b; margin-bottom: 15px; display: block;">Trakteer</a>
-                        <a href="https://saweria.co/Leoly" target="_blank" class="btn btn-primary" style="background: #ffd700; color: #1f2937;">Saweria</a>
-                    </div>
-                </div>
-            </div>
-        </section>
+      <section id="shop" class="content-section">
+        <div class="section-header-flex">
+          <div>
+            <h2 class="section-title">Premium Products</h2>
+            <p class="text-secondary">Arsitektur premium siap pakai untuk meningkatkan performa bisnis Anda.</p>
+          </div>
+          <div>
+            <input type="text" id="shop-search" placeholder="Search product..." class="search-input">
+          </div>
+        </div>
+        <div class="dynamic-grid" id="shop-grid-node">
+          <div class="skeleton-card"></div>
+        </div>
+      </section>
 
-        <!-- CONTACT SECTION -->
-        <section id="contact" class="app-section">
-            <div class="section-container">
-                <div class="section-header">
-                    <h2>Hubungi Saya</h2>
-                    <p>Mari diskusikan ide Anda</p>
-                </div>
-                <div class="contact-grid">
-                    <div class="contact-form-box glass-card">
-                        <form id="main-contact-form">
-                            <div class="form-group"><label>Nama</label><input type="text" id="contact-name" required></div>
-                            <div class="form-group"><label>Email</label><input type="email" id="contact-email" required></div>
-                            <div class="form-group"><label>Pesan</label><textarea id="contact-message" rows="5" required></textarea></div>
-                            <button type="submit" class="btn btn-primary">Kirim</button>
-                        </form>
-                    </div>
-                    <div class="contact-info-box glass-card">
-                        <h3>Social Media</h3>
-                        <div class="social-buttons-list">
-                            <a href="mailto:emosoft.mail@gmail.com" class="social-btn mail">Email</a>
-                            <a href="https://github.com/EmonCme" target="_blank" class="social-btn" style="background: #333;">GitHub</a>
-                            <a href="https://instagram.com/emon_leoly" target="_blank" class="social-btn" style="background: #e4405f;">Instagram</a>
-                            <a href="https://wa.me/6285198224557" target="_blank" class="social-btn wa">WhatsApp</a>
-                        </div>
-                    </div>
-                </div>
+      <section id="donate" class="content-section">
+        <div class="section-header">
+          <h2 class="section-title">Support & Donation</h2>
+          <p class="text-secondary">Dukung pengembangan berkelanjutan ekosistem open-source dan server info hub.</p>
+        </div>
+        <div class="donate-grid">
+          <div class="glass-card text-center flex-center flex-dir-col" style="padding: 2.5rem;">
+            <h4>Gateway QRIS Premium</h4>
+            <div class="qris-box glass-card">
+              <img id="donate-qris-node" src="" alt="QRIS Gateway" class="lazy-image">
             </div>
-        </section>
+            <p class="text-secondary" style="font-size: 0.85rem; margin-top: 1rem;">Scan via Aplikasi Finansial Utama Anda</p>
+          </div>
+          <div class="glass-card" style="padding: 2.5rem;">
+            <h4>Metode Transfer Instan</h4>
+            <ul class="donation-list">
+              <li><span>DANA</span> <strong id="donate-dana-node" class="text-primary">-</strong></li>
+              <li><span>OVO</span> <strong id="donate-ovo-node" class="text-primary">-</strong></li>
+              <li><span>GOPAY</span> <strong id="donate-gopay-node" class="text-primary">-</strong></li>
+            </ul>
+            <a href="#" id="donate-saweria-node" target="_blank" class="btn btn-primary text-center" style="display: block; margin-top: 2rem;">
+              <i class="fa-solid fa-heart" style="margin-right: 0.5rem;"></i> Dukung via Saweria
+            </a>
+          </div>
+        </div>
+      </section>
 
-        <!-- ADMIN SECTION -->
-        <section id="admin" class="app-section">
-            <div class="section-container">
-                <div id="admin-login-box" class="glass-card authentication-card">
-                    <h3>Admin Login</h3>
-                    <form id="admin-login-form">
-                        <div class="form-group"><label>Username</label><input type="text" id="admin-username" required></div>
-                        <div class="form-group"><label>Password</label><input type="password" id="admin-password" required></div>
-                        <button type="submit" class="btn btn-primary btn-block">Login</button>
-                    </form>
-                </div>
-                <div id="admin-workspace" class="d-none">
-                    <div class="admin-workspace-header glass-card">
-                        <h2>Dashboard Admin</h2>
-                        <button id="admin-logout-btn" class="btn btn-secondary">Logout</button>
-                    </div>
-                    <div class="admin-dashboard-layout">
-                        <div class="admin-nav-tabs glass-card">
-                            <button class="admin-tab-btn active" data-target="tab-home">Edit Home</button>
-                            <button class="admin-tab-btn" data-target="tab-project">Projects</button>
-                            <button class="admin-tab-btn" data-target="tab-product">Products</button>
-                            <button class="admin-tab-btn" data-target="tab-faq">FAQ</button>
-                            <button class="admin-tab-btn" data-target="tab-testimonial">Testimoni</button>
-                        </div>
-                        <div class="admin-tab-content-holder glass-card">
-                            <div id="tab-home" class="admin-tab-pane active-pane">
-                                <button class="btn btn-primary" id="btn-edit-home">Edit Home Content</button>
-                                <p style="margin-top: 20px;">Klik tombol di atas untuk mengubah konten halaman Home.</p>
-                            </div>
-                            <div id="tab-project" class="admin-tab-pane">
-                                <button class="btn btn-primary" id="btn-add-project-modal">+ Tambah Project</button>
-                                <div class="table-responsive">
-                                    <table>
-                                        <thead>
-                                            <tr><th>Judul</th><th>Kategori</th><th>Likes</th><th>Aksi</th></tr>
-                                        </thead>
-                                        <tbody id="admin-project-table-body"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div id="tab-product" class="admin-tab-pane">
-                                <button class="btn btn-primary" id="btn-add-product-modal">+ Tambah Produk</button>
-                                <div class="table-responsive">
-                                    <table>
-                                        <thead>
-                                            <tr><th>Nama</th><th>Kategori</th><th>Harga</th><th>Aksi</th></tr>
-                                        </thead>
-                                        <tbody id="admin-product-table-body"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div id="tab-faq" class="admin-tab-pane">
-                                <button class="btn btn-primary" id="btn-add-faq-modal">+ Tambah FAQ</button>
-                                <div class="table-responsive">
-                                    <table>
-                                        <thead>
-                                            <tr><th>Pertanyaan</th><th>Aksi</th></tr>
-                                        </thead>
-                                        <tbody id="admin-faq-table-body"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div id="tab-testimonial" class="admin-tab-pane">
-                                <button class="btn btn-primary" id="btn-add-testimonial-modal">+ Tambah Testimoni</button>
-                                <div class="table-responsive">
-                                    <table>
-                                        <thead>
-                                            <tr><th>Nama</th><th>Perusahaan</th><th>Rating</th><th>Aksi</th></tr>
-                                        </thead>
-                                        <tbody id="admin-testimonial-table-body"></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+      <section id="contact" class="content-section">
+        <div class="section-header">
+          <h2 class="section-title">Contact Center</h2>
+          <p class="text-secondary">Mari bicarakan tentang arsitektur sistem, optimasi web, atau kolaborasi premium.</p>
+        </div>
+        <div class="contact-links-grid">
+          <a href="#" id="ctx-wa" target="_blank" class="glass-card contact-link-card">
+            <i class="fa-brands fa-whatsapp ctx-icon-wa"></i>
+            <div>
+              <span class="ctx-label">WhatsApp Secure Line</span>
+              <p class="text-secondary text-sm">Direct Messaging</p>
             </div>
-        </section>
+          </a>
+          <a href="#" id="ctx-tg" target="_blank" class="glass-card contact-link-card">
+            <i class="fa-brands fa-telegram ctx-icon-tg"></i>
+            <div>
+              <span class="ctx-label">Telegram Workspace</span>
+              <p class="text-secondary text-sm">Secure Chat</p>
+            </div>
+          </a>
+          <a href="#" id="ctx-mail" target="_blank" class="glass-card contact-link-card">
+            <i class="fa-solid fa-envelope ctx-icon-mail"></i>
+            <div>
+              <span class="ctx-label">Corporate Email</span>
+              <p class="text-secondary text-sm">Official Inquiries</p>
+            </div>
+          </a>
+          <a href="#" id="ctx-ig" target="_blank" class="glass-card contact-link-card">
+            <i class="fa-brands fa-instagram ctx-icon-ig"></i>
+            <div>
+              <span class="ctx-label">Instagram Portfolio</span>
+              <p class="text-secondary text-sm">Social Presence</p>
+            </div>
+          </a>
+          <a href="#" id="ctx-git" target="_blank" class="glass-card contact-link-card">
+            <i class="fa-brands fa-github ctx-icon-git"></i>
+            <div>
+              <span class="ctx-label">GitHub Environment</span>
+              <p class="text-secondary text-sm">Open Source Repositories</p>
+            </div>
+          </a>
+        </div>
+      </section>
     </main>
 
-    <!-- SHOPPING CART PANEL -->
-    <div id="shopping-cart-panel" class="glass-panel">
-        <div class="panel-header">
-            <h3>Keranjang</h3>
-            <button id="cart-close-btn" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
+    <button id="back-to-top" class="back-to-top" aria-label="Back To Top">
+      <i class="fa-solid fa-arrow-up"></i>
+    </button>
+  </div>
+
+  ==================================================
+  ADMIN CENTRAL MODAL MODULAR SYSTEM
+  ==================================================
+  <div id="admin-modal" class="modal-overlay hidden-panel">
+    
+    <div id="admin-auth-card" class="glass-card modal-window" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-lock text-accent" style="margin-right: 0.5rem;"></i> Gate Authorization</h3>
+        <button class="close-modal-btn close-modal-trigger"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="admin-login-form" class="modern-form">
+        <div class="form-group">
+          <label for="auth-user">Identity Token (Username)</label>
+          <input type="text" id="auth-user" required placeholder="admin">
         </div>
-        <div class="panel-body" id="cart-items-container"></div>
-        <div class="panel-footer">
-            <div class="total-box">
-                <span>Total:</span>
-                <span id="cart-total-price">Rp 0</span>
-            </div>
-            <button id="checkout-action-btn" class="btn btn-primary btn-block">Checkout</button>
+        <div class="form-group">
+          <label for="auth-pass">Passphrase</label>
+          <input type="password" id="auth-pass" required placeholder="••••••••">
         </div>
+        <div class="form-group flex-row" style="gap: 0.5rem; justify-content: flex-start;">
+          <input type="checkbox" id="auth-remember" style="width: auto;">
+          <label for="auth-remember" style="margin-bottom: 0; cursor: pointer;">Remember Session</label>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Authenticate</button>
+      </form>
     </div>
 
-    <!-- MODAL -->
-    <div id="global-data-modal" class="modal-overlay">
-        <div class="modal-window glass-card">
-            <div class="modal-header">
-                <h3 id="modal-title-node">Form</h3>
-                <button id="modal-close-trigger" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="modal-body" id="modal-body-node"></div>
+    <div id="admin-dashboard-card" class="glass-card modal-window hidden-panel" style="max-width: 1100px; width: 95%;">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-shield-halved text-accent" style="margin-right: 0.5rem;"></i> Leoly Core Engine Controls</h3>
+        <div class="flex-row" style="gap: 1rem;">
+          <button id="admin-logout-btn" class="btn btn-secondary" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Logout</button>
+          <button class="close-modal-btn close-modal-trigger"><i class="fa-solid fa-xmark"></i></button>
         </div>
+      </div>
+      
+      <div class="admin-layout">
+        <div class="admin-tabs">
+          <button class="admin-tab-btn active" data-tab="tab-overview"><i class="fa-solid fa-chart-pie"></i> Metrics Overview</button>
+          <button class="admin-tab-btn" data-tab="tab-website"><i class="fa-solid fa-globe"></i> SEO & Core Global</button>
+          <button class="admin-tab-btn" data-tab="tab-home-editor"><i class="fa-solid fa-house"></i> Hero Node</button>
+          <button class="admin-tab-btn" data-tab="tab-about-editor"><i class="fa-solid fa-user"></i> Profile Engine</button>
+          <button class="admin-tab-btn" data-tab="tab-project-manager"><i class="fa-solid fa-folder-open"></i> Project Manager</button>
+          <button class="admin-tab-btn" data-tab="tab-shop-manager"><i class="fa-solid fa-store"></i> Product Catalog</button>
+          <button class="admin-tab-btn" data-tab="tab-gateways"><i class="fa-solid fa-wallet"></i> Gateway Systems</button>
+          <button class="admin-tab-btn" data-tab="tab-json-manager"><i class="fa-solid fa-database"></i> JSON IO Manager</button>
+        </div>
+
+        <div class="admin-tab-content-wrapper">
+          
+          <div id="tab-overview" class="admin-tab-panel active">
+            <h4>System Analytical Performance</h4>
+            <div class="metrics-grid">
+              <div class="metric-card glass-card">
+                <span class="metric-label">Visitor Sessions</span>
+                <h3 id="m-visitors">0</h3>
+              </div>
+              <div class="metric-card glass-card">
+                <span class="metric-label">Total Core Projects</span>
+                <h3 id="m-projects">0</h3>
+              </div>
+              <div class="metric-card glass-card">
+                <span class="metric-label">Premium Catalog Items</span>
+                <h3 id="m-products">0</h3>
+              </div>
+              <div class="metric-card glass-card">
+                <span class="metric-label">Financial Endorsements</span>
+                <h3 id="m-donations">0</h3>
+              </div>
+            </div>
+            <div class="chart-container glass-card" style="margin-top: 1.5rem; position: relative; height:280px; width:100%">
+              <canvas id="analyticsChart"></canvas>
+            </div>
+          </div>
+
+          <div id="tab-website" class="admin-tab-panel">
+            <h4>Core Metadata Engine</h4>
+            <form id="form-core-web" class="modern-form">
+              <div class="form-group">
+                <label>Website Title Struct</label>
+                <input type="text" id="adm-web-title" required>
+              </div>
+              <div class="form-group">
+                <label>Global SEO Description Meta</label>
+                <textarea id="adm-web-desc" rows="3" required></textarea>
+              </div>
+              <div class="grid-2col">
+                <div class="form-group">
+                  <label>Logo Token / Glyph</label>
+                  <input type="text" id="adm-web-logo">
+                </div>
+                <div class="form-group">
+                  <label>Background System Banner Link</label>
+                  <div class="img-upload-preview-group">
+                    <input type="text" id="adm-web-banner" class="img-preview-input">
+                    <img src="" class="input-preview-box">
+                  </div>
+                </div>
+              </div>
+              <div class="form-group flex-row" style="justify-content: flex-start; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+                <input type="checkbox" id="adm-sys-maintenance" style="width: auto;">
+                <label style="margin-bottom: 0;">Activate Global Maintenance Protocol Screen</label>
+              </div>
+              <button type="submit" class="btn btn-primary margin-t-1">Commit System Changes</button>
+            </form>
+          </div>
+
+          <div id="tab-home-editor" class="admin-tab-panel">
+            <h4>Hero Section Definition Editor</h4>
+            <form id="form-hero-editor" class="modern-form">
+              <div class="form-group">
+                <label>Primary Title</label>
+                <input type="text" id="adm-home-title" required>
+              </div>
+              <div class="form-group">
+                <label>Subtitle Descriptor</label>
+                <input type="text" id="adm-home-subtitle" required>
+              </div>
+              <div class="form-group">
+                <label>Hero Focus Block Text</label>
+                <textarea id="adm-home-desc" rows="3" required></textarea>
+              </div>
+              <div class="grid-2col">
+                <div class="form-group">
+                  <label>Button Action Primary Text</label>
+                  <input type="text" id="adm-home-btn1" required>
+                </div>
+                <div class="form-group">
+                  <label>Button Action Secondary Text</label>
+                  <input type="text" id="adm-home-btn2" required>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary margin-t-1">Update Core Matrix</button>
+            </form>
+          </div>
+
+          <div id="tab-about-editor" class="admin-tab-panel">
+            <h4>Profile Structural Properties</h4>
+            <form id="form-about-editor" class="modern-form">
+              <div class="form-group">
+                <label>Avatar Photo Link URL</label>
+                <div class="img-upload-preview-group">
+                  <input type="text" id="adm-about-photo" class="img-preview-input" required>
+                  <img src="" class="input-preview-box">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Developer Bio Manifest</label>
+                <textarea id="adm-about-desc" rows="4" required></textarea>
+              </div>
+              <div class="form-group">
+                <label>Skill Tags Matrix (Comma Separated)</label>
+                <input type="text" id="adm-about-skills" placeholder="HTML, CSS, JS" required>
+              </div>
+              <button type="submit" class="btn btn-primary margin-t-1">Sync Profile Array</button>
+            </form>
+          </div>
+
+          <div id="tab-project-manager" class="admin-tab-panel">
+            <div class="flex-row" style="justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h4>Architectural Case Studies Array</h4>
+              <button type="button" class="btn btn-primary" id="open-add-project-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">+ Add Project Node</button>
+            </div>
+            
+            <form id="form-project-crud" class="modern-form glass-card hidden-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-color: var(--accent-color);">
+              <input type="hidden" id="crud-project-id">
+              <h5 id="crud-project-title-label" style="margin-top: 0; margin-bottom: 1rem; font-size: 1rem;">New Project Struct</h5>
+              <div class="grid-2col">
+                <div class="form-group">
+                  <label>Project Name</label>
+                  <input type="text" id="crud-p-title" required>
+                </div>
+                <div class="form-group">
+                  <label>Category Label</label>
+                  <input type="text" id="crud-p-cat" required placeholder="Web Design / Fullstack">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Project Context Summary</label>
+                <textarea id="crud-p-desc" rows="2" required></textarea>
+              </div>
+              <div class="form-group">
+                <label>Thumbnail Resource URL</label>
+                <div class="img-upload-preview-group">
+                  <input type="text" id="crud-p-thumb" class="img-preview-input" required>
+                  <img src="" class="input-preview-box">
+                </div>
+              </div>
+              <div class="grid-2col">
+                <div class="form-group">
+                  <label>Live Demo Target URL</label>
+                  <input type="text" id="crud-p-demo" required>
+                </div>
+                <div class="form-group">
+                  <label>Source Control Blueprint Link</label>
+                  <input type="text" id="crud-p-source" required>
+                </div>
+              </div>
+              <div class="flex-row margin-t-1" style="gap: 1rem;">
+                <button type="submit" class="btn btn-primary">Save Node</button>
+                <button type="button" class="btn btn-secondary" id="cancel-project-btn">Cancel</button>
+              </div>
+            </form>
+
+            <div class="admin-table-scroll-wrapper">
+              <table class="admin-data-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-projects-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="tab-shop-manager" class="admin-tab-panel">
+            <div class="flex-row" style="justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h4>Premium Digital Asset Ecosystem</h4>
+              <button type="button" class="btn btn-primary" id="open-add-shop-btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">+ Add Asset Node</button>
+            </div>
+            
+            <form id="form-shop-crud" class="modern-form glass-card hidden-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-color: var(--accent-color);">
+              <input type="hidden" id="crud-shop-id">
+              <h5 id="crud-shop-title-label" style="margin-top: 0; margin-bottom: 1rem; font-size: 1rem;">New Premium Asset Block</h5>
+              <div class="grid-2col">
+                <div class="form-group">
+                  <label>Product Asset Title</label>
+                  <input type="text" id="crud-s-title" required>
+                </div>
+                <div class="form-group">
+                  <label>Valuation Tag Price</label>
+                  <input type="text" id="crud-s-price" placeholder="Rp 50.000" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Asset Architectural Description</label>
+                <textarea id="crud-s-desc" rows="2" required></textarea>
+              </div>
+              <div class="grid-2col">
+                <div class="form-group">
+                  <label>Product Thumbnail URL</label>
+                  <div class="img-upload-preview-group">
+                    <input type="text" id="crud-s-thumb" class="img-preview-input" required>
+                    <img src="" class="input-preview-box">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Aquisition Commercial Gateway Link</label>
+                  <input type="text" id="crud-s-buyurl" required>
+                </div>
+              </div>
+              <div class="flex-row margin-t-1" style="gap: 1rem;">
+                <button type="submit" class="btn btn-primary">Save Asset</button>
+                <button type="button" class="btn btn-secondary" id="cancel-shop-btn">Cancel</button>
+              </div>
+            </form>
+
+            <div class="admin-table-scroll-wrapper">
+              <table class="admin-data-table">
+                <thead>
+                  <tr>
+                    <th>Asset Name</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-shop-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="tab-gateways" class="admin-tab-panel">
+            <h4>Fintech Interfaces & Network Endpoints</h4>
+            <form id="form-gateways" class="modern-form">
+              <h5 style="margin-top:0; border-bottom:1px solid var(--border-color); padding-bottom:0.3rem;">Financial Inbound Endpoints</h5>
+              <div class="grid-2col">
+                <div class="form-group">
+                  <label>QRIS String Matrix / Image URL</label>
+                  <div class="img-upload-preview-group">
+                    <input type="text" id="adm-don-qris" class="img-preview-input">
+                    <img src="" class="input-preview-box">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Saweria Gateway Endorsement Link</label>
+                  <input type="text" id="adm-don-saweria">
+                </div>
+              </div>
+              <div class="grid-3col">
+                <div class="form-group"><label>DANA Register ID</label><input type="text" id="adm-don-dana"></div>
+                <div class="form-group"><label>OVO Register ID</label><input type="text" id="adm-don-ovo"></div>
+                <div class="form-group"><label>GoPay Register ID</label><input type="text" id="adm-don-gopay"></div>
+              </div>
+
+              <h5 style="margin-top:1.5rem; border-bottom:1px solid var(--border-color); padding-bottom:0.3rem;">Communication Node Routing</h5>
+              <div class="grid-2col">
+                <div class="form-group"><label>WhatsApp Routing Target</label><input type="text" id="adm-ctx-wa"></div>
+                <div class="form-group"><label>Telegram Direct Identifier</label><input type="text" id="adm-ctx-tg"></div>
+              </div>
+              <div class="grid-3col">
+                <div class="form-group"><label>Inbound Mail Routing</label><input type="text" id="adm-ctx-mail"></div>
+                <div class="form-group"><label>Instagram Account handle</label><input type="text" id="adm-ctx-ig"></div>
+                <div class="form-group"><label>GitHub Production Workspace</label><input type="text" id="adm-ctx-git"></div>
+              </div>
+
+              <button type="submit" class="btn btn-primary margin-t-1">Sync Channels</button>
+            </form>
+          </div>
+
+          <div id="tab-json-manager" class="admin-tab-panel">
+            <h4>JSON Data Infrastructure Engine</h4>
+            <p class="text-secondary" style="font-size: 0.85rem; margin-bottom: 1.5rem;">
+              Manajemen penyimpanan data lokal. Anda dapat mengekspor data yang diubah di sini langsung ke dalam berkas <code class="text-primary">database.json</code> untuk kebutuhan repositori static Anda atau melakukan backup data instan.
+            </p>
+            <div class="json-actions-grid">
+              <button id="btn-json-export" class="btn btn-secondary"><i class="fa-solid fa-file-export"></i> Export Live JSON Data</button>
+              <button id="btn-json-download" class="btn btn-primary"><i class="fa-solid fa-download"></i> Download database.json</button>
+              
+              <div class="glass-card" style="padding:1.5rem; grid-column: span 2; margin-top: 1rem;">
+                <h5>Import Database Manifest</h5>
+                <p class="text-secondary text-sm" style="margin-bottom:1rem;">Unggah atau timpa data manifest sistem secara menyeluruh dari file .json cadangan Anda.</p>
+                <input type="file" id="json-file-input" accept=".json" style="display:none;">
+                <button type="button" onclick="document.getElementById('json-file-input').click()" class="btn btn-secondary"><i class="fa-solid fa-file-import"></i> Upload / Import Object JSON</button>
+              </div>
+            </div>
+
+            <div class="flex-row" style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; justify-content: flex-end; gap:1rem;">
+              <button id="btn-json-backup" class="btn btn-secondary" style="background: rgba(16,185,129,0.1); color:#10b981; border-color:rgba(16,185,129,0.2);">Backup System State</button>
+              <button id="btn-json-restore" class="btn btn-secondary" style="background: rgba(245,158,11,0.1); color:#f59e0b; border-color:rgba(245,158,11,0.2);">Restore Cache</button>
+              <button id="btn-json-reset" class="btn btn-secondary" style="background: rgba(239,68,68,0.1); color:#ef4444; border-color:rgba(239,68,68,0.2);">Wipe & Reset Factory Defaults</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </div>
 
-    <footer class="glass-footer">
-        <p>© 2026 <strong>Leoly</strong>. Built with <i class="fa-solid fa-heart"></i></p>
-    </footer>
-    <button id="back-to-top" class="icon-btn"><i class="fa-solid fa-arrow-up"></i></button>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="script.js"></script>
+  ==================================================
+  CUSTOM MODULAR CONFIRM SYSTEM DIALOG DIALOG
+  ==================================================
+  <div id="confirm-modal" class="modal-overlay hidden-panel" style="z-index: 1100;">
+    <div class="glass-card modal-window text-center" style="max-width: 380px; padding: 2rem;">
+      <i class="fa-solid fa-circle-exclamation text-accent" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
+      <h4 id="confirm-title" style="margin: 0 0 0.5rem 0;">System Interception</h4>
+      <p id="confirm-msg" class="text-secondary" style="font-size:0.9rem; margin-bottom:1.5rem;"></p>
+      <div class="flex-row" style="gap: 1rem; justify-content: center;">
+        <button id="confirm-yes-btn" class="btn btn-primary" style="padding:0.4rem 1.5rem;">Execute</button>
+        <button id="confirm-no-btn" class="btn btn-secondary" style="padding:0.4rem 1.5rem;">Abort</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
