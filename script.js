@@ -57,13 +57,13 @@ function isMobileDevice() {
 // ========================
 
 const DEFAULT_PROJECTS = [
-    { id: "p1", name: "Leoly Info Server Core", category: "Server Info", description: "Arsitektur monitoring data server info internal berkinerja tinggi berbasis real-time data flow.", link: "https://emosoft.xyz", image_url: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=400&auto=format" },
-    { id: "p2", name: "Premium SaaS Analytics UI", category: "Web App", description: "Desain sistem dashboard modular dengan implementasi advanced glassmorphism modern.", link: "https://emosoft.xyz", image_url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=400&auto=format" }
+    { id: "p1", name: "Leoly Info Server Core", category: "Server Info", desc: "Arsitektur monitoring data server info internal berkinerja tinggi berbasis real-time data flow.", link: "https://emosoft.xyz", img: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=400&auto=format" },
+    { id: "p2", name: "Premium SaaS Analytics UI", category: "Web App", desc: "Desain sistem dashboard modular dengan implementasi advanced glassmorphism modern.", link: "https://emosoft.xyz", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=400&auto=format" }
 ];
 
 const DEFAULT_PRODUCTS = [
-    { id: "s1", name: "Next-Gen Aurora CSS Pack", category: "Source Code", price: 150000, description: "Modul konfigurasi animasi aurora gradient 60 FPS optimal untuk landing page premium.", image_url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format" },
-    { id: "s2", name: "Roblox Terrain Config", category: "Config", price: 85000, description: "Script kustomisasi rendering terrain map untuk performa game mobile.", image_url: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=400&auto=format" }
+    { id: "s1", name: "Next-Gen Aurora CSS Pack", category: "Source Code", price: 150000, desc: "Modul konfigurasi animasi aurora gradient 60 FPS optimal untuk landing page premium.", img: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format" },
+    { id: "s2", name: "Roblox Terrain Config", category: "Config", price: 85000, desc: "Script kustomisasi rendering terrain map untuk performa game mobile.", img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=400&auto=format" }
 ];
 
 const DEFAULT_SETTINGS = {
@@ -107,12 +107,21 @@ let supabaseClient = window.supabaseClient;
 
 async function loadProjectsFromSupabase() {
     try {
+        if (!supabaseClient) {
+            console.warn('Supabase client not initialized');
+            loadProjectsFromLocal();
+            return false;
+        }
+        
         const { data, error } = await supabaseClient
             .from('projects')
             .select('*')
             .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase projects error:', error);
+            throw error;
+        }
         
         if (data && data.length > 0) {
             appState.projects = data.map(p => ({
@@ -123,10 +132,13 @@ async function loadProjectsFromSupabase() {
                 link: p.link,
                 img: p.image_url
             }));
+            console.log(`✅ Loaded ${appState.projects.length} projects from Supabase`);
         } else {
-            // Seed default data if empty
+            console.log('No projects in Supabase, using defaults');
+            appState.projects = [...DEFAULT_PROJECTS];
+            // Seed data ke Supabase
             for (const project of DEFAULT_PROJECTS) {
-                await supabaseClient.from('projects').insert([{
+                await supabaseClient.from('projects').upsert([{
                     id: project.id,
                     name: project.name,
                     category: project.category,
@@ -135,16 +147,14 @@ async function loadProjectsFromSupabase() {
                     image_url: project.img
                 }]);
             }
-            appState.projects = [...DEFAULT_PROJECTS];
         }
         
         renderProjectsEngine();
         updateCounters();
         return true;
     } catch (error) {
-        console.error('Error loading projects:', error);
-        showToast('Failed to load projects from cloud', 'fa-cloud-arrow-down');
-        // Fallback to local storage
+        console.error('Error loading projects:', error.message);
+        showToast('Cannot connect to cloud, using local data', 'fa-cloud-arrow-down', 4000);
         loadProjectsFromLocal();
         return false;
     }
@@ -152,6 +162,11 @@ async function loadProjectsFromSupabase() {
 
 async function loadProductsFromSupabase() {
     try {
+        if (!supabaseClient) {
+            loadProductsFromLocal();
+            return false;
+        }
+        
         const { data, error } = await supabaseClient
             .from('products')
             .select('*')
@@ -168,27 +183,28 @@ async function loadProductsFromSupabase() {
                 desc: p.description,
                 img: p.image_url
             }));
+            console.log(`✅ Loaded ${appState.products.length} products from Supabase`);
         } else {
-            // Seed default data if empty
+            console.log('No products in Supabase, using defaults');
+            appState.products = [...DEFAULT_PRODUCTS];
+            // Seed data ke Supabase
             for (const product of DEFAULT_PRODUCTS) {
-                await supabaseClient.from('products').insert([{
+                await supabaseClient.from('products').upsert([{
                     id: product.id,
                     name: product.name,
                     category: product.category,
                     price: product.price,
-                    description: product.description,
-                    image_url: product.image_url
+                    description: product.desc,
+                    image_url: product.img
                 }]);
             }
-            appState.products = [...DEFAULT_PRODUCTS];
         }
         
         renderShopEngine();
         updateCounters();
         return true;
     } catch (error) {
-        console.error('Error loading products:', error);
-        showToast('Failed to load products from cloud', 'fa-cloud-arrow-down');
+        console.error('Error loading products:', error.message);
         loadProductsFromLocal();
         return false;
     }
@@ -196,31 +212,33 @@ async function loadProductsFromSupabase() {
 
 async function loadSettingsFromSupabase() {
     try {
+        if (!supabaseClient) return false;
+        
         const { data, error } = await supabaseClient
             .from('settings')
             .select('*')
             .eq('id', 'main')
-            .single();
+            .maybeSingle();
         
         if (error && error.code !== 'PGRST116') throw error;
         
         if (data) {
             appState.settings = {
                 ...appState.settings,
-                ...data,
-                heroTitle: data.hero_title,
-                heroSubtitle: data.hero_subtitle,
-                siteName: data.site_name,
-                typingStrings: data.typing_strings,
-                wa: data.wa,
-                tg: data.tg,
-                gh: data.gh,
-                em: data.em,
-                dana: data.dana,
-                ovo: data.ovo,
-                saweria: data.saweria,
-                qrisUrl: data.qris_url
+                siteName: data.site_name || appState.settings.siteName,
+                heroTitle: data.hero_title || appState.settings.heroTitle,
+                heroSubtitle: data.hero_subtitle || appState.settings.heroSubtitle,
+                typingStrings: data.typing_strings || appState.settings.typingStrings,
+                wa: data.wa || appState.settings.wa,
+                tg: data.tg || appState.settings.tg,
+                gh: data.gh || appState.settings.gh,
+                em: data.em || appState.settings.em,
+                dana: data.dana || appState.settings.dana,
+                ovo: data.ovo || appState.settings.ovo,
+                saweria: data.saweria || appState.settings.saweria,
+                qrisUrl: data.qris_url || appState.settings.qrisUrl
             };
+            console.log('✅ Loaded settings from Supabase');
         } else {
             // Insert default settings
             await supabaseClient.from('settings').insert([{
@@ -249,7 +267,7 @@ async function loadSettingsFromSupabase() {
     }
 }
 
-async function saveProjectToSupabase(project, isNew = false) {
+async function saveProjectToSupabase(project) {
     try {
         const { error } = await supabaseClient
             .from('projects')
@@ -264,6 +282,7 @@ async function saveProjectToSupabase(project, isNew = false) {
             }]);
         
         if (error) throw error;
+        console.log('✅ Project saved to Supabase:', project.id);
         return true;
     } catch (error) {
         console.error('Error saving project:', error);
@@ -272,7 +291,7 @@ async function saveProjectToSupabase(project, isNew = false) {
     }
 }
 
-async function saveProductToSupabase(product, isNew = false) {
+async function saveProductToSupabase(product) {
     try {
         const { error } = await supabaseClient
             .from('products')
@@ -287,6 +306,7 @@ async function saveProductToSupabase(product, isNew = false) {
             }]);
         
         if (error) throw error;
+        console.log('✅ Product saved to Supabase:', product.id);
         return true;
     } catch (error) {
         console.error('Error saving product:', error);
@@ -363,7 +383,7 @@ async function incrementVisitorCount() {
             .from('visitors')
             .select('*')
             .eq('date', today)
-            .single();
+            .maybeSingle();
         
         if (error && error.code !== 'PGRST116') throw error;
         
@@ -378,7 +398,7 @@ async function incrementVisitorCount() {
                 .insert([{ date: today, visitor_count: 1 }]);
         }
         
-        // Get total visitors for last 30 days
+        // Get total visitors
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
@@ -388,7 +408,8 @@ async function incrementVisitorCount() {
             .gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
         
         const total = totalData?.reduce((sum, v) => sum + v.visitor_count, 0) || 1240;
-        document.getElementById("stat-visitor-count").innerText = total.toLocaleString();
+        const visitorEl = document.getElementById("stat-visitor-count");
+        if (visitorEl) visitorEl.innerText = total.toLocaleString();
         
         return total;
     } catch (error) {
@@ -779,7 +800,6 @@ function toggleAdminPanelMode(show) {
         document.addEventListener('click', resetAdminTimer);
         document.addEventListener('keydown', resetAdminTimer);
         
-        // Show user info
         const userInfo = document.getElementById("admin-user-info");
         if (userInfo && appState.currentUser) {
             userInfo.innerHTML = `<i class="fa-solid fa-user"></i> ${appState.currentUser.email}`;
@@ -792,7 +812,6 @@ function toggleAdminPanelMode(show) {
 }
 
 function populateAdminDashboardTables() {
-    // Projects table
     const pTable = document.getElementById("adm-projects-table");
     if(pTable) {
         pTable.innerHTML = "";
@@ -810,7 +829,6 @@ function populateAdminDashboardTables() {
         });
     }
     
-    // Products table
     const sTable = document.getElementById("adm-products-table");
     if(sTable) {
         sTable.innerHTML = "";
@@ -829,7 +847,6 @@ function populateAdminDashboardTables() {
         });
     }
     
-    // Fill settings forms
     const s = appState.settings;
     const settingsFields = {
         "adm-site-name": s.siteName,
@@ -852,7 +869,7 @@ function populateAdminDashboardTables() {
     });
 }
 
-async function openEditorEngine(type, id = null) {
+function openEditorEngine(type, id = null) {
     const modal = document.getElementById("editor-modal");
     const catSelect = document.getElementById("edit-category");
     if(!modal || !catSelect) return;
@@ -935,7 +952,6 @@ async function deleteDataEngine(type, id) {
 // ========================
 
 function initEventListeners() {
-    // Scroll handlers
     window.addEventListener("scroll", () => {
         const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
         const progress = document.getElementById("scroll-progress");
@@ -948,7 +964,6 @@ function initEventListeners() {
     
     document.getElementById("back-to-top")?.addEventListener("click", () => window.scrollTo({top:0, behavior:'smooth'}));
     
-    // Hamburger menu
     const hamburger = document.getElementById("hamburger");
     const navMenu = document.getElementById("nav-menu");
     if(hamburger && navMenu) {
@@ -956,13 +971,11 @@ function initEventListeners() {
         document.querySelectorAll(".nav-link").forEach(l => l.addEventListener("click", () => navMenu.classList.remove("active")));
     }
     
-    // Search with debounce
     const debouncedProject = debounce(() => renderProjectsEngine(), 300);
     const debouncedShop = debounce(() => renderShopEngine(), 300);
     document.getElementById("project-search")?.addEventListener("input", (e) => { appState.projectSearch = e.target.value; debouncedProject(); });
     document.getElementById("shop-search")?.addEventListener("input", (e) => { appState.shopSearch = e.target.value; debouncedShop(); });
     
-    // Filters
     document.querySelectorAll("#project-filters .filter-btn").forEach(btn => btn.addEventListener("click", function() {
         document.querySelectorAll("#project-filters .filter-btn").forEach(b => b.classList.remove("active"));
         this.classList.add("active");
@@ -976,7 +989,6 @@ function initEventListeners() {
         renderShopEngine();
     }));
     
-    // Cart
     document.getElementById("cart-toggle-btn")?.addEventListener("click", openCartModal);
     document.getElementById("checkout-btn")?.addEventListener("click", () => {
         if(appState.cart.length === 0) return showToast("Cart is empty", "fa-triangle-exclamation");
@@ -986,7 +998,6 @@ function initEventListeners() {
         window.open(`https://wa.me/${appState.settings.wa}?text=${encodeURIComponent(text)}`, "_blank");
     });
     
-    // Admin - Login with Supabase
     document.getElementById("open-login-btn")?.addEventListener("click", () => {
         if(appState.isAdmin) {
             toggleAdminPanelMode(true);
@@ -1006,7 +1017,6 @@ function initEventListeners() {
         await logoutFromSupabase();
     });
     
-    // Admin nav tabs
     document.querySelectorAll(".admin-nav-item").forEach(btn => btn.addEventListener("click", function() {
         document.querySelectorAll(".admin-nav-item").forEach(b => b.classList.remove("active"));
         document.querySelectorAll(".admin-tab-content").forEach(c => c.classList.remove("active"));
@@ -1014,7 +1024,6 @@ function initEventListeners() {
         document.getElementById(this.dataset.tab).classList.add("active");
     }));
     
-    // Hero Settings Form
     document.getElementById("adm-hero-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
         appState.settings.siteName = document.getElementById("adm-site-name").value;
@@ -1029,7 +1038,6 @@ function initEventListeners() {
         showToast("Hero settings saved to cloud!");
     });
     
-    // Contact Settings Form
     document.getElementById("adm-contact-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
         appState.settings.wa = document.getElementById("adm-wa").value;
@@ -1047,11 +1055,9 @@ function initEventListeners() {
         showToast("Contact settings saved to cloud!");
     });
     
-    // Add buttons
     document.getElementById("adm-add-project-btn")?.addEventListener("click", () => openEditorEngine('project'));
     document.getElementById("adm-add-product-btn")?.addEventListener("click", () => openEditorEngine('product'));
     
-    // Editor Form Submit
     document.getElementById("editor-form")?.addEventListener("submit", async (e) => {
         e.preventDefault();
         const type = document.getElementById("editor-target-type").value;
@@ -1068,7 +1074,7 @@ function initEventListeners() {
         let success = false;
         if(type === 'project') {
             newItem.link = document.getElementById("edit-link").value || "https://";
-            success = await saveProjectToSupabase(newItem, !id);
+            success = await saveProjectToSupabase(newItem);
             if (success) {
                 if(id) {
                     const idx = appState.projects.findIndex(p => p.id === id);
@@ -1079,7 +1085,7 @@ function initEventListeners() {
             }
         } else {
             newItem.price = parseInt(document.getElementById("edit-price").value) || 0;
-            success = await saveProductToSupabase(newItem, !id);
+            success = await saveProductToSupabase(newItem);
             if (success) {
                 if(id) {
                     const idx = appState.products.findIndex(p => p.id === id);
@@ -1102,7 +1108,6 @@ function initEventListeners() {
         }
     });
     
-    // Database Actions
     document.getElementById("db-sync-btn")?.addEventListener("click", async () => {
         showToast("Syncing from cloud...", "fa-arrows-rotate");
         await loadProjectsFromSupabase();
@@ -1135,11 +1140,9 @@ function initEventListeners() {
         }
     });
     
-    // Close modals
     document.querySelectorAll(".close-modal").forEach(b => b.addEventListener("click", closeModalSystem));
     window.addEventListener("click", (e) => { if(e.target.classList.contains("modal-overlay")) closeModalSystem(); });
     
-    // Keyboard shortcuts
     window.addEventListener("keydown", (e) => {
         if(e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
             e.preventDefault();
@@ -1149,7 +1152,6 @@ function initEventListeners() {
         if(e.key === "Escape") closeModalSystem();
     });
     
-    // Ripple effect
     document.querySelectorAll(".ripple").forEach(btn => {
         btn.addEventListener("click", function(e) {
             const rect = this.getBoundingClientRect();
@@ -1191,36 +1193,17 @@ function initChartEngine() {
 }
 
 // ========================
-// SUPABASE CONNECTION CHECK
-// ========================
-
-async function checkSupabaseConnectionAndUpdateUI() {
-    const statusSpan = document.getElementById("supabase-connection-status");
-    if (statusSpan) {
-        const isConnected = await window.checkSupabaseConnection();
-        if (isConnected) {
-            statusSpan.innerHTML = '<span style="color:#22c55e;">● Connected</span>';
-        } else {
-            statusSpan.innerHTML = '<span style="color:#ef4444;">● Disconnected (using local cache)</span>';
-        }
-    }
-}
-
-// ========================
 // DOM READY
 // ========================
 
 document.addEventListener("DOMContentLoaded", async () => {
-    // Show loader
     setTimeout(() => {
         const loader = document.getElementById("loading-screen");
         if(loader) { loader.style.opacity = "0"; setTimeout(() => loader.remove(), 500); }
     }, 1500);
     
-    // Check auth status
     await checkAuthStatus();
     
-    // Load data from Supabase
     showToast("Connecting to Supabase cloud...", "fa-cloud", 2000);
     
     await Promise.all([
@@ -1229,17 +1212,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         loadSettingsFromSupabase()
     ]);
     
-    // Track visitor
     await incrementVisitorCount();
     
-    // Render UI
     buildParticles();
     updateCounters();
     initChartEngine();
     initEventListeners();
     
-    // Check connection status
-    await checkSupabaseConnectionAndUpdateUI();
+    if (window.checkSupabaseConnection) {
+        await window.checkSupabaseConnection();
+    }
     
     AOS.init({ duration: 800, once: true });
     
