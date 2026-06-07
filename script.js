@@ -1,7 +1,7 @@
 /**
  * LEOLY DEV - SUPABASE EDITION
  * Full cloud integration with Supabase
- * Version 3.0.0
+ * Version 3.1.0
  */
 
 // ========================
@@ -90,7 +90,7 @@ let appState = {
     projects: [],
     products: [],
     settings: DEFAULT_SETTINGS,
-    cart: [],
+    cart: JSON.parse(localStorage.getItem("leoly_cart") || "[]"),
     activeProjectFilter: "all",
     activeShopFilter: "all",
     projectSearch: "",
@@ -99,31 +99,49 @@ let appState = {
     currentUser: null
 };
 
-// ========================
-// SUPABASE CLIENT INIT
-// ========================
-
 let supabaseClient = null;
 
-// Wait for Supabase client to be ready
-function initSupabaseClient() {
-    return new Promise((resolve) => {
-        const checkInterval = setInterval(() => {
-            if (window.supabaseClient) {
-                supabaseClient = window.supabaseClient;
-                clearInterval(checkInterval);
-                console.log('✅ Supabase client ready');
-                resolve(true);
-            }
-        }, 100);
-        
-        // Timeout after 5 seconds
-        setTimeout(() => {
-            clearInterval(checkInterval);
-            console.warn('⚠️ Supabase client timeout, using local storage');
-            resolve(false);
-        }, 5000);
-    });
+function getSupabase() {
+    return window.supabaseClient || supabaseClient;
+}
+
+// ========================
+// LOCAL STORAGE FUNCTIONS
+// ========================
+
+function saveCartToLocal() {
+    localStorage.setItem("leoly_cart", JSON.stringify(appState.cart));
+    updateCounters();
+}
+
+function loadProjectsFromLocal() {
+    const local = localStorage.getItem("leoly_projects");
+    if (local) {
+        appState.projects = JSON.parse(local);
+    } else {
+        appState.projects = [...DEFAULT_PROJECTS];
+        localStorage.setItem("leoly_projects", JSON.stringify(DEFAULT_PROJECTS));
+    }
+    renderProjectsEngine();
+}
+
+function loadProductsFromLocal() {
+    const local = localStorage.getItem("leoly_products");
+    if (local) {
+        appState.products = JSON.parse(local);
+    } else {
+        appState.products = [...DEFAULT_PRODUCTS];
+        localStorage.setItem("leoly_products", JSON.stringify(DEFAULT_PRODUCTS));
+    }
+    renderShopEngine();
+}
+
+function saveStateToLocal() {
+    localStorage.setItem("leoly_projects", JSON.stringify(appState.projects));
+    localStorage.setItem("leoly_products", JSON.stringify(appState.products));
+    localStorage.setItem("leoly_settings", JSON.stringify(appState.settings));
+    localStorage.setItem("leoly_cart", JSON.stringify(appState.cart));
+    updateCounters();
 }
 
 // ========================
@@ -131,22 +149,20 @@ function initSupabaseClient() {
 // ========================
 
 async function loadProjectsFromSupabase() {
+    const client = getSupabase();
+    if (!client) {
+        console.warn('Supabase client not initialized, using local');
+        loadProjectsFromLocal();
+        return false;
+    }
+    
     try {
-        if (!supabaseClient) {
-            console.warn('Supabase client not initialized');
-            loadProjectsFromLocal();
-            return false;
-        }
-        
-        const { data, error } = await supabaseClient
+        const { data, error } = await client
             .from('projects')
             .select('*')
             .order('created_at', { ascending: false });
         
-        if (error) {
-            console.error('Supabase projects error:', error);
-            throw error;
-        }
+        if (error) throw error;
         
         if (data && data.length > 0) {
             appState.projects = data.map(p => ({
@@ -159,11 +175,10 @@ async function loadProjectsFromSupabase() {
             }));
             console.log(`✅ Loaded ${appState.projects.length} projects from Supabase`);
         } else {
-            console.log('No projects in Supabase, using defaults');
+            console.log('No projects in Supabase, seeding defaults');
             appState.projects = [...DEFAULT_PROJECTS];
-            // Seed data ke Supabase
             for (const project of DEFAULT_PROJECTS) {
-                await supabaseClient.from('projects').upsert([{
+                await client.from('projects').upsert([{
                     id: project.id,
                     name: project.name,
                     category: project.category,
@@ -179,20 +194,20 @@ async function loadProjectsFromSupabase() {
         return true;
     } catch (error) {
         console.error('Error loading projects:', error.message);
-        showToast('Cannot connect to cloud, using local data', 'fa-cloud-arrow-down', 4000);
         loadProjectsFromLocal();
         return false;
     }
 }
 
 async function loadProductsFromSupabase() {
+    const client = getSupabase();
+    if (!client) {
+        loadProductsFromLocal();
+        return false;
+    }
+    
     try {
-        if (!supabaseClient) {
-            loadProductsFromLocal();
-            return false;
-        }
-        
-        const { data, error } = await supabaseClient
+        const { data, error } = await client
             .from('products')
             .select('*')
             .order('created_at', { ascending: false });
@@ -210,11 +225,10 @@ async function loadProductsFromSupabase() {
             }));
             console.log(`✅ Loaded ${appState.products.length} products from Supabase`);
         } else {
-            console.log('No products in Supabase, using defaults');
+            console.log('No products in Supabase, seeding defaults');
             appState.products = [...DEFAULT_PRODUCTS];
-            // Seed data ke Supabase
             for (const product of DEFAULT_PRODUCTS) {
-                await supabaseClient.from('products').upsert([{
+                await client.from('products').upsert([{
                     id: product.id,
                     name: product.name,
                     category: product.category,
@@ -236,10 +250,11 @@ async function loadProductsFromSupabase() {
 }
 
 async function loadSettingsFromSupabase() {
+    const client = getSupabase();
+    if (!client) return false;
+    
     try {
-        if (!supabaseClient) return false;
-        
-        const { data, error } = await supabaseClient
+        const { data, error } = await client
             .from('settings')
             .select('*')
             .eq('id', 'main')
@@ -250,10 +265,10 @@ async function loadSettingsFromSupabase() {
         if (data) {
             appState.settings = {
                 ...appState.settings,
-                siteName: data.site_name || appState.settings.siteName,
-                heroTitle: data.hero_title || appState.settings.heroTitle,
-                heroSubtitle: data.hero_subtitle || appState.settings.heroSubtitle,
-                typingStrings: data.typing_strings || appState.settings.typingStrings,
+                siteName: data.site_name || appState.settings.site_name,
+                heroTitle: data.hero_title || appState.settings.hero_title,
+                heroSubtitle: data.hero_subtitle || appState.settings.hero_subtitle,
+                typingStrings: data.typing_strings || appState.settings.typing_strings,
                 wa: data.wa || appState.settings.wa,
                 tg: data.tg || appState.settings.tg,
                 gh: data.gh || appState.settings.gh,
@@ -261,12 +276,11 @@ async function loadSettingsFromSupabase() {
                 dana: data.dana || appState.settings.dana,
                 ovo: data.ovo || appState.settings.ovo,
                 saweria: data.saweria || appState.settings.saweria,
-                qrisUrl: data.qris_url || appState.settings.qrisUrl
+                qrisUrl: data.qris_url || appState.settings.qris_url
             };
             console.log('✅ Loaded settings from Supabase');
         } else {
-            // Insert default settings
-            await supabaseClient.from('settings').insert([{
+            await client.from('settings').insert([{
                 id: "main",
                 site_name: DEFAULT_SETTINGS.site_name,
                 hero_title: DEFAULT_SETTINGS.hero_title,
@@ -293,8 +307,11 @@ async function loadSettingsFromSupabase() {
 }
 
 async function saveProjectToSupabase(project) {
+    const client = getSupabase();
+    if (!client) return false;
+    
     try {
-        const { error } = await supabaseClient
+        const { error } = await client
             .from('projects')
             .upsert([{
                 id: project.id,
@@ -317,8 +334,11 @@ async function saveProjectToSupabase(project) {
 }
 
 async function saveProductToSupabase(product) {
+    const client = getSupabase();
+    if (!client) return false;
+    
     try {
-        const { error } = await supabaseClient
+        const { error } = await client
             .from('products')
             .upsert([{
                 id: product.id,
@@ -341,8 +361,11 @@ async function saveProductToSupabase(product) {
 }
 
 async function saveSettingsToSupabase() {
+    const client = getSupabase();
+    if (!client) return false;
+    
     try {
-        const { error } = await supabaseClient
+        const { error } = await client
             .from('settings')
             .upsert([{
                 id: "main",
@@ -372,8 +395,11 @@ async function saveSettingsToSupabase() {
 }
 
 async function deleteProjectFromSupabase(id) {
+    const client = getSupabase();
+    if (!client) return false;
+    
     try {
-        const { error } = await supabaseClient
+        const { error } = await client
             .from('projects')
             .delete()
             .eq('id', id);
@@ -387,8 +413,11 @@ async function deleteProjectFromSupabase(id) {
 }
 
 async function deleteProductFromSupabase(id) {
+    const client = getSupabase();
+    if (!client) return false;
+    
     try {
-        const { error } = await supabaseClient
+        const { error } = await client
             .from('products')
             .delete()
             .eq('id', id);
@@ -402,9 +431,12 @@ async function deleteProductFromSupabase(id) {
 }
 
 async function incrementVisitorCount() {
+    const client = getSupabase();
+    if (!client) return 1240;
+    
     const today = new Date().toISOString().split('T')[0];
     try {
-        const { data, error } = await supabaseClient
+        const { data, error } = await client
             .from('visitors')
             .select('*')
             .eq('date', today)
@@ -413,21 +445,20 @@ async function incrementVisitorCount() {
         if (error && error.code !== 'PGRST116') throw error;
         
         if (data) {
-            await supabaseClient
+            await client
                 .from('visitors')
                 .update({ visitor_count: data.visitor_count + 1 })
                 .eq('date', today);
         } else {
-            await supabaseClient
+            await client
                 .from('visitors')
                 .insert([{ date: today, visitor_count: 1 }]);
         }
         
-        // Get total visitors
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         
-        const { data: totalData } = await supabaseClient
+        const { data: totalData } = await client
             .from('visitors')
             .select('visitor_count')
             .gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
@@ -441,40 +472,6 @@ async function incrementVisitorCount() {
         console.error('Error tracking visitor:', error);
         return 1240;
     }
-}
-
-// ========================
-// LOCAL STORAGE FALLBACK
-// ========================
-
-function loadProjectsFromLocal() {
-    const local = localStorage.getItem("leoly_projects");
-    if (local) {
-        appState.projects = JSON.parse(local);
-    } else {
-        appState.projects = DEFAULT_PROJECTS;
-        localStorage.setItem("leoly_projects", JSON.stringify(DEFAULT_PROJECTS));
-    }
-    renderProjectsEngine();
-}
-
-function loadProductsFromLocal() {
-    const local = localStorage.getItem("leoly_products");
-    if (local) {
-        appState.products = JSON.parse(local);
-    } else {
-        appState.products = DEFAULT_PRODUCTS;
-        localStorage.setItem("leoly_products", JSON.stringify(DEFAULT_PRODUCTS));
-    }
-    renderShopEngine();
-}
-
-function saveStateToLocal() {
-    localStorage.setItem("leoly_projects", JSON.stringify(appState.projects));
-    localStorage.setItem("leoly_products", JSON.stringify(appState.products));
-    localStorage.setItem("leoly_settings", JSON.stringify(appState.settings));
-    localStorage.setItem("leoly_cart", JSON.stringify(appState.cart));
-    updateCounters();
 }
 
 // ========================
@@ -660,7 +657,7 @@ function addToCartEngine(id) {
     } else { 
         appState.cart.push({ id: product.id, name: product.name, price: product.price, qty: 1 }); 
     }
-    saveStateToLocal();
+    saveCartToLocal();
     showToast(`${product.name} added to cart!`, "fa-cart-plus");
 }
 
@@ -691,7 +688,7 @@ function openCartModal() {
 
 function removeFromCartEngine(id) {
     appState.cart = appState.cart.filter(c => c.id !== id);
-    saveStateToLocal();
+    saveCartToLocal();
     openCartModal();
 }
 
@@ -741,8 +738,14 @@ function closeModalSystem() {
 // ========================
 
 async function loginWithSupabase(email, password) {
+    const client = getSupabase();
+    if (!client) {
+        showToast("Supabase not connected! Check your internet.", "fa-wifi", 3000);
+        return false;
+    }
+    
     try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({
+        const { data, error } = await client.auth.signInWithPassword({
             email: email,
             password: password
         });
@@ -761,40 +764,39 @@ async function loginWithSupabase(email, password) {
         return true;
     } catch (error) {
         console.error('Login error:', error);
-        showToast(error.message || "Login failed!", "fa-circle-xmark");
+        showToast(error.message || "Login failed! Check email/password.", "fa-circle-xmark", 4000);
         return false;
     }
 }
 
 async function logoutFromSupabase() {
-    try {
-        await supabaseClient.auth.signOut();
-        appState.isAdmin = false;
-        appState.currentUser = null;
-        sessionStorage.removeItem("admin_session");
-        sessionStorage.removeItem("admin_email");
-        toggleAdminPanelMode(false);
-        showToast("Logged out successfully", "fa-power-off");
-        return true;
-    } catch (error) {
-        console.error('Logout error:', error);
-        return false;
+    const client = getSupabase();
+    if (client) {
+        await client.auth.signOut();
     }
+    appState.isAdmin = false;
+    appState.currentUser = null;
+    sessionStorage.removeItem("admin_session");
+    sessionStorage.removeItem("admin_email");
+    toggleAdminPanelMode(false);
+    showToast("Logged out successfully", "fa-power-off");
+    return true;
 }
 
 async function checkAuthStatus() {
     const session = sessionStorage.getItem("admin_session");
     if (session === "active") {
-        const { data } = await supabaseClient.auth.getSession();
-        if (data.session) {
-            appState.isAdmin = true;
-            appState.currentUser = data.session.user;
-            return true;
-        } else {
-            sessionStorage.removeItem("admin_session");
-            appState.isAdmin = false;
-            return false;
+        const client = getSupabase();
+        if (client) {
+            const { data } = await client.auth.getSession();
+            if (data.session) {
+                appState.isAdmin = true;
+                appState.currentUser = data.session.user;
+                return true;
+            }
         }
+        sessionStorage.removeItem("admin_session");
+        appState.isAdmin = false;
     }
     return false;
 }
@@ -1222,22 +1224,50 @@ function initChartEngine() {
 // ========================
 
 document.addEventListener("DOMContentLoaded", async () => {
+    console.log("DOM loaded, initializing Leoly Dev...");
+    
     setTimeout(() => {
         const loader = document.getElementById("loading-screen");
-        if(loader) { loader.style.opacity = "0"; setTimeout(() => loader.remove(), 500); }
+        if(loader) { 
+            loader.style.opacity = "0"; 
+            setTimeout(() => loader.remove(), 500); 
+        }
     }, 1500);
     
-    await checkAuthStatus();
+    let supabaseReady = false;
+    let attempts = 0;
+    const maxAttempts = 30;
     
-    showToast("Connecting to Supabase cloud...", "fa-cloud", 2000);
+    while (!window.supabaseClient && attempts < maxAttempts) {
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
+        console.log(`Waiting for Supabase... attempt ${attempts}`);
+    }
     
-    await Promise.all([
-        loadProjectsFromSupabase(),
-        loadProductsFromSupabase(),
-        loadSettingsFromSupabase()
-    ]);
+    if (window.supabaseClient) {
+        supabaseClient = window.supabaseClient;
+        supabaseReady = true;
+        console.log('✅ Supabase client ready after', attempts, 'attempts');
+        showToast("Connected to Supabase cloud!", "fa-cloud", 2000);
+    } else {
+        console.warn('⚠️ Supabase not available, using local storage only');
+        showToast("Offline mode - using local storage", "fa-database", 3000);
+    }
     
-    await incrementVisitorCount();
+    if (supabaseReady) {
+        await checkAuthStatus();
+        await Promise.all([
+            loadProjectsFromSupabase(),
+            loadProductsFromSupabase(),
+            loadSettingsFromSupabase()
+        ]);
+        await incrementVisitorCount();
+    } else {
+        loadProjectsFromLocal();
+        loadProductsFromLocal();
+        applyIdentitySettings();
+        initTypingEffect();
+    }
     
     buildParticles();
     updateCounters();
@@ -1250,5 +1280,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     AOS.init({ duration: 800, once: true });
     
-    console.log("Leoly Dev Supabase Edition v3.0.0 Ready! 🚀");
+    console.log("🎉 Leoly Dev v3.1.0 Ready!");
 });
