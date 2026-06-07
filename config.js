@@ -5,6 +5,11 @@
 const SUPABASE_URL = 'https://aummxgxudbjeqjnzlxrq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF1bW14Z3h1ZGJqZXFqbnpseHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MjY5MzIsImV4cCI6MjA5NjQwMjkzMn0.pQqh7CeXACaarP-7qnMNWZWD4bXqJ1YFsl9jlMvo0YY';
 
+// Pastikan window.supabase sudah ada
+if (!window.supabase) {
+    console.error('Supabase library not loaded! Make sure script is loaded first.');
+}
+
 // Initialize Supabase client
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -12,7 +17,9 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 window.supabaseClient = supabase;
 window.SUPABASE_URL = SUPABASE_URL;
 
-// Check connection dengan error handling yang lebih baik
+console.log('Supabase client initialized:', window.supabaseClient ? '✅ Success' : '❌ Failed');
+
+// Check connection
 async function checkSupabaseConnection() {
     try {
         console.log('Checking Supabase connection...');
@@ -20,30 +27,40 @@ async function checkSupabaseConnection() {
         
         if (error) {
             console.error('Supabase query error:', error);
-            if (error.code === '42P01') {
-                console.error('❌ Table "settings" does not exist! Please run the SQL script first.');
-                document.getElementById('supabase-connection-status').innerHTML = '<span style="color:#ef4444;">● Missing tables - Run SQL script</span>';
-            } else {
-                document.getElementById('supabase-connection-status').innerHTML = `<span style="color:#ef4444;">● Error: ${error.message}</span>`;
+            const statusEl = document.getElementById('supabase-connection-status');
+            if (statusEl) {
+                if (error.code === '42P01') {
+                    statusEl.innerHTML = '<span style="color:#ef4444;">● Missing tables - Run SQL script</span>';
+                } else {
+                    statusEl.innerHTML = `<span style="color:#ef4444;">● Error: ${error.message}</span>`;
+                }
             }
             return false;
         }
         
         console.log('✅ Supabase connected successfully!');
-        document.getElementById('supabase-connection-status').innerHTML = '<span style="color:#22c55e;">● Connected to Supabase</span>';
+        const statusEl = document.getElementById('supabase-connection-status');
+        if (statusEl) {
+            statusEl.innerHTML = '<span style="color:#22c55e;">● Connected to Supabase</span>';
+        }
         return true;
     } catch (error) {
         console.error('Supabase connection error:', error);
-        document.getElementById('supabase-connection-status').innerHTML = '<span style="color:#ef4444;">● Connection failed</span>';
+        const statusEl = document.getElementById('supabase-connection-status');
+        if (statusEl) {
+            statusEl.innerHTML = '<span style="color:#ef4444;">● Connection failed</span>';
+        }
         return false;
     }
 }
 
 window.checkSupabaseConnection = checkSupabaseConnection;
 
-// Run check on load
+// Auto check when DOM ready
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => checkSupabaseConnection());
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(checkSupabaseConnection, 500);
+    });
 } else {
-    checkSupabaseConnection();
+    setTimeout(checkSupabaseConnection, 500);
 }

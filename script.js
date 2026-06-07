@@ -99,7 +99,32 @@ let appState = {
     currentUser: null
 };
 
-let supabaseClient = window.supabaseClient;
+// ========================
+// SUPABASE CLIENT INIT
+// ========================
+
+let supabaseClient = null;
+
+// Wait for Supabase client to be ready
+function initSupabaseClient() {
+    return new Promise((resolve) => {
+        const checkInterval = setInterval(() => {
+            if (window.supabaseClient) {
+                supabaseClient = window.supabaseClient;
+                clearInterval(checkInterval);
+                console.log('✅ Supabase client ready');
+                resolve(true);
+            }
+        }, 100);
+        
+        // Timeout after 5 seconds
+        setTimeout(() => {
+            clearInterval(checkInterval);
+            console.warn('⚠️ Supabase client timeout, using local storage');
+            resolve(false);
+        }, 5000);
+    });
+}
 
 // ========================
 // SUPABASE OPERATIONS
