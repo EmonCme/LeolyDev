@@ -23,7 +23,7 @@ let donationsData = [
 let messagesData = [];
 let isAdminMode = sessionStorage.getItem('leoly_isAdmin') === 'true';
 
-// Counter untuk ID sederhana (karena API mungkin belum support auto-increment)
+// Counter untuk ID
 let nextProjectId = 100;
 let nextShopId = 100;
 let nextMessageId = 100;
@@ -35,7 +35,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     initNavigationSystem();
     initModalVerification();
 
-    // Tarik data langsung dari Cloudflare D1 Database secara parallel
     await loadAllDataFromCloudflare();
 
     initFormHandlers();
@@ -66,11 +65,10 @@ async function loadAllDataFromCloudflare() {
             profileData.tags = [];
         }
 
-        projectsData = Array.isArray(projectsRes) ? projectsRes : [];
-        shopData = Array.isArray(shopRes) ? shopRes : [];
+        projectsData = Array.isArray(projectsRes) && projectsRes.length > 0 ? projectsRes : getDefaultProjects();
+        shopData = Array.isArray(shopRes) && shopRes.length > 0 ? shopRes : getDefaultShop();
         messagesData = Array.isArray(messagesRes) ? messagesRes : [];
 
-        // Set ID counter untuk keperluan delete local (jika API sukses)
         if (projectsData.length > 0) {
             nextProjectId = Math.max(...projectsData.map(p => p.id || 0), 0) + 1;
         }
@@ -84,11 +82,24 @@ async function loadAllDataFromCloudflare() {
         syncInterfaceRender();
     } catch (err) {
         console.error("Gagal memuat data dari Cloudflare D1:", err);
-        showNotification('Database Offline', 'Gagal memuat data cloud. Menggunakan mode offline/demo.', 'error');
-        // Fallback ke data demo
+        showNotification('Database Offline', 'Menggunakan mode offline/demo.', 'error');
         setupDemoData();
         syncInterfaceRender();
     }
+}
+
+function getDefaultProjects() {
+    return [
+        { id: 1, title: "Leoly Ecosystem", desc: "Sistem informasi terintegrasi untuk developer.", img: DEFAULT_PROJECT_IMG, link: "#" },
+        { id: 2, title: "Roblox Studio Toolkit", desc: "Koleksi plugin dan asset untuk builder.", img: DEFAULT_PROJECT_IMG, link: "#" }
+    ];
+}
+
+function getDefaultShop() {
+    return [
+        { id: 1, title: "Premium UI Kit", price: 150000, desc: "Paket lengkap komponen UI modern.", img: DEFAULT_SHOP_IMG },
+        { id: 2, title: "Sistem Lisensi", price: 250000, desc: "Perlindungan hak akses full.", img: DEFAULT_SHOP_IMG }
+    ];
 }
 
 function setupDemoData() {
@@ -102,17 +113,11 @@ function setupDemoData() {
         };
     }
     if (projectsData.length === 0) {
-        projectsData = [
-            { id: 1, title: "Leoly Ecosystem", desc: "Sistem informasi terintegrasi untuk developer.", img: DEFAULT_PROJECT_IMG, link: "#" },
-            { id: 2, title: "Roblox Studio Toolkit", desc: "Koleksi plugin dan asset untuk builder.", img: DEFAULT_PROJECT_IMG, link: "#" }
-        ];
+        projectsData = getDefaultProjects();
         nextProjectId = 3;
     }
     if (shopData.length === 0) {
-        shopData = [
-            { id: 1, title: "Premium UI Kit", price: 150000, desc: "Paket lengkap komponen UI modern.", img: DEFAULT_SHOP_IMG },
-            { id: 2, title: "Sistem Lisensi", price: 250000, desc: "Perlindungan hak akses full.", img: DEFAULT_SHOP_IMG }
-        ];
+        shopData = getDefaultShop();
         nextShopId = 3;
     }
 }
@@ -121,6 +126,7 @@ function setupDemoData() {
 // 3. RENDERER ENGINE & DYNAMIC COMPONENT SYNC
 // ==========================================================================
 function syncInterfaceRender() {
+    // Profile
     document.getElementById('display-name').textContent = profileData.name || "Leoly Hub";
     document.getElementById('display-bio').textContent = profileData.bio || "";
     document.getElementById('display-avatar').src = profileData.avatar || DEFAULT_AVATAR_IMG;
@@ -129,7 +135,9 @@ function syncInterfaceRender() {
     const tagsWrapper = document.getElementById('display-tags');
     if (tagsWrapper && profileData.tags) {
         tagsWrapper.innerHTML = '';
-        (Array.isArray(profileData.tags) ? profileData.tags : []).forEach(t => {
+        const tagsArray = Array.isArray(profileData.tags) ? profileData.tags : 
+                          (typeof profileData.tags === 'string' ? profileData.tags.split(',').map(t => t.trim()) : []);
+        tagsArray.forEach(t => {
             if (t && t.trim()) {
                 const span = document.createElement('span');
                 span.className = 'tag';
@@ -139,10 +147,12 @@ function syncInterfaceRender() {
         });
     }
 
+    // Stats
     document.getElementById('stat-projects-count').textContent = projectsData.length;
     document.getElementById('stat-shop-count').textContent = shopData.length;
     document.getElementById('stat-donations-count').textContent = donationsData.length;
 
+    // Projects Grid
     const projectsContainer = document.getElementById('projects-container');
     if (projectsContainer) {
         projectsContainer.innerHTML = '';
@@ -158,7 +168,7 @@ function syncInterfaceRender() {
                     <p>${escapeHtml(proj.desc)}</p>
                     <div class="card-footer">
                         <a href="${proj.link || '#'}" class="btn btn-secondary" target="_blank"><i data-lucide="external-link"></i> View Source</a>
-                        ${isAdminMode ? `<button class="btn-danger-action" onclick="deleteProject(${proj.id})">Hapus</button>` : ''}
+                        ${isAdminMode ? `<button class="btn-danger-action" data-action="delete-project" data-id="${proj.id}">Hapus</button>` : ''}
                     </div>
                 </div>
             `;
@@ -166,6 +176,7 @@ function syncInterfaceRender() {
         });
     }
 
+    // Shop Grid
     const shopContainer = document.getElementById('shop-container');
     if (shopContainer) {
         shopContainer.innerHTML = '';
@@ -181,8 +192,8 @@ function syncInterfaceRender() {
                     <p>${escapeHtml(item.desc)}</p>
                     <div class="card-footer">
                         <span class="card-price">Rp ${Number(item.price).toLocaleString('id-ID')}</span>
-                        <button class="btn btn-primary" onclick="triggerPurchase('${escapeHtml(item.title)}', ${item.price})"><i data-lucide="shopping-cart"></i> Buy</button>
-                        ${isAdminMode ? `<button class="btn-danger-action" onclick="deleteShopItem(${item.id})">Hapus</button>` : ''}
+                        <button class="btn btn-primary" data-action="buy-item" data-title="${escapeHtml(item.title)}" data-price="${item.price}"><i data-lucide="shopping-cart"></i> Buy</button>
+                        ${isAdminMode ? `<button class="btn-danger-action" data-action="delete-shop" data-id="${item.id}">Hapus</button>` : ''}
                     </div>
                 </div>
             `;
@@ -190,6 +201,7 @@ function syncInterfaceRender() {
         });
     }
 
+    // Donation Feed
     const donationFeedList = document.getElementById('donation-feed-list');
     if (donationFeedList) {
         donationFeedList.innerHTML = '';
@@ -209,6 +221,7 @@ function syncInterfaceRender() {
         });
     }
 
+    // Admin Messages Table
     const adminMessagesList = document.getElementById('admin-messages-list');
     if (adminMessagesList) {
         adminMessagesList.innerHTML = '';
@@ -221,15 +234,65 @@ function syncInterfaceRender() {
                     <td>${escapeHtml(msg.contact)}</td>
                     <td>${escapeHtml(msg.subject)}</td>
                     <td style="max-width: 300px; white-space: pre-wrap;">${escapeHtml(msg.message)}</td>
-                    <td><button class="btn-table-action" onclick="deleteMessage(${msg.id})">Selesai</button></td>
+                    <td><button class="btn-table-action" data-action="delete-message" data-id="${msg.id}">Selesai</button></td>
                 `;
                 adminMessagesList.appendChild(row);
             });
         }
     }
 
+    // Attach event listeners for dynamic buttons
+    attachDynamicEventListeners();
+
     toggleAdminElementsVisibility();
     lucide.createIcons();
+}
+
+function attachDynamicEventListeners() {
+    // Delete project buttons
+    document.querySelectorAll('[data-action="delete-project"]').forEach(btn => {
+        btn.removeEventListener('click', handleDeleteProject);
+        btn.addEventListener('click', handleDeleteProject);
+    });
+
+    // Delete shop buttons
+    document.querySelectorAll('[data-action="delete-shop"]').forEach(btn => {
+        btn.removeEventListener('click', handleDeleteShop);
+        btn.addEventListener('click', handleDeleteShop);
+    });
+
+    // Delete message buttons
+    document.querySelectorAll('[data-action="delete-message"]').forEach(btn => {
+        btn.removeEventListener('click', handleDeleteMessage);
+        btn.addEventListener('click', handleDeleteMessage);
+    });
+
+    // Buy item buttons
+    document.querySelectorAll('[data-action="buy-item"]').forEach(btn => {
+        btn.removeEventListener('click', handleBuyItem);
+        btn.addEventListener('click', handleBuyItem);
+    });
+}
+
+function handleDeleteProject(e) {
+    const id = parseInt(e.currentTarget.getAttribute('data-id'));
+    deleteProject(id);
+}
+
+function handleDeleteShop(e) {
+    const id = parseInt(e.currentTarget.getAttribute('data-id'));
+    deleteShopItem(id);
+}
+
+function handleDeleteMessage(e) {
+    const id = parseInt(e.currentTarget.getAttribute('data-id'));
+    deleteMessage(id);
+}
+
+function handleBuyItem(e) {
+    const title = e.currentTarget.getAttribute('data-title');
+    const price = parseInt(e.currentTarget.getAttribute('data-price'));
+    triggerPurchase(title, price);
 }
 
 function escapeHtml(str) {
@@ -239,8 +302,6 @@ function escapeHtml(str) {
         if (m === '<') return '&lt;';
         if (m === '>') return '&gt;';
         return m;
-    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-        return c;
     });
 }
 
@@ -266,14 +327,15 @@ function toggleAdminElementsVisibility() {
 }
 
 // ==========================================================================
-// 4. FORM HANDLERS (PUSH DATA BARU KE SERVER CLOUDFLARE)
+// 4. FORM HANDLERS
 // ==========================================================================
 function initFormHandlers() {
     const profileForm = document.getElementById('admin-profile-form');
     if (profileForm) {
         document.getElementById('input-name').value = profileData.name || '';
         document.getElementById('input-bio').value = profileData.bio || '';
-        document.getElementById('input-tags').value = Array.isArray(profileData.tags) ? profileData.tags.join(', ') : (profileData.tags || '');
+        const tagsValue = Array.isArray(profileData.tags) ? profileData.tags.join(', ') : (profileData.tags || '');
+        document.getElementById('input-tags').value = tagsValue;
         document.getElementById('input-avatar').value = (profileData.avatar === DEFAULT_AVATAR_IMG || !profileData.avatar) ? '' : profileData.avatar;
         document.getElementById('input-banner').value = (profileData.banner === DEFAULT_BANNER_IMG || !profileData.banner) ? '' : profileData.banner;
 
@@ -295,16 +357,15 @@ function initFormHandlers() {
                 });
 
                 if (res.ok) {
-                    showNotification('Success Save', 'Profil database Cloudflare berhasil diperbarui.', 'success');
+                    showNotification('Success Save', 'Profil database berhasil diperbarui.', 'success');
                     await loadAllDataFromCloudflare();
                 } else {
-                    // Fallback update local
                     profileData = {
                         ...updatedProfile,
                         tags: updatedProfile.tags.split(',').map(t => t.trim()).filter(t => t)
                     };
                     syncInterfaceRender();
-                    showNotification('Saved Locally', 'Profil tersimpan secara lokal (Cloud offline).', 'success');
+                    showNotification('Saved Locally', 'Profil tersimpan secara lokal.', 'success');
                 }
             } catch (err) {
                 profileData = {
@@ -336,11 +397,10 @@ function initFormHandlers() {
                 });
 
                 if (res.ok) {
-                    showNotification('Project Published', 'Proyek baru berhasil disimpan di D1 Cloud.', 'success');
+                    showNotification('Project Published', 'Proyek baru berhasil disimpan.', 'success');
                     projectForm.reset();
                     await loadAllDataFromCloudflare();
                 } else {
-                    // Fallback
                     newProject.id = nextProjectId++;
                     projectsData.push(newProject);
                     syncInterfaceRender();
@@ -376,7 +436,7 @@ function initFormHandlers() {
                 });
 
                 if (res.ok) {
-                    showNotification('Item Uploaded', 'Katalog baru berhasil diunggah ke D1 Cloud.', 'success');
+                    showNotification('Item Uploaded', 'Katalog baru berhasil diunggah.', 'success');
                     shopForm.reset();
                     await loadAllDataFromCloudflare();
                 } else {
@@ -449,7 +509,6 @@ function initDonationForm() {
                 return;
             }
 
-            // Simpan donasi secara lokal
             const newDonation = {
                 id: Date.now(),
                 name: name,
@@ -459,7 +518,6 @@ function initDonationForm() {
             donationsData.push(newDonation);
             syncInterfaceRender();
 
-            // Kirim ke WhatsApp
             const waText = `*Donasi Masuk!*\n\nNama: ${name}\nNominal: Rp ${amount.toLocaleString('id-ID')}\nPesan: ${msg}`;
             window.open(`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(waText)}`, '_blank');
 
@@ -470,17 +528,16 @@ function initDonationForm() {
 }
 
 // ==========================================================================
-// 5. OPERASI DELETE DATA DARI DATABASE CLOUDFLARE D1
+// 5. OPERASI DELETE DATA
 // ==========================================================================
 async function deleteProject(id) {
-    if (confirm('Hapus proyek ini secara permanen dari Cloudflare D1?')) {
+    if (confirm('Hapus proyek ini secara permanen?')) {
         try {
             const res = await fetch(`${API_URL}/api/projects/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 showNotification('Deleted', 'Proyek berhasil dihapus.', 'success');
                 await loadAllDataFromCloudflare();
             } else {
-                // Fallback hapus lokal
                 projectsData = projectsData.filter(p => p.id !== id);
                 syncInterfaceRender();
                 showNotification('Deleted', 'Proyek dihapus secara lokal.', 'success');
@@ -494,7 +551,7 @@ async function deleteProject(id) {
 }
 
 async function deleteShopItem(id) {
-    if (confirm('Hapus produk ini secara permanen dari Cloudflare D1?')) {
+    if (confirm('Hapus produk ini secara permanen?')) {
         try {
             const res = await fetch(`${API_URL}/api/shop/${id}`, { method: 'DELETE' });
             if (res.ok) {
@@ -532,15 +589,15 @@ async function deleteMessage(id) {
 }
 
 // ==========================================================================
-// 6. UTILITY ENGINE SYSTEM (NAVIGASI, INTERFACE TOAST MODAL)
+// 6. UTILITY FUNCTIONS
 // ==========================================================================
-window.triggerPurchase = function(title, price) {
-    const waText = `Halo Leoly Management, saya tertarik untuk membeli:\n\n• *Aset:* ${title}\n• *Harga:* Rp ${price.toLocaleString('id-ID')}`;
+function triggerPurchase(title, price) {
+    const waText = `Halo Leoly Management, saya tertarik untuk membeli:\n\n• Aset: ${title}\n• Harga: Rp ${price.toLocaleString('id-ID')}`;
     showNotification('Order Redirect', 'Menghubungkan ke WhatsApp...', 'success');
     setTimeout(() => {
         window.open(`https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(waText)}`, '_blank');
     }, 800);
-};
+}
 
 function initNavigationSystem() {
     const sidebar = document.getElementById('sidebar');
@@ -565,7 +622,6 @@ function initNavigationSystem() {
         });
     });
 
-    // Handle initial hash
     if (window.location.hash) {
         const hash = window.location.hash.substring(1);
         const targetLink = document.querySelector(`.nav-item[data-section="${hash}"]`);
@@ -646,6 +702,7 @@ function showNotification(title, description, type = 'success') {
     setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4500);
 }
 
+// Make functions available globally
 window.deleteProject = deleteProject;
 window.deleteShopItem = deleteShopItem;
 window.deleteMessage = deleteMessage;

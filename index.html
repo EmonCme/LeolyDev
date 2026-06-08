@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* fallback tambahan untuk memastikan tidak ada perubahan visual */
+        /* fix untuk tombol hapus agar tidak merusak layout - TIDAK MENGUBAH TAMPILAN ASLI */
         .btn-danger-action {
             position: relative !important;
             bottom: auto !important;
@@ -20,21 +20,7 @@
         .card-footer {
             flex-wrap: wrap;
             gap: 8px;
-        }
-        .btn-table-action {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 0.45rem 0.75rem;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .btn-table-action:hover {
-            background: var(--accent);
-            color: #000000;
+            align-items: center;
         }
     </style>
 </head>
