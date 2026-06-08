@@ -1,424 +1,327 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="theme-color" content="#030712">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="format-detection" content="telephone=no">
-    <title>Leoly Dev | Premium Personal Developer Hub</title>
-    <meta name="description" content="Premium personal developer portfolio and server info dashboard.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leoly Hub - Server Info Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
-    <div id="scroll-progress"></div>
-
-    <div id="loading-screen">
-        <div class="loader-content">
-            <h1 class="loader-logo" id="loader-logo-text">Leoly Dev</h1>
-            <div class="loader-bar-container">
-                <div class="loader-bar"></div>
-            </div>
+    <div id="global-loader" class="loader-container">
+        <div class="loader-wrapper">
+            <span class="loader-letter">L</span>
+            <span class="loader-letter">e</span>
+            <span class="loader-letter">o</span>
+            <span class="loader-letter">l</span>
+            <span class="loader-letter">y</span>
+            <span class="loader-letter">&nbsp;</span>
+            <span class="loader-letter">H</span>
+            <span class="loader-letter">u</span>
+            <span class="loader-letter">b</span>
+            <div class="loader"></div>
         </div>
     </div>
 
-    <div class="aurora-container">
-        <div class="aurora-layer aurora-blue"></div>
-        <div class="aurora-layer aurora-white"></div>
-        <div class="aurora-layer aurora-red"></div>
-        <div class="particles" id="particles-container"></div>
-    </div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
 
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="#home" class="nav-logo" id="site-logo">Leoly Dev</a>
-            <div class="nav-menu" id="nav-menu">
-                <a href="#home" class="nav-link active" data-sec="home"><i class="fa-solid fa-house"></i> Home</a>
-                <a href="#projects" class="nav-link" data-sec="projects"><i class="fa-solid fa-code"></i> Projects</a>
-                <a href="#shop" class="nav-link" data-sec="shop"><i class="fa-solid fa-bag-shopping"></i> Shop</a>
-                <a href="#contact" class="nav-link" data-sec="contact"><i class="fa-solid fa-envelope"></i> Contact</a>
-                <a href="#donate" class="nav-link" data-sec="donate"><i class="fa-solid fa-heart"></i> Donate</a>
-                <button class="nav-admin-btn" id="open-login-btn"><i class="fa-solid fa-user-gear"></i></button>
-            </div>
-            <div class="hamburger" id="hamburger">
-                <span></span><span></span><span></span>
-            </div>
+    <header>
+        <div class="logo-area">
+            <h1>LEOLY<span class="logo-dot">.</span><span class="logo-sub">HUB</span></h1>
+        </div>
+        <div class="header-actions">
+            <span id="role-indicator" class="role-badge guest">Guest Mode</span>
+            <button class="menu-toggle" id="openMenu"><i data-lucide="menu" style="width: 18px; height: 18px;"></i></button>
+        </div>
+    </header>
+
+    <div class="sidebar-overlay" id="overlay"></div>
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <span class="nav-title">Navigation</span>
+            <button class="close-sidebar" id="closeMenu">✕</button>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#home" class="nav-item active" data-section="home"><i data-lucide="home"></i> Dashboard</a></li>
+            <li><a href="#projects" class="nav-item" data-section="projects"><i data-lucide="layers"></i> Projects</a></li>
+            <li><a href="#shop" class="nav-item" data-section="shop"><i data-lucide="shopping-bag"></i> Shop Store</a></li>
+            <li><a href="#donations" class="nav-item" data-section="donations"><i data-lucide="heart"></i> Donation</a></li>
+            <li><a href="#contact" class="nav-item" data-section="contact"><i data-lucide="mail"></i> Contact</a></li>
+            <li class="admin-only" style="display: none;"><a href="#admin" class="nav-item" data-section="admin"><i data-lucide="shield-alert"></i> Admin Panel</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button id="loginBtn" class="btn-login-trigger"><i data-lucide="log-in"></i> Owner Verification</button>
+            <button id="logoutBtn" class="btn-logout" style="display: none;"><i data-lucide="log-out"></i> Exit Admin</button>
         </div>
     </nav>
 
-    <main class="main-wrapper">
-
-        <section id="home" class="section hero-section">
-            <div class="hero-content" data-aos="fade-up" data-aos-duration="1000">
-                <div class="badge-premium"><i class="fa-solid fa-crown"></i> Next-Gen Developer Portfolio</div>
-                <h1 class="hero-title" id="hero-display-title">Leoly Dev</h1>
-                <div class="typing-container">
-                    <span class="typing-text" id="typing-element"></span>
+    <main class="container">
+        <section id="home-section" class="content-section active-section">
+            <div class="profile-card">
+                <div class="profile-banner">
+                    <img id="display-banner" src="" alt="Banner">
                 </div>
-                <p class="hero-subtitle" id="hero-display-subtitle">Membangun ekosistem teknologi modern, arsitektur server berkinerja tinggi, dan solusi digital premium berbasis UI/UX futuristik.</p>
-                <div class="hero-buttons">
-                    <a href="#projects" class="btn btn-primary ripple"><i class="fa-solid fa-compass"></i> Explore Work</a>
-                    <a href="#contact" class="btn btn-secondary ripple"><i class="fa-solid fa-paper-plane"></i> Contact Me</a>
+                <div class="profile-info">
+                    <div class="avatar-container">
+                        <img id="display-avatar" src="" alt="Avatar">
+                    </div>
+                    <div class="profile-text">
+                        <div class="profile-title-row">
+                            <h2 id="display-name">Loading...</h2>
+                            <span class="verified-badge" title="Official Verified Server"><i data-lucide="check-circle-2"></i></span>
+                        </div>
+                        <p id="display-bio" class="profile-bio">Loading bio...</p>
+                        <div class="profile-tags" id="display-tags"></div>
+                    </div>
                 </div>
             </div>
 
-            <div class="stats-grid" data-aos="fade-up" data-aos-delay="200">
-                <div class="stat-card glass-card">
-                    <div class="stat-icon"><i class="fa-solid fa-diagram-project"></i></div>
-                    <div class="stat-info">
-                        <h3 class="counter-number" id="stat-projects-count">0</h3>
-                        <p>Projects Released</p>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-icon"><i data-lucide="server"></i></div>
+                    <div class="stat-data">
+                        <span class="stat-label">Active Projects</span>
+                        <span class="stat-value" id="stat-projects-count">0</span>
                     </div>
                 </div>
-                <div class="stat-card glass-card">
-                    <div class="stat-icon"><i class="fa-solid fa-box"></i></div>
-                    <div class="stat-info">
-                        <h3 class="counter-number" id="stat-products-count">0</h3>
-                        <p>Premium Assets</p>
+                <div class="stat-box">
+                    <div class="stat-icon"><i data-lucide="package"></i></div>
+                    <div class="stat-data">
+                        <span class="stat-label">Store Items</span>
+                        <span class="stat-value" id="stat-shop-count">0</span>
                     </div>
                 </div>
-                <div class="stat-card glass-card">
-                    <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
-                    <div class="stat-info">
-                        <h3 class="counter-number" id="stat-visitor-count">0</h3>
-                        <p>Active Visitors</p>
+                <div class="stat-box">
+                    <div class="stat-icon"><i data-lucide="coins"></i></div>
+                    <div class="stat-data">
+                        <span class="stat-label">Total Backers</span>
+                        <span class="stat-value" id="stat-donations-count">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-vault">
+                <div class="vault-header">
+                    <h3><i data-lucide="activity" style="color: var(--accent);"></i> Server Live Feeds</h3>
+                </div>
+                <div class="donation-feed-container">
+                    <div class="feed-stream" id="donation-feed-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects-section" class="content-section">
+            <div class="section-title">
+                <h2>Our Development</h2>
+                <p>Daftar infrastruktur, map, dan server info yang sedang aktif dikembangkan.</p>
+            </div>
+            <div class="items-grid" id="projects-container"></div>
+        </section>
+
+        <section id="shop-section" class="content-section">
+            <div class="section-title">
+                <h2>Store Catalog</h2>
+                <p>Aset modular, lisensi sistem, dan penawaran premium siap pakai.</p>
+            </div>
+            <div class="items-grid" id="shop-container"></div>
+        </section>
+
+        <section id="donations-section" class="content-section">
+            <div class="donation-layout">
+                <div class="donation-form-card">
+                    <h3>Dukung Server Leoly Hub</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Bantu kami menjaga keberlangsungan server info tetap online.</p>
+                    <form id="donation-form">
+                        <div class="form-group">
+                            <label for="donator-name">Nama Donatur</label>
+                            <input type="text" id="donator-name" placeholder="Anonim" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="donation-amount">Nominal Dukungan</label>
+                            <input type="number" id="donation-amount" placeholder="Contoh: 10000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="donation-msg">Pesan / Harapan</label>
+                            <textarea id="donation-msg" rows="3" placeholder="Tulis pesan untuk sistem..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i data-lucide="heart"></i> Kirim Dukungan via WA</button>
+                    </form>
+                </div>
+                <div class="donation-info-card">
+                    <h3>Metode Pembayaran</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Tekan tombol di samping untuk mengirimkan rincian konfirmasi otomatis ke WhatsApp Owner.</p>
+                    <div class="payment-methods">
+                        <div class="pay-method-item">
+                            <span class="pay-name">QRIS / ALL PAYMENT</span>
+                            <span class="pay-number">Silakan minta kode QRIS terbaru saat chat WA</span>
+                        </div>
+                        <div class="pay-method-item">
+                            <span class="pay-name">DANA / OVO / GOPAY</span>
+                            <span class="pay-number">Melalui gerbang WhatsApp terintegrasi</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="projects" class="section">
-            <div class="section-header" data-aos="fade-up">
-                <h2 class="section-title">Our Engineered Projects</h2>
-                <p class="section-desc">Eksplorasi sistem, aplikasi, dan arsitektur server info yang dikembangkan secara presisi.</p>
-            </div>
-
-            <div class="controls-wrapper glass-card" data-aos="fade-up">
-                <div class="search-box">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="project-search" placeholder="Cari projek...">
+        <section id="contact-section" class="content-section">
+            <div class="contact-card">
+                <div class="contact-header">
+                    <h2>Hubungi Management</h2>
+                    <p>Punya pertanyaan atau kendala operasional server? Kirimkan tiket pengaduan di bawah ini.</p>
                 </div>
-                <div class="filter-box" id="project-filters">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="Web App">Web App</button>
-                    <button class="filter-btn" data-filter="Server Info">Server Info</button>
-                    <button class="filter-btn" data-filter="Game Template">Game</button>
-                </div>
-            </div>
-
-            <div class="items-grid" id="projects-grid">
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
-                <div class="skeleton-card"></div>
-            </div>
-        </section>
-
-        <section id="shop" class="section">
-            <div class="section-header" data-aos="fade-up">
-                <h2 class="section-title">Premium Asset Shop</h2>
-                <p class="section-desc">Dapatkan lisensi produk digital eksklusif, template UI premium, dan konfigurasi optimasi.</p>
-            </div>
-
-            <div class="controls-wrapper glass-card" data-aos="fade-up">
-                <div class="search-box">
-                    <i class="fa-solid fa-bag-shopping"></i>
-                    <input type="text" id="shop-search" placeholder="Cari produk...">
-                </div>
-                <div class="filter-box" id="shop-filters">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="Source Code">Code</button>
-                    <button class="filter-btn" data-filter="Config">Config</button>
-                    <button class="filter-btn" data-filter="Design">Design</button>
-                </div>
-            </div>
-
-            <div class="items-grid" id="shop-grid"></div>
-        </section>
-
-        <section id="contact" class="section">
-            <div class="section-header" data-aos="fade-up">
-                <h2 class="section-title">Secure Connection Portal</h2>
-                <p class="section-desc">Hubungi saya langsung melalui gerbang komunikasi terenkripsi di bawah ini.</p>
-            </div>
-
-            <div class="contact-grid" data-aos="fade-up">
-                <div class="contact-card glass-card ripple" onclick="copyContact('WhatsApp', '081234567890')">
-                    <div class="contact-icon wa"><i class="fa-brands fa-whatsapp"></i></div>
-                    <h3>WhatsApp</h3>
-                    <p id="ctx-wa">081234567890</p>
-                    <span class="copy-badge"><i class="fa-solid fa-copy"></i> Copy</span>
-                </div>
-                <div class="contact-card glass-card ripple" onclick="copyContact('Telegram', '@leolydev')">
-                    <div class="contact-icon tg"><i class="fa-brands fa-telegram"></i></div>
-                    <h3>Telegram</h3>
-                    <p id="ctx-tg">@leolydev</p>
-                    <span class="copy-badge"><i class="fa-solid fa-copy"></i> Copy</span>
-                </div>
-                <div class="contact-card glass-card ripple" onclick="window.open('https://github.com', '_blank')">
-                    <div class="contact-icon gh"><i class="fa-brands fa-github"></i></div>
-                    <h3>GitHub</h3>
-                    <p id="ctx-gh">github.com/leolydev</p>
-                    <span class="copy-badge"><i class="fa-solid fa-arrow-up-right-from-square"></i> Visit</span>
-                </div>
-                <div class="contact-card glass-card ripple" onclick="copyContact('Email', 'admin@emosoft.xyz')">
-                    <div class="contact-icon em"><i class="fa-solid fa-envelope"></i></div>
-                    <h3>Email Support</h3>
-                    <p id="ctx-em">admin@emosoft.xyz</p>
-                    <span class="copy-badge"><i class="fa-solid fa-copy"></i> Copy</span>
-                </div>
-            </div>
-        </section>
-
-        <section id="donate" class="section">
-            <div class="section-header" data-aos="fade-up">
-                <h2 class="section-title">Support The Ecosystem</h2>
-                <p class="section-desc">Dukung pengembangan infrastruktur server info dan proyek open-source kami.</p>
-            </div>
-
-            <div class="donate-container glass-card" data-aos="fade-up">
-                <div class="donate-qris">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=LeolyDevPremiumDonation" alt="QRIS" id="donate-qris-img" loading="lazy">
-                    <p class="qris-label"><i class="fa-solid fa-qrcode"></i> Scan QRIS</p>
-                </div>
-                <div class="donate-methods">
-                    <div class="method-row ripple" onclick="copyContact('Dana', '081234567890')">
-                        <span class="method-name"><i class="fa-solid fa-wallet text-blue"></i> DANA</span>
-                        <span class="method-val" id="ctx-dana">081234567890 <i class="fa-solid fa-copy"></i></span>
+                <form id="contact-form">
+                    <div class="form-group">
+                        <label for="contact-identity">Kontak Anda (Discord / WA / Email)</label>
+                        <input type="text" id="contact-identity" placeholder="Contoh: UsernameDiscord" required>
                     </div>
-                    <div class="method-row ripple" onclick="copyContact('OVO', '081234567890')">
-                        <span class="method-name"><i class="fa-solid fa-wallet text-purple"></i> OVO</span>
-                        <span class="method-val" id="ctx-ovo">081234567890 <i class="fa-solid fa-copy"></i></span>
+                    <div class="form-group">
+                        <label for="contact-subject">Subjek Masalah</label>
+                        <input type="text" id="contact-subject" placeholder="Contoh: Error Fitur / Kerjasama" required>
                     </div>
-                    <div class="method-row ripple" onclick="copyContact('Saweria', 'https://saweria.co/leoly')">
-                        <span class="method-name"><i class="fa-solid fa-heart text-red"></i> Saweria</span>
-                        <span class="method-val" id="ctx-saweria">saweria.co/leoly <i class="fa-solid fa-copy"></i></span>
+                    <div class="form-group">
+                        <label for="contact-message">Detail Pesan</label>
+                        <textarea id="contact-message" rows="5" placeholder="Deskripsikan secara rinci..." required></textarea>
                     </div>
-                </div>
+                    <button type="submit" class="btn btn-primary"><i data-lucide="send"></i> Kirim Tiket Pengaduan</button>
+                </form>
             </div>
         </section>
 
+        <section id="admin-section" class="content-section">
+            <div class="section-title">
+                <h2>Control Room</h2>
+                <p>Manajemen data dashboard inti Leoly Hub secara langsung.</p>
+            </div>
+
+            <div class="admin-grid-layout">
+                <div class="admin-controls">
+                    <h3><i data-lucide="user-cog"></i> Profile Settings</h3>
+                    <form id="admin-profile-form">
+                        <div class="form-group">
+                            <label for="input-name">Nama Profil</label>
+                            <input type="text" id="input-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="input-bio">Deskripsi / Bio</label>
+                            <textarea id="input-bio" rows="2" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="input-tags">Tags (Pisahkan dengan koma)</label>
+                            <input type="text" id="input-tags" placeholder="Roblox, HTML, Developer">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-avatar">Link Foto Avatar</label>
+                            <input type="url" id="input-avatar">
+                        </div>
+                        <div class="form-group">
+                            <label for="input-banner">Link Foto Banner</label>
+                            <input type="url" id="input-banner">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Simpan Profil</button>
+                    </form>
+                </div>
+
+                <div class="admin-controls">
+                    <h3><i data-lucide="folder-plus"></i> Add Project Card</h3>
+                    <form id="admin-project-form">
+                        <div class="form-group">
+                            <label for="proj-title">Nama Project</label>
+                            <input type="text" id="proj-title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="proj-desc">Keterangan Project</label>
+                            <textarea id="proj-desc" rows="2" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="proj-img">Link Gambar Project</label>
+                            <input type="url" id="proj-img">
+                        </div>
+                        <div class="form-group">
+                            <label for="proj-link">Link Eksternal</label>
+                            <input type="url" id="proj-link" placeholder="https://...">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Tambah Project</button>
+                    </form>
+                </div>
+
+                <div class="admin-controls">
+                    <h3><i data-lucide="plus-square"></i> Add Catalog Item</h3>
+                    <form id="admin-shop-form">
+                        <div class="form-group">
+                            <label for="shop-title">Nama Produk</label>
+                            <input type="text" id="shop-title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="shop-price">Harga (Rp)</label>
+                            <input type="number" id="shop-price" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="shop-desc">Deskripsi Produk</label>
+                            <textarea id="shop-desc" rows="2" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="shop-img">Link Gambar Produk</label>
+                            <input type="url" id="shop-img">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Tambah Produk</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="section-vault" style="margin-top: 2rem;">
+                <div class="vault-header">
+                    <h3><i data-lucide="inbox"></i> Tiket Pengaduan Masuk</h3>
+                </div>
+                <div class="table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Kontak</th>
+                                <th>Subjek</th>
+                                <th>Isi Pesan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-messages-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <footer class="main-footer">
-        <p>&copy; 2026 <span id="footer-site-name">Leoly Dev</span> • Premium SaaS Engine</p>
-    </footer>
-
-    <button id="back-to-top" class="fab-btn"><i class="fa-solid fa-arrow-up"></i></button>
-    <div class="shopping-cart-badge" id="cart-toggle-btn">
-        <i class="fa-solid fa-cart-shopping"></i> <span id="cart-count">0</span>
+    <div class="login-modal" id="loginModal">
+        <form class="form" id="login-form">
+            <div class="login-modal-header">
+                <p id="heading">Owner Verification</p>
+                <button type="button" id="closeLogin" class="close-modal-btn">✕</button>
+            </div>
+            <div class="field">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M13.106 7.222c0-2.967-2.249-5.032-5.482-5.032-3.35 0-5.646 2.318-5.646 5.702 0 3.493 2.235 5.708 5.762 5.708.862 0 1.689-.123 2.304-.335v-.862c-.43.199-1.354.328-2.29.328-2.926 0-4.813-1.88-4.813-4.798 0-2.844 1.921-4.881 4.594-4.881 2.735 0 4.608 1.688 4.608 4.156 0 1.682-.554 2.769-1.416 2.769-.492 0-.772-.28-.772-.76V5.206H8.923v.834h-.11c-.266-.595-.881-.964-1.6-.964-1.4 0-2.378 1.162-2.378 2.823 0 1.737.957 2.906 2.379 2.906.8 0 1.415-.39 1.709-1.087h.11c.081.67.703 1.148 1.503 1.148 1.572 0 2.57-1.415 2.57-3.643zm-7.177.704c0-1.197.54-1.907 1.456-1.907.93 0 1.524.738 1.524 1.907S8.308 9.84 7.371 9.84c-.895 0-1.442-.725-1.442-1.914z"></path>
+                </svg>
+                <input autocomplete="off" placeholder="Username" class="input-field" type="text" id="login-username" required>
+            </div>
+            <div class="field">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path>
+                </svg>
+                <input placeholder="Password" class="input-field" type="password" id="login-password" required>
+            </div>
+            <div class="btn">
+                <button type="submit" class="button1">Verify Access</button>
+                <button type="button" id="cancelLogin" class="button2">Cancel</button>
+            </div>
+        </form>
     </div>
 
-    <div id="toast-container"></div>
+    <div id="notification-container" class="toast-container"></div>
 
-    <!-- Login Modal -->
-    <div class="modal-overlay" id="login-modal">
-        <div class="modal-box glass-card animate-pop">
-            <div class="modal-header">
-                <h3><i class="fa-solid fa-shield-halved"></i> Admin Access</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <form id="login-form">
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="admin-email" required placeholder="admin@example.com">
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="admin-pass" required placeholder="password">
-                </div>
-                <button type="submit" class="btn btn-primary w-100 ripple">Login with Supabase</button>
-            </form>
-            <div id="login-status" style="margin-top: 1rem; text-align: center; font-size: 0.8rem; color: var(--text-muted);"></div>
-        </div>
-    </div>
-
-    <!-- Cart Modal -->
-    <div class="modal-overlay" id="cart-modal">
-        <div class="modal-box glass-card animate-pop">
-            <div class="modal-header">
-                <h3><i class="fa-solid fa-cart-shopping"></i> Your Cart</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div id="cart-items-list"></div>
-            <div class="cart-total-box" style="margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between;">
-                <span>Total:</span>
-                <span id="cart-total-price">Rp 0</span>
-            </div>
-            <button class="btn btn-primary w-100 ripple mt-2" id="checkout-btn"><i class="fa-brands fa-whatsapp"></i> Checkout</button>
-        </div>
-    </div>
-
-    <!-- Detail Modal -->
-    <div class="modal-overlay" id="detail-modal">
-        <div class="modal-box glass-card animate-pop">
-            <div class="modal-header">
-                <h3 id="detail-title">Item Title</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <img src="" alt="" id="detail-img" class="detail-modal-img">
-                <p id="detail-desc" style="margin-top:1.5rem; line-height:1.6; color:rgba(255,255,255,0.8);"></p>
-                <div id="detail-footer-action" style="margin-top:2rem;"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Admin Panel -->
-    <div id="admin-panel" class="admin-panel-overlay">
-        <div class="admin-container glass-card">
-            <aside class="admin-sidebar">
-                <div class="admin-brand">
-                    <h4>Leoly Management</h4>
-                    <span>Supabase Edition</span>
-                </div>
-                <div id="admin-user-info" style="padding: 0.5rem; margin-bottom: 1rem; font-size: 0.8rem; color: var(--primary);"></div>
-                <nav class="admin-nav">
-                    <button class="admin-nav-item active" data-tab="db-dash"><i class="fa-solid fa-chart-pie"></i> Metrics</button>
-                    <button class="admin-nav-item" data-tab="db-hero"><i class="fa-solid fa-display"></i> Hero</button>
-                    <button class="admin-nav-item" data-tab="db-projects"><i class="fa-solid fa-code"></i> Projects</button>
-                    <button class="admin-nav-item" data-tab="db-shop"><i class="fa-solid fa-bag-shopping"></i> Products</button>
-                    <button class="admin-nav-item" data-tab="db-contact"><i class="fa-solid fa-address-book"></i> Contacts</button>
-                    <button class="admin-nav-item" data-tab="db-data"><i class="fa-solid fa-database"></i> Database</button>
-                </nav>
-                <button class="btn btn-secondary w-100 mt-auto" id="admin-logout-btn"><i class="fa-solid fa-power-off"></i> Logout</button>
-            </aside>
-
-            <main class="admin-main-content">
-                <div class="admin-tab-content active" id="db-dash">
-                    <h2>System Metrics</h2>
-                    <div class="admin-stats-row">
-                        <div class="astat-card"><h5>Projects</h5><p id="adm-p-count">0</p></div>
-                        <div class="astat-card"><h5>Products</h5><p id="adm-s-count">0</p></div>
-                        <div class="astat-card"><h5>Visitors</h5><p id="visitor-count">0</p></div>
-                        <div class="astat-card"><h5>Online</h5><p id="online-status">● Live</p></div>
-                    </div>
-                    <div class="chart-container" style="position: relative; height:250px; width:100%; margin-top:2rem;">
-                        <canvas id="analyticsChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="admin-tab-content" id="db-hero">
-                    <h2>Hero Section Settings</h2>
-                    <form id="adm-hero-form">
-                        <div class="form-group"><label>Site Name</label><input type="text" id="adm-site-name"></div>
-                        <div class="form-group"><label>Hero Title</label><input type="text" id="adm-hero-title"></div>
-                        <div class="form-group"><label>Hero Subtitle</label><textarea id="adm-hero-subtitle" rows="3"></textarea></div>
-                        <div class="form-group"><label>Typing Strings (comma separated)</label><input type="text" id="adm-typing-strings"></div>
-                        <button type="submit" class="btn btn-primary ripple">Save to Supabase</button>
-                    </form>
-                </div>
-
-                <div class="admin-tab-content" id="db-projects">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.5rem;">
-                        <h2>Projects Manager</h2>
-                        <button class="btn btn-primary ripple" id="adm-add-project-btn"><i class="fa-solid fa-plus"></i> Add Project</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead><tr><th>Name</th><th>Category</th><th>Actions</th></tr></thead>
-                            <tbody id="adm-projects-table"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="admin-tab-content" id="db-shop">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.5rem;">
-                        <h2>Products Manager</h2>
-                        <button class="btn btn-primary ripple" id="adm-add-product-btn"><i class="fa-solid fa-plus"></i> Add Product</button>
-                    </div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Actions</th></tr></thead>
-                            <tbody id="adm-products-table"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="admin-tab-content" id="db-contact">
-                    <h2>Contact & Donation Settings</h2>
-                    <form id="adm-contact-form">
-                        <div class="grid-2">
-                            <div class="form-group"><label>WhatsApp</label><input type="text" id="adm-wa"></div>
-                            <div class="form-group"><label>Telegram</label><input type="text" id="adm-tg"></div>
-                            <div class="form-group"><label>GitHub</label><input type="text" id="adm-gh"></div>
-                            <div class="form-group"><label>Email</label><input type="email" id="adm-em"></div>
-                            <div class="form-group"><label>DANA</label><input type="text" id="adm-dana"></div>
-                            <div class="form-group"><label>OVO</label><input type="text" id="adm-ovo"></div>
-                        </div>
-                        <div class="form-group"><label>Saweria URL</label><input type="text" id="adm-saweria"></div>
-                        <div class="form-group"><label>QRIS URL</label><input type="text" id="adm-qris-url"></div>
-                        <button type="submit" class="btn btn-primary ripple">Save to Supabase</button>
-                    </form>
-                </div>
-
-                <div class="admin-tab-content" id="db-data">
-                    <h2>Database Engine (Supabase)</h2>
-                    <p style="margin-bottom:1.5rem; color:rgba(255,255,255,0.6)">Data is stored in Supabase PostgreSQL. Use the buttons below for sync operations.</p>
-                    <div class="database-actions-grid">
-                        <button class="btn btn-secondary ripple" id="db-sync-btn"><i class="fa-solid fa-arrows-rotate"></i> Sync from Cloud</button>
-                        <button class="btn btn-secondary ripple" id="db-export-btn"><i class="fa-solid fa-file-export"></i> Export JSON</button>
-                        <button class="btn btn-danger ripple" id="db-reset-btn"><i class="fa-solid fa-radiation"></i> Clear Local Cache</button>
-                    </div>
-                    <hr style="margin:2rem 0; border-color:rgba(255,255,255,0.1);">
-                    <div id="supabase-status" style="padding:1rem; background:rgba(0,0,0,0.2); border-radius:var(--radius-sm);">
-                        <p><i class="fa-solid fa-database"></i> Supabase Status: <span id="supabase-connection-status">Checking...</span></p>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <!-- Editor Modal -->
-    <div class="modal-overlay" id="editor-modal">
-        <div class="modal-box glass-card animate-pop">
-            <div class="modal-header">
-                <h3 id="editor-modal-title">Editor</h3>
-                <button class="close-modal">&times;</button>
-            </div>
-            <form id="editor-form">
-                <input type="hidden" id="editor-target-type">
-                <input type="hidden" id="editor-target-id">
-                <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" id="edit-name" required>
-                </div>
-                <div class="form-group">
-                    <label>Category</label>
-                    <select id="edit-category" required></select>
-                </div>
-                <div class="form-group" id="group-edit-price">
-                    <label>Price (Rp)</label>
-                    <input type="number" id="edit-price">
-                </div>
-                <div class="form-group" id="group-edit-link">
-                    <label>Link / Demo</label>
-                    <input type="url" id="edit-link">
-                </div>
-                <div class="form-group">
-                    <label>Image URL</label>
-                    <input type="text" id="edit-img" placeholder="https://...">
-                </div>
-                <div class="form-group">
-                    <label>Description</label>
-                    <textarea id="edit-desc" rows="4" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary w-100 ripple">Save to Supabase</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Supabase Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
