@@ -9,333 +9,582 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* fix untuk tombol hapus agar tidak merusak layout - TIDAK MENGUBAH TAMPILAN ASLI */
-        .btn-danger-action {
-            position: relative !important;
-            bottom: auto !important;
-            right: auto !important;
-            margin-left: 8px;
-        }
-        .card-footer {
-            flex-wrap: wrap;
-            gap: 8px;
-            align-items: center;
-        }
-    </style>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
-    <div id="global-loader" class="loader-container">
-        <div class="loader-wrapper">
-            <span class="loader-letter">L</span>
-            <span class="loader-letter">e</span>
-            <span class="loader-letter">o</span>
-            <span class="loader-letter">l</span>
-            <span class="loader-letter">y</span>
-            <span class="loader-letter">&nbsp;</span>
-            <span class="loader-letter">H</span>
-            <span class="loader-letter">u</span>
-            <span class="loader-letter">b</span>
-            <div class="loader"></div>
-        </div>
+<div id="global-loader" class="loader-container">
+    <div class="loader-wrapper">
+        <span class="loader-letter">L</span>
+        <span class="loader-letter">e</span>
+        <span class="loader-letter">o</span>
+        <span class="loader-letter">l</span>
+        <span class="loader-letter">y</span>
+        <span class="loader-letter">&nbsp;</span>
+        <span class="loader-letter">H</span>
+        <span class="loader-letter">u</span>
+        <span class="loader-letter">b</span>
+        <div class="loader"></div>
     </div>
+</div>
 
-    <div class="glow-orb orb-1"></div>
-    <div class="glow-orb orb-2"></div>
+<div class="glow-orb orb-1"></div>
+<div class="glow-orb orb-2"></div>
 
-    <header>
-        <div class="logo-area">
-            <h1>LEOLY<span class="logo-dot">.</span><span class="logo-sub">HUB</span></h1>
+<header>
+    <div class="logo-area">
+        <h1>LEOLY<span class="logo-dot">.</span><span class="logo-sub">HUB</span></h1>
+    </div>
+    <div class="header-actions">
+        <span id="role-indicator" class="role-badge guest">Guest</span>
+        <button class="profile-login-btn" id="profileLoginBtn" title="Login">
+            <i data-lucide="user-circle" style="width: 20px; height: 20px;"></i>
+        </button>
+        <button class="menu-toggle" id="openMenu"><i data-lucide="menu" style="width: 18px; height: 18px;"></i></button>
+    </div>
+</header>
+
+<div class="sidebar-overlay" id="overlay"></div>
+<nav id="sidebar">
+    <div class="sidebar-header">
+        <span class="nav-title">Navigation</span>
+        <button class="close-sidebar" id="closeMenu">✕</button>
+    </div>
+    <ul class="nav-links">
+        <li><a href="#home" class="nav-item active" data-section="home"><i data-lucide="home"></i> Dashboard</a></li>
+        <li><a href="#projects" class="nav-item" data-section="projects"><i data-lucide="layers"></i> Projects</a></li>
+        <li><a href="#shop" class="nav-item" data-section="shop"><i data-lucide="shopping-bag"></i> Shop Store</a></li>
+        <li><a href="#donations" class="nav-item" data-section="donations"><i data-lucide="heart"></i> Donation</a></li>
+        <li><a href="#contact" class="nav-item" data-section="contact"><i data-lucide="mail"></i> Contact</a></li>
+        
+        <li class="login-menu-item" style="display: none;">
+            <a href="#" class="nav-item" id="sidebar-login-btn">
+                <i data-lucide="log-in"></i> Login / Sign In
+            </a>
+        </li>
+        <li class="logout-menu-item" style="display: none;">
+            <a href="#" class="nav-item" id="sidebar-logout-btn">
+                <i data-lucide="log-out"></i> Logout
+            </a>
+        </li>
+        
+        <li class="admin-only" style="display: none;"><a href="#admin" class="nav-item" data-section="admin"><i data-lucide="shield-alert"></i> Admin Panel</a></li>
+    </ul>
+    <div class="sidebar-footer"></div>
+</nav>
+
+<main class="container">
+    <!-- SECTION HOME -->
+    <section id="home-section" class="content-section active-section">
+        <div class="profile-card">
+            <div class="profile-banner">
+                <img id="display-banner" src="" alt="Banner">
+            </div>
+            <div class="profile-info">
+                <div class="avatar-container">
+                    <img id="display-avatar" src="" alt="Avatar">
+                </div>
+                <div class="profile-text">
+                    <div class="profile-title-row">
+                        <h2 id="display-name">Loading...</h2>
+                        <span class="verified-badge" title="Official Verified Server"><i data-lucide="check-circle-2"></i></span>
+                    </div>
+                    <p id="display-bio" class="profile-bio">Loading bio...</p>
+                    <div class="profile-tags" id="display-tags"></div>
+                </div>
+            </div>
         </div>
-        <div class="header-actions">
-            <span id="role-indicator" class="role-badge guest">Guest Mode</span>
-            <button class="menu-toggle" id="openMenu"><i data-lucide="menu" style="width: 18px; height: 18px;"></i></button>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-icon"><i data-lucide="server"></i></div>
+                <div class="stat-data">
+                    <span class="stat-label">Active Projects</span>
+                    <span class="stat-value" id="stat-projects-count">0</span>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon"><i data-lucide="package"></i></div>
+                <div class="stat-data">
+                    <span class="stat-label">Store Items</span>
+                    <span class="stat-value" id="stat-shop-count">0</span>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon"><i data-lucide="coins"></i></div>
+                <div class="stat-data">
+                    <span class="stat-label">Total Backers</span>
+                    <span class="stat-value" id="stat-donations-count">0</span>
+                </div>
+            </div>
         </div>
-    </header>
-
-    <div class="sidebar-overlay" id="overlay"></div>
-    <nav id="sidebar">
-        <div class="sidebar-header">
-            <span class="nav-title">Navigation</span>
-            <button class="close-sidebar" id="closeMenu">✕</button>
+        <div class="section-vault">
+            <div class="vault-header">
+                <h3><i data-lucide="activity" style="color: var(--accent);"></i> Server Live Feeds</h3>
+            </div>
+            <div class="donation-feed-container">
+                <div class="feed-stream" id="donation-feed-list"></div>
+            </div>
         </div>
-        <ul class="nav-links">
-            <li><a href="#home" class="nav-item active" data-section="home"><i data-lucide="home"></i> Dashboard</a></li>
-            <li><a href="#projects" class="nav-item" data-section="projects"><i data-lucide="layers"></i> Projects</a></li>
-            <li><a href="#shop" class="nav-item" data-section="shop"><i data-lucide="shopping-bag"></i> Shop Store</a></li>
-            <li><a href="#donations" class="nav-item" data-section="donations"><i data-lucide="heart"></i> Donation</a></li>
-            <li><a href="#contact" class="nav-item" data-section="contact"><i data-lucide="mail"></i> Contact</a></li>
-            <li class="admin-only" style="display: none;"><a href="#admin" class="nav-item" data-section="admin"><i data-lucide="shield-alert"></i> Admin Panel</a></li>
-        </ul>
-        <div class="sidebar-footer">
-            <button id="loginBtn" class="btn-login-trigger"><i data-lucide="log-in"></i> Owner Verification</button>
-            <button id="logoutBtn" class="btn-logout" style="display: none;"><i data-lucide="log-out"></i> Exit Admin</button>
+    </section>
+
+    <section id="projects-section" class="content-section">
+        <div class="section-title">
+            <h2>Our Development</h2>
+            <p>Daftar infrastruktur, map, dan server info yang sedang aktif dikembangkan.</p>
         </div>
-    </nav>
+        <div class="items-grid" id="projects-container"></div>
+    </section>
 
-    <main class="container">
-        <section id="home-section" class="content-section active-section">
-            <div class="profile-card">
-                <div class="profile-banner">
-                    <img id="display-banner" src="" alt="Banner">
-                </div>
-                <div class="profile-info">
-                    <div class="avatar-container">
-                        <img id="display-avatar" src="" alt="Avatar">
-                    </div>
-                    <div class="profile-text">
-                        <div class="profile-title-row">
-                            <h2 id="display-name">Loading...</h2>
-                            <span class="verified-badge" title="Official Verified Server"><i data-lucide="check-circle-2"></i></span>
-                        </div>
-                        <p id="display-bio" class="profile-bio">Loading bio...</p>
-                        <div class="profile-tags" id="display-tags"></div>
-                    </div>
-                </div>
-            </div>
+    <section id="shop-section" class="content-section">
+        <div class="section-title">
+            <h2>Store Catalog</h2>
+            <p>Aset modular, lisensi sistem, dan penawaran premium siap pakai.</p>
+        </div>
+        <div class="items-grid" id="shop-container"></div>
+    </section>
 
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-icon"><i data-lucide="server"></i></div>
-                    <div class="stat-data">
-                        <span class="stat-label">Active Projects</span>
-                        <span class="stat-value" id="stat-projects-count">0</span>
+    <section id="donations-section" class="content-section">
+        <div class="donation-layout" style="grid-template-columns: 1fr;">
+            <div class="donation-info-card" style="max-width: 500px; margin: 0 auto;">
+                <h3><i data-lucide="qrcode"></i> Donasi via QRIS</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Scan QRIS di bawah menggunakan aplikasi pembayaran (DANA, OVO, GOPAY, LinkAja, dll).</p>
+                <div class="qris-card">
+                    <div class="image_container">
+                        <img id="qris-image" src="" alt="QRIS Code">
                     </div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon"><i data-lucide="package"></i></div>
-                    <div class="stat-data">
-                        <span class="stat-label">Store Items</span>
-                        <span class="stat-value" id="stat-shop-count">0</span>
+                    <div class="title">Scan QRIS</div>
+                    <div class="size">via Any Payment (DANA, OVO, GOPAY, QRIS)</div>
+                    <div class="action">
+                        <button id="download-qris-btn" class="button">
+                            <span class="button__text">Download</span>
+                            <span class="button__icon">
+                                <svg class="svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 35 35">
+                                    <path d="M17.5,22.131a1.249,1.249,0,0,1-1.25-1.25V2.187a1.25,1.25,0,0,1,2.5,0V20.881A1.249,1.249,0,0,1,17.5,22.131Z"/>
+                                    <path d="M17.5,22.693a3.189,3.189,0,0,1-2.262-.936L8.487,15.006a1.249,1.249,0,0,1,1.767-1.767l6.751,6.751a.7.7,0,0,0,.99,0l6.751-6.751a1.25,1.25,0,0,1,1.768,1.767l-6.752,6.751A3.191,3.191,0,0,1,17.5,22.693Z"/>
+                                    <path d="M31.436,34.063H3.564A3.318,3.318,0,0,1,.25,30.749V22.011a1.25,1.25,0,0,1,2.5,0v8.738a.815.815,0,0,0,.814.814H31.436a.815.815,0,0,0,.814-.814V22.011a1.25,1.25,0,1,1,2.5,0v8.738A3.318,3.318,0,0,1,31.436,34.063Z"/>
+                                </svg>
+                            </span>
+                        </button>
                     </div>
                 </div>
-                <div class="stat-box">
-                    <div class="stat-icon"><i data-lucide="coins"></i></div>
-                    <div class="stat-data">
-                        <span class="stat-label">Total Backers</span>
-                        <span class="stat-value" id="stat-donations-count">0</span>
-                    </div>
+                <div class="pay-number" style="margin-top: 1.5rem; text-align: center; background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 12px;">
+                    💳 Setelah melakukan pembayaran, donasi akan otomatis tercatat di sistem.
                 </div>
             </div>
+        </div>
+    </section>
 
-            <div class="section-vault">
-                <div class="vault-header">
-                    <h3><i data-lucide="activity" style="color: var(--accent);"></i> Server Live Feeds</h3>
+    <section id="contact-section" class="content-section">
+        <div class="contact-card">
+            <div class="contact-header">
+                <h2>Hubungi Management</h2>
+                <p>Punya pertanyaan atau kendala operasional server? Kirimkan tiket pengaduan di bawah ini.</p>
+            </div>
+            <form id="contact-form">
+                <div class="form-group">
+                    <label for="contact-identity">Kontak Anda (Discord / WA / Email)</label>
+                    <input type="text" id="contact-identity" placeholder="Contoh: UsernameDiscord" required>
                 </div>
-                <div class="donation-feed-container">
-                    <div class="feed-stream" id="donation-feed-list"></div>
+                <div class="form-group">
+                    <label for="contact-subject">Subjek Masalah</label>
+                    <input type="text" id="contact-subject" placeholder="Contoh: Error Fitur / Kerjasama" required>
+                </div>
+                <div class="form-group">
+                    <label for="contact-message">Detail Pesan</label>
+                    <textarea id="contact-message" rows="5" placeholder="Deskripsikan secara rinci..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary"><i data-lucide="send"></i> Kirim Tiket Pengaduan</button>
+            </form>
+        </div>
+    </section>
+
+    <section id="profile-section" class="content-section">
+        <div class="profile-card" style="max-width: 600px; margin: 0 auto;">
+            <div class="profile-banner" style="height: 100px; background: linear-gradient(135deg, #1a1a2e, #16213e);"></div>
+            <div class="profile-info" style="text-align: center;">
+                <div class="avatar-container" style="margin-left: auto; margin-right: auto;">
+                    <img id="profile-avatar" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150" alt="Avatar">
+                </div>
+                <div class="profile-title-row" style="justify-content: center;">
+                    <h2 id="profile-name">Loading...</h2>
+                    <span class="verified-badge" id="profile-badge"><i data-lucide="check-circle-2"></i></span>
+                </div>
+                <p id="profile-email" class="profile-bio" style="text-align: center; margin-bottom: 0.5rem;">Loading email...</p>
+                <div class="profile-tags" id="profile-tags" style="justify-content: center;"></div>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+            <button id="logout-from-profile" class="btn btn-danger-action" style="padding: 0.65rem 1.5rem;">Logout</button>
+        </div>
+    </section>
+
+    <!-- ==================== ADMIN PANEL - TERPISAH PER HALAMAN ==================== -->
+    
+    <!-- HALAMAN 1: ADMIN DASHBOARD -->
+    <section id="admin-dashboard-section" class="content-section">
+        <div class="section-title">
+            <h2><i data-lucide="layout-dashboard"></i> Admin Dashboard</h2>
+            <p>Ringkasan dan statistik keseluruhan sistem.</p>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-icon"><i data-lucide="layers"></i></div>
+                <div class="stat-data">
+                    <span class="stat-label">Total Projects</span>
+                    <span class="stat-value" id="admin-stat-projects">0</span>
                 </div>
             </div>
-        </section>
-
-        <section id="projects-section" class="content-section">
-            <div class="section-title">
-                <h2>Our Development</h2>
-                <p>Daftar infrastruktur, map, dan server info yang sedang aktif dikembangkan.</p>
-            </div>
-            <div class="items-grid" id="projects-container"></div>
-        </section>
-
-        <section id="shop-section" class="content-section">
-            <div class="section-title">
-                <h2>Store Catalog</h2>
-                <p>Aset modular, lisensi sistem, dan penawaran premium siap pakai.</p>
-            </div>
-            <div class="items-grid" id="shop-container"></div>
-        </section>
-
-        <section id="donations-section" class="content-section">
-            <div class="donation-layout">
-                <div class="donation-form-card">
-                    <h3>Dukung Server Leoly Hub</h3>
-                    <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Bantu kami menjaga keberlangsungan server info tetap online.</p>
-                    <form id="donation-form">
-                        <div class="form-group">
-                            <label for="donator-name">Nama Donatur</label>
-                            <input type="text" id="donator-name" placeholder="Anonim" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="donation-amount">Nominal Dukungan</label>
-                            <input type="number" id="donation-amount" placeholder="Contoh: 10000" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="donation-msg">Pesan / Harapan</label>
-                            <textarea id="donation-msg" rows="3" placeholder="Tulis pesan untuk sistem..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary"><i data-lucide="heart"></i> Kirim Dukungan via WA</button>
-                    </form>
-                </div>
-                <div class="donation-info-card">
-                    <h3>Metode Pembayaran</h3>
-                    <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Tekan tombol di samping untuk mengirimkan rincian konfirmasi otomatis ke WhatsApp Owner.</p>
-                    <div class="payment-methods">
-                        <div class="pay-method-item">
-                            <span class="pay-name">QRIS / ALL PAYMENT</span>
-                            <span class="pay-number">Silakan minta kode QRIS terbaru saat chat WA</span>
-                        </div>
-                        <div class="pay-method-item">
-                            <span class="pay-name">DANA / OVO / GOPAY</span>
-                            <span class="pay-number">Melalui gerbang WhatsApp terintegrasi</span>
-                        </div>
-                    </div>
+            <div class="stat-box">
+                <div class="stat-icon"><i data-lucide="shopping-bag"></i></div>
+                <div class="stat-data">
+                    <span class="stat-label">Total Products</span>
+                    <span class="stat-value" id="admin-stat-shop">0</span>
                 </div>
             </div>
-        </section>
-
-        <section id="contact-section" class="content-section">
-            <div class="contact-card">
-                <div class="contact-header">
-                    <h2>Hubungi Management</h2>
-                    <p>Punya pertanyaan atau kendala operasional server? Kirimkan tiket pengaduan di bawah ini.</p>
+            <div class="stat-box">
+                <div class="stat-icon"><i data-lucide="heart"></i></div>
+                <div class="stat-data">
+                    <span class="stat-label">Total Donations</span>
+                    <span class="stat-value" id="admin-stat-donations">0</span>
                 </div>
-                <form id="contact-form">
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon"><i data-lucide="mail"></i></div>
+                <div class="stat-data">
+                    <span class="stat-label">Messages</span>
+                    <span class="stat-value" id="admin-stat-messages">0</span>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon"><i data-lucide="hard-drive"></i></div>
+                <div class="stat-data">
+                    <span class="stat-label">Storage Used</span>
+                    <span class="stat-value" id="admin-storage-used">0 MB</span>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon"><i data-lucide="users"></i></div>
+                <div class="stat-data">
+                    <span class="stat-label">Admin User</span>
+                    <span class="stat-value" id="admin-name-display">-</span>
+                </div>
+            </div>
+        </div>
+        <div class="quick-actions">
+            <h3><i data-lucide="zap"></i> Quick Actions</h3>
+            <div class="quick-actions-grid">
+                <button class="quick-action-btn" data-quick="profile">
+                    <i data-lucide="user-cog"></i> Edit Profile
+                </button>
+                <button class="quick-action-btn" data-quick="projects">
+                    <i data-lucide="folder-plus"></i> Add Project
+                </button>
+                <button class="quick-action-btn" data-quick="shop">
+                    <i data-lucide="plus-square"></i> Add Product
+                </button>
+                <button class="quick-action-btn" data-quick="qris">
+                    <i data-lucide="qrcode"></i> Update QRIS
+                </button>
+                <button class="quick-action-btn" data-quick="files">
+                    <i data-lucide="upload-cloud"></i> Upload Files
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- HALAMAN 2: PROFILE SETTINGS -->
+    <section id="admin-profile-section" class="content-section">
+        <div class="section-title">
+            <h2><i data-lucide="user-cog"></i> Profile Settings</h2>
+            <p>Kelola informasi profil dan tampilan banner.</p>
+        </div>
+        <div class="admin-card">
+            <form id="admin-profile-form" enctype="multipart/form-data">
+                <div class="form-row">
                     <div class="form-group">
-                        <label for="contact-identity">Kontak Anda (Discord / WA / Email)</label>
-                        <input type="text" id="contact-identity" placeholder="Contoh: UsernameDiscord" required>
+                        <label for="input-name">Nama Profil</label>
+                        <input type="text" id="input-name" required>
                     </div>
                     <div class="form-group">
-                        <label for="contact-subject">Subjek Masalah</label>
-                        <input type="text" id="contact-subject" placeholder="Contoh: Error Fitur / Kerjasama" required>
+                        <label for="input-tags">Tags (Pisahkan dengan koma)</label>
+                        <input type="text" id="input-tags" placeholder="Roblox, HTML, Developer">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="input-bio">Deskripsi / Bio</label>
+                    <textarea id="input-bio" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Foto Avatar</label>
+                        <div class="image-preview">
+                            <img id="avatar-preview-img" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                        </div>
+                        <input type="file" id="input-avatar-file" accept="image/jpeg,image/png,image/gif,image/webp">
+                        <button type="button" id="clear-avatar-btn" class="btn-clear-image">Hapus Avatar</button>
+                        <input type="hidden" id="input-avatar" value="">
+                        <input type="hidden" id="avatar-clear" value="0">
                     </div>
                     <div class="form-group">
-                        <label for="contact-message">Detail Pesan</label>
-                        <textarea id="contact-message" rows="5" placeholder="Deskripsikan secara rinci..." required></textarea>
+                        <label>Foto Banner</label>
+                        <div class="image-preview">
+                            <img id="banner-preview-img" src="" style="width: 100%; height: 100px; object-fit: cover; border-radius: 8px;">
+                        </div>
+                        <input type="file" id="input-banner-file" accept="image/jpeg,image/png,image/gif,image/webp">
+                        <button type="button" id="clear-banner-btn" class="btn-clear-image">Hapus Banner</button>
+                        <input type="hidden" id="input-banner" value="">
+                        <input type="hidden" id="banner-clear" value="0">
                     </div>
-                    <button type="submit" class="btn btn-primary"><i data-lucide="send"></i> Kirim Tiket Pengaduan</button>
-                </form>
-            </div>
-        </section>
-
-        <section id="admin-section" class="content-section">
-            <div class="section-title">
-                <h2>Control Room</h2>
-                <p>Manajemen data dashboard inti Leoly Hub secara langsung.</p>
-            </div>
-
-            <div class="admin-grid-layout">
-                <div class="admin-controls">
-                    <h3><i data-lucide="user-cog"></i> Profile Settings</h3>
-                    <form id="admin-profile-form">
-                        <div class="form-group">
-                            <label for="input-name">Nama Profil</label>
-                            <input type="text" id="input-name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="input-bio">Deskripsi / Bio</label>
-                            <textarea id="input-bio" rows="2" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="input-tags">Tags (Pisahkan dengan koma)</label>
-                            <input type="text" id="input-tags" placeholder="Roblox, HTML, Developer">
-                        </div>
-                        <div class="form-group">
-                            <label for="input-avatar">Link Foto Avatar</label>
-                            <input type="url" id="input-avatar">
-                        </div>
-                        <div class="form-group">
-                            <label for="input-banner">Link Foto Banner</label>
-                            <input type="url" id="input-banner">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Simpan Profil</button>
-                    </form>
                 </div>
-
-                <div class="admin-controls">
-                    <h3><i data-lucide="folder-plus"></i> Add Project Card</h3>
-                    <form id="admin-project-form">
-                        <div class="form-group">
-                            <label for="proj-title">Nama Project</label>
-                            <input type="text" id="proj-title" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="proj-desc">Keterangan Project</label>
-                            <textarea id="proj-desc" rows="2" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="proj-img">Link Gambar Project</label>
-                            <input type="url" id="proj-img">
-                        </div>
-                        <div class="form-group">
-                            <label for="proj-link">Link Eksternal</label>
-                            <input type="url" id="proj-link" placeholder="https://...">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Tambah Project</button>
-                    </form>
+                <button type="submit" class="btn btn-primary"><i data-lucide="save"></i> Simpan Profil</button>
+            </form>
+        </div>
+        
+        <!-- QRIS Settings di halaman terpisah -->
+        <div class="section-title" style="margin-top: 2rem;">
+            <h2><i data-lucide="qrcode"></i> QRIS Payment Settings</h2>
+            <p>Kelola QR code pembayaran.</p>
+        </div>
+        <div class="admin-card">
+            <form id="admin-qris-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label>Gambar QRIS Saat Ini</label>
+                    <div class="image-preview">
+                        <img id="qris-preview-img" src="" style="width: 150px; height: 150px; object-fit: contain; background: white; border-radius: 12px; padding: 8px;">
+                    </div>
                 </div>
+                <div class="form-group">
+                    <label for="qris-file">Upload QRIS Baru (PNG/JPG)</label>
+                    <input type="file" id="qris-file" accept="image/jpeg,image/png,image/webp">
+                </div>
+                <button type="submit" class="btn btn-primary"><i data-lucide="upload"></i> Update QRIS</button>
+            </form>
+        </div>
+    </section>
 
-                <div class="admin-controls">
-                    <h3><i data-lucide="plus-square"></i> Add Catalog Item</h3>
-                    <form id="admin-shop-form">
-                        <div class="form-group">
-                            <label for="shop-title">Nama Produk</label>
-                            <input type="text" id="shop-title" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="shop-price">Harga (Rp)</label>
-                            <input type="number" id="shop-price" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="shop-desc">Deskripsi Produk</label>
-                            <textarea id="shop-desc" rows="2" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="shop-img">Link Gambar Produk</label>
-                            <input type="url" id="shop-img">
-                        </div>
-                        <button type="submit" class="btn btn-primary">Tambah Produk</button>
-                    </form>
+    <!-- HALAMAN 3: PROJECTS MANAGER -->
+    <section id="admin-projects-section" class="content-section">
+        <div class="section-title">
+            <h2><i data-lucide="folder-plus"></i> Projects Manager</h2>
+            <p>Tambah, edit, atau hapus project.</p>
+        </div>
+        
+        <!-- Form Tambah Project -->
+        <div class="admin-card">
+            <h3><i data-lucide="plus-circle"></i> Tambah Project Baru</h3>
+            <form id="admin-project-form" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="proj-title">Nama Project</label>
+                        <input type="text" id="proj-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="proj-link">Link Eksternal</label>
+                        <input type="url" id="proj-link" placeholder="https://...">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="proj-desc">Keterangan Project</label>
+                    <textarea id="proj-desc" rows="2" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="proj-img-file">Upload Gambar Project</label>
+                    <input type="file" id="proj-img-file" accept="image/jpeg,image/png,image/gif,image/webp">
+                    <input type="hidden" id="proj-img" value="">
+                </div>
+                <button type="submit" class="btn btn-primary"><i data-lucide="plus"></i> Tambah Project</button>
+            </form>
+        </div>
+        
+        <!-- Daftar Project -->
+        <div class="admin-card">
+            <h3><i data-lucide="list"></i> Daftar Project</h3>
+            <div class="items-list" id="admin-projects-list"></div>
+        </div>
+    </section>
+
+    <!-- HALAMAN 4: SHOP MANAGER -->
+    <section id="admin-shop-section" class="content-section">
+        <div class="section-title">
+            <h2><i data-lucide="shopping-bag"></i> Shop Manager</h2>
+            <p>Kelola produk di store catalog.</p>
+        </div>
+        
+        <!-- Form Tambah Produk -->
+        <div class="admin-card">
+            <h3><i data-lucide="plus-circle"></i> Tambah Produk Baru</h3>
+            <form id="admin-shop-form" enctype="multipart/form-data">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="shop-title">Nama Produk</label>
+                        <input type="text" id="shop-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="shop-price">Harga (Rp)</label>
+                        <input type="number" id="shop-price" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="shop-desc">Deskripsi Produk</label>
+                    <textarea id="shop-desc" rows="2" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="shop-img-file">Upload Gambar Produk</label>
+                    <input type="file" id="shop-img-file" accept="image/jpeg,image/png,image/gif,image/webp">
+                    <input type="hidden" id="shop-img" value="">
+                </div>
+                <button type="submit" class="btn btn-primary"><i data-lucide="plus"></i> Tambah Produk</button>
+            </form>
+        </div>
+        
+        <!-- Daftar Produk -->
+        <div class="admin-card">
+            <h3><i data-lucide="list"></i> Daftar Produk</h3>
+            <div class="items-list" id="admin-shop-list"></div>
+        </div>
+    </section>
+
+    <!-- HALAMAN 5: FILE ASSETS MANAGER -->
+    <section id="admin-files-section" class="content-section">
+        <div class="section-title">
+            <h2><i data-lucide="upload-cloud"></i> File Assets Manager</h2>
+            <p>Upload dan kelola file aset.</p>
+        </div>
+        
+        <div class="admin-card">
+            <div class="file-upload-area">
+                <div class="dropzone" id="globalDropzone">
+                    <div class="dropzone-content">
+                        <i data-lucide="upload"></i>
+                        <p>Drag & drop files here or click to browse</p>
+                        <span class="dropzone-hint">Supports: JPG, PNG, PDF, ZIP, TXT (Max 10MB each)</span>
+                    </div>
+                    <input type="file" id="globalFileInput" multiple style="display:none">
+                </div>
+                <div class="upload-queue" id="uploadQueue"></div>
+                <div class="uploaded-files-list">
+                    <h4><i data-lucide="folder-open"></i> Uploaded Files</h4>
+                    <div class="files-grid" id="uploadedFilesGrid"></div>
+                    <div class="storage-metric" id="storageMetric"></div>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <div class="section-vault" style="margin-top: 2rem;">
-                <div class="vault-header">
-                    <h3><i data-lucide="inbox"></i> Tiket Pengaduan Masuk</h3>
-                </div>
-                <div class="table-container">
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Kontak</th>
-                                <th>Subjek</th>
-                                <th>Isi Pesan</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="admin-messages-list"></tbody>
-                    </table>
-                </div>
+    <!-- HALAMAN 6: MESSAGES INBOX -->
+    <section id="admin-messages-section" class="content-section">
+        <div class="section-title">
+            <h2><i data-lucide="inbox"></i> Messages Inbox</h2>
+            <p>Kelola tiket pengaduan yang masuk.</p>
+        </div>
+        
+        <div class="admin-card">
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Kontak</th>
+                            <th>Subjek</th>
+                            <th>Isi Pesan</th>
+                            <th>Tanggal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-messages-list"></tbody>
+                </table>
             </div>
-        </section>
-    </main>
+        </div>
+    </section>
+</main>
 
-    <div class="login-modal" id="loginModal">
-        <form class="form" id="login-form">
-            <div class="login-modal-header">
-                <p id="heading">Owner Verification</p>
-                <button type="button" id="closeLogin" class="close-modal-btn">✕</button>
+<!-- FLOATING BOTTOM NAVIGATION - ADMIN PANEL -->
+<div class="floating-bottom-nav" id="floatingBottomNav">
+    <div class="bottom-nav-container">
+        <button class="bottom-nav-item active" data-section="admin-dashboard">
+            <i data-lucide="layout-dashboard"></i>
+            <span>Dashboard</span>
+        </button>
+        <button class="bottom-nav-item" data-section="admin-profile">
+            <i data-lucide="user-cog"></i>
+            <span>Profile</span>
+        </button>
+        <button class="bottom-nav-item" data-section="admin-projects">
+            <i data-lucide="folder-plus"></i>
+            <span>Projects</span>
+        </button>
+        <button class="bottom-nav-item" data-section="admin-shop">
+            <i data-lucide="shopping-bag"></i>
+            <span>Shop</span>
+        </button>
+        <button class="bottom-nav-item" data-section="admin-files">
+            <i data-lucide="upload-cloud"></i>
+            <span>Files</span>
+        </button>
+        <button class="bottom-nav-item" data-section="admin-messages">
+            <i data-lucide="inbox"></i>
+            <span>Messages</span>
+        </button>
+    </div>
+</div>
+
+<!-- MODAL LOGIN -->
+<div class="login-modal" id="loginModal">
+    <div class="modal-overlay"></div>
+    <div class="modal-container">
+        <button type="button" id="closeLogin" class="modal-close-btn">&times;</button>
+        <form class="login-form" id="login-form">
+            <div class="flex-column">
+                <label>Username</label>
             </div>
-            <div class="field">
-                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M13.106 7.222c0-2.967-2.249-5.032-5.482-5.032-3.35 0-5.646 2.318-5.646 5.702 0 3.493 2.235 5.708 5.762 5.708.862 0 1.689-.123 2.304-.335v-.862c-.43.199-1.354.328-2.29.328-2.926 0-4.813-1.88-4.813-4.798 0-2.844 1.921-4.881 4.594-4.881 2.735 0 4.608 1.688 4.608 4.156 0 1.682-.554 2.769-1.416 2.769-.492 0-.772-.28-.772-.76V5.206H8.923v.834h-.11c-.266-.595-.881-.964-1.6-.964-1.4 0-2.378 1.162-2.378 2.823 0 1.737.957 2.906 2.379 2.906.8 0 1.415-.39 1.709-1.087h.11c.081.67.703 1.148 1.503 1.148 1.572 0 2.57-1.415 2.57-3.643zm-7.177.704c0-1.197.54-1.907 1.456-1.907.93 0 1.524.738 1.524 1.907S8.308 9.84 7.371 9.84c-.895 0-1.442-.725-1.442-1.914z"></path>
+            <div class="inputForm">
+                <svg height="20" viewBox="0 0 32 32" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <g id="Layer_3" data-name="Layer 3">
+                        <path d="m30.853 13.87a15 15 0 0 0 -29.729 4.082 15.1 15.1 0 0 0 12.876 12.918 15.6 15.6 0 0 0 2.016.13 14.85 14.85 0 0 0 7.715-2.145 1 1 0 1 0 -1.031-1.711 13.007 13.007 0 1 1 5.458-6.529 2.149 2.149 0 0 1 -4.158-.759v-10.856a1 1 0 0 0 -2 0v1.726a8 8 0 1 0 .2 10.325 4.135 4.135 0 0 0 7.83.274 15.2 15.2 0 0 0 .823-7.455zm-14.853 8.13a6 6 0 1 1 6-6 6.006 6.006 0 0 1 -6 6z"></path>
+                    </g>
                 </svg>
-                <input autocomplete="off" placeholder="Username" class="input-field" type="text" id="login-username" required>
+                <input type="text" class="input" id="login-username" placeholder="Enter your Username" autocomplete="off" required>
             </div>
-            <div class="field">
-                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path>
+
+            <div class="flex-column">
+                <label>Password</label>
+            </div>
+            <div class="inputForm">
+                <svg height="20" viewBox="-64 0 512 512" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m336 512h-288c-26.453125 0-48-21.523438-48-48v-224c0-26.476562 21.546875-48 48-48h288c26.453125 0 48 21.523438 48 48v224c0 26.476562-21.546875 48-48 48zm-288-288c-8.8125 0-16 7.167969-16 16v224c0 8.832031 7.1875 16 16 16h288c8.8125 0 16-7.167969 16-16v-224c0-8.832031-7.1875-16-16-16zm0 0"></path>
+                    <path d="m304 224c-8.832031 0-16-7.167969-16-16v-80c0-52.929688-43.070312-96-96-96s-96 43.070312-96 96v80c0 8.832031-7.167969 16-16 16s-16-7.167969-16-16v-80c0-70.59375 57.40625-128 128-128s128 57.40625 128 128v80c0 8.832031-7.167969 16-16 16zm0 0"></path>
                 </svg>
-                <input placeholder="Password" class="input-field" type="password" id="login-password" required>
+                <input type="password" class="input" id="login-password" placeholder="Enter your Password" required>
             </div>
-            <div class="btn">
-                <button type="submit" class="button1">Verify Access</button>
-                <button type="button" id="cancelLogin" class="button2">Cancel</button>
+
+            <div class="flex-row">
+                <div>
+                    <input type="radio" id="remember-me">
+                    <label for="remember-me">Remember me</label>
+                </div>
+                <span class="span">Forgot password?</span>
+            </div>
+
+            <button type="submit" class="button-submit">Sign In</button>
+            <p class="p">Don't have an account? <span class="span">Sign Up</span></p>
+            <p class="p line">Or With</p>
+
+            <div class="flex-row">
+                <button type="button" class="btn google">
+                    <svg version="1.1" width="20" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
+                        <path style="fill:#FBBB00;" d="M113.47,309.408L95.648,375.94l-65.139,1.378C11.042,341.211,0,299.9,0,256c0-42.451,10.324-82.483,28.624-117.732h0.014l57.992,10.632l25.404,57.644c-5.317,15.501-8.215,32.141-8.215,49.456C103.821,274.792,107.225,292.797,113.47,309.408z"></path>
+                        <path style="fill:#518EF8;" d="M507.527,208.176C510.467,223.662,512,239.655,512,256c0,18.328-1.927,36.206-5.598,53.451c-12.462,58.683-45.025,109.925-90.134,146.187l-0.014-0.014l-73.044-3.727l-10.338-64.535c29.932-17.554,53.324-45.025,65.646-77.911h-136.89V208.176h138.887L507.527,208.176L507.527,208.176z"></path>
+                        <path style="fill:#28B446;" d="M416.253,455.624l0.014,0.014C372.396,490.901,316.666,512,256,512c-97.491,0-182.252-54.491-225.491-134.681l82.961-67.91c21.619,57.698,77.278,98.771,142.53,98.771c28.047,0,54.323-7.582,76.87-20.818L416.253,455.624z"></path>
+                        <path style="fill:#F14336;" d="M419.404,58.936l-82.933,67.896c-23.335-14.586-50.919-23.012-80.471-23.012c-66.729,0-123.429,42.957-143.965,102.724l-83.397-68.276h-0.014C71.23,56.123,157.06,0,256,0C318.115,0,375.068,22.126,419.404,58.936z"></path>
+                    </svg>
+                    Google
+                </button>
             </div>
         </form>
     </div>
+</div>
 
-    <div id="notification-container" class="toast-container"></div>
+<div id="notification-container" class="toast-container"></div>
 
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
